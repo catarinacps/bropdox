@@ -42,10 +42,12 @@ $(TARGET): $(OBJ) $(EXP)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-.PHONY: clean all
-
 clean:
 	rm -f $(OBJ) $(INC_DIR)/*~ $(LIB_DIR)/*.a *~
 
 redo: clean
 	make all
+
+.PHONY: clean all
+
+.DEFAULT_GOAL: redo
