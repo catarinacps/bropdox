@@ -1,7 +1,7 @@
 # **bropdox**
 A DropBox clone as defined in the final assignment for SISOP 2.\
-It is a 2 part assignment and we'll use the UDP sockets API for UNIX in the communication\
-between the *Server* and the *Client* threads. 
+It is a 2 part assignment and we'll use UNIX UDP sockets API in the communication\
+between the *Server* and the *Client* threads.
 
 **Collaborators**:
 - Henrique Silva
@@ -21,7 +21,7 @@ Cleans the generated `.o`'s, binaries and temporary files.
 - **redo**\
 Does the `all` and then the `clean` rules.
 - **test**\
-Does the `clean` rule and then nothing because the tests do not exist yet.
+Does the `all` rule and then nothing because the tests do not exist yet.
 
 ---
 

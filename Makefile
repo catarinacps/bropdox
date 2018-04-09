@@ -1,19 +1,20 @@
 #	-- bropdox --
 #
-#	Makefile do arquivo
+#	Makefile do projeto bropdox
 #
 #	@param target
 #		"all" - compila
 #		"clean" - limpa os binários gerados na compilação
-#		"redo" - realiza a regra clean e então compila
+#		"redo" - limpa binários e então compila
+#		"test" - compila e realiza testes
 #
-#	Se make não recebe parâmetros, a ação default é clean e make all 
+#	Se make não recebe parâmetros, a ação default é redo
 
 #	Flags de compilaçao. Debug para uso no GDB
 CC = gcc
 DEBUG = -g
 CFLAGS = -Wall -std=c99 $(DEBUG)
-INC_FLAG = -I$(INC_DIR) 
+INC_FLAG = -I$(INC_DIR)
 
 #	Diretorios do projeto
 INC_DIR = include
@@ -38,6 +39,7 @@ OBJ = $(patsubst %,$(OBJ_DIR)/%,$(_OBJ))
 _EXP = placeholder
 EXP = $(patsubst %,$(OBJ_DIR)/%,$(_EXP)) $(patsubst %,$(BIN_DIR)/%,$(_EXP))
 
+.DEFAULT_GOAL = redo
 
 all: $(TARGET)
 
@@ -45,17 +47,14 @@ $(TARGET): $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(DEPS)
-	$(CC) -c $@ $< $(INC_FLAG) $(CFLAGS)
+	$(CC) -c -o $@ $< $(INC_FLAG) $(CFLAGS)
 
 clean:
-	rm -f $(OBJ) $(INC_DIR)/*~ $(TARGET) *~
+	rm -f $(OBJ) $(INC_DIR)/*~ $(TARGET) *~ *.o
 
-redo: clean
-	make all
+redo: clean all
 
 test: all
 	@echo "tests are in the making!"
 
-.PHONY: clean all
-
-.DEFAULT_GOAL: redo
+.PHONY: all clean redo test
