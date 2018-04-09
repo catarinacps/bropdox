@@ -17,9 +17,10 @@ INC_FLAG = -I$(INC_DIR)
 
 #	Diretorios do projeto
 INC_DIR = include
-OBJ_DIR = obj
+OBJ_DIR = build
 BIN_DIR = bin
 SRC_DIR = src
+TST_DIR = tests
 
 #	Caminho do arquivo estático final
 _TARGET = dropboxServer dropboxClient
@@ -44,7 +45,7 @@ $(TARGET): $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(DEPS)
-	$(CC) -c -o $@ $< $(INC_FLAG) $(CFLAGS)
+	$(CC) -c $@ $< $(INC_FLAG) $(CFLAGS)
 
 clean:
 	rm -f $(OBJ) $(INC_DIR)/*~ $(TARGET) *~
