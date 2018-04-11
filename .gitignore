@@ -1,5 +1,8 @@
 .directory
 .vscode
+build/*
+bin/*
+!*.gitkeep
 
 # Prerequisites
 *.d
