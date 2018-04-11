@@ -28,7 +28,7 @@ _TARGET = dropboxServer dropboxClient
 TARGET = $(patsubst %,$(BIN_DIR)/%,$(_TARGET))
 
 #	Dependencias, ou seja, arquivos de header
-_DEPS = dropboxServer.h dropboxClient.h dropboxUtil.h
+_DEPS = dropboxServer.hpp dropboxClient.hpp dropboxUtil.hpp
 DEPS = $(patsubst %,$(INC_DIR)/%,$(_DEPS))
 
 #	Objetos a serem criados

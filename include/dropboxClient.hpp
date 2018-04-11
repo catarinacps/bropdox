@@ -1,20 +1,16 @@
-#ifndef DROPBOXCLIENT_H
-#define DROPBOXCLIENT_H
+#ifndef DROPBOXCLIENT_HPP
+#define DROPBOXCLIENT_HPP
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <dropboxUtil.h>
+#include <dropboxUtil.hpp>
 
 class Client {
 private:
     int devices[2];
-
-    char userid[MAXNAME];
-
-    struct file_info files[MAXFILES];
-
     int logged_in;
+    char userid[MAXNAME];
+    socklen_t server_len;
+    struct file_info files[MAXFILES];
+    con_buffer_t buffer;
 
 public:
     Client();
@@ -63,4 +59,4 @@ public:
     void close_session();
 };
 
-#endif // DROPBOXCLIENT_H
+#endif // DROPBOXCLIENT_HPP
