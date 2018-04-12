@@ -73,9 +73,9 @@ void Server::treat_client_request(con_buffer_t* buf, struct sockaddr_un* cli_add
         printf("Bad request/handshake, turning down connection...\n");
         return;
     }
-    
+
     n = sendto(this->sockfd, "t", 2, 0, (struct sockaddr*)cli_addr, sizeof(struct sockaddr));
-    if (n < 0 ) {
+    if (n < 0) {
         return;
         printf("Error while sending ack...\n");
     }
