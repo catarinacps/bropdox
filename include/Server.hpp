@@ -1,5 +1,5 @@
-#ifndef DROPBOXSERVER_HPP
-#define DROPBOXSERVER_HPP
+#ifndef SERVER_HPP
+#define SERVER_HPP
 
 #define ADDR "BropDoxServer"
 
@@ -9,8 +9,8 @@ class Server {
 private:
     int sockfd;
     socklen_t client_len;
-    struct sockaddr_un server_address, client_address;
     con_buffer_t buffer;
+    struct sockaddr_un server_address, client_address;
 
     /** Trata o handshake do cliente.
      * 
@@ -18,9 +18,6 @@ private:
      * requisicao do cliente.
      */
     void treat_client_request(con_buffer_t* buf, struct sockaddr_un* cli_addr);
-
-public:
-    Server();
 
     /** Sincroniza o servidor com o diretorio "sync_dir_<nomeusuario>" do cliente.
      * 
@@ -38,6 +35,9 @@ public:
      * @param file O nome e extensao do arquivo em questao.
      */
     void send_file(char* file);
+
+public:
+    Server();
 };
 
-#endif // DROPBOXSERVER_HPP
+#endif // SERVER_HPP

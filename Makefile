@@ -13,7 +13,7 @@
 #	Flags de compilaçao. Debug para uso no GDB
 CC = g++
 DEBUG = -g
-CFLAGS = -Wall -Wextra -Wshadow $(DEBUG)
+CFLAGS = -std=c++17 -Wall -Wextra -Wshadow $(DEBUG)
 TFLAGS = --error-printer
 INC_FLAG = -I$(INC_DIR)
 
@@ -25,23 +25,23 @@ SRC_DIR = src
 TST_DIR = tests
 
 #	Caminho do arquivo estático final
-_TARGET = dropboxServer dropboxClient
-TARGET = $(patsubst %,$(BIN_DIR)/%,$(_TARGET))
+_TARGET = mainServer mainClient
+TARGET = $(patsubst %, $(BIN_DIR)/%, $(_TARGET))
 
 #	Dependencias, ou seja, arquivos de header
-_DEPS = dropboxServer.hpp dropboxClient.hpp dropboxUtil.hpp
-DEPS = $(patsubst %,$(INC_DIR)/%,$(_DEPS))
+_DEPS = Server.hpp Client.hpp bropdoxUtil.hpp
+DEPS = $(patsubst %, $(INC_DIR)/%, $(_DEPS))
 
 #	Objetos a serem criados
-_OBJ = dropboxUtil.o
-OBJ = $(patsubst %,$(OBJ_DIR)/%,$(_OBJ))
+_OBJ = Server.o Client.o bropdoxUtil.o
+OBJ = $(patsubst %, $(OBJ_DIR)/%, $(_OBJ))
 
 #	Target da regra test
 T_TG = $(T_DIR)/AppTest
 
 #	Headers/definições de suites de teste
 _T_DEP = AppTest.hpp
-T_DEP = $(patsubst %,$(T_DIR)/%,$(T_TG))
+T_DEP = $(patsubst %, $(T_DIR)/%, $(T_TG))
 
 #	Codigo fonte a ser gerado para a suite de testes
 T_SRC = $(T_TG).cpp
@@ -50,7 +50,7 @@ T_SRC = $(T_TG).cpp
 # _EXP = placeholder
 # EXP = $(patsubst %,$(OBJ_DIR)/%,$(_EXP)) $(patsubst %,$(BIN_DIR)/%,$(_EXP))
 
-.DEFAULT_GOAL = redo
+.DEFAULT_GOAL = all
 
 $(TARGET): $(BIN_DIR)/%: $(OBJ_DIR)/%.o $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)

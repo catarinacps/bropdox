@@ -1,16 +1,16 @@
-#ifndef DROPBOXCLIENT_HPP
-#define DROPBOXCLIENT_HPP
+#ifndef CLIENT_HPP
+#define CLIENT_HPP
 
 #include <bropdoxUtil.hpp>
 
 class Client {
 private:
-    int devices[2];
     int logged_in;
+    int devices[2];
+    con_buffer_t buffer;
     char userid[MAXNAME];
     socklen_t server_len;
     struct file_info files[MAXFILES];
-    con_buffer_t buffer;
 
 public:
     Client();
@@ -59,4 +59,4 @@ public:
     void close_session();
 };
 
-#endif // DROPBOXCLIENT_HPP
+#endif // CLIENT_HPP
