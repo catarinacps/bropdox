@@ -1,7 +1,7 @@
 #include <cxxtest/TestSuite.h>
 
-#include <dropboxClient.hpp>
-#include <dropboxServer.hpp>
+#include <Client.hpp>
+#include <Server.hpp>
 
 class AppTest : public CxxTest::TestSuite {
     Server testServer;
