@@ -9,7 +9,7 @@ class Server {
 private:
     int sockfd;
     socklen_t client_len;
-    con_buffer_t buffer;
+    data_buffer_t buffer;
     struct sockaddr_un server_address, client_address;
 
     /** Trata o handshake do cliente.
@@ -17,7 +17,7 @@ private:
      * Esse metodo somente sera chamado na thread criada para tratar a 
      * requisicao do cliente.
      */
-    void treat_client_request(con_buffer_t* buf, struct sockaddr_un* cli_addr);
+    void treat_client_request(data_buffer_t* buf, struct sockaddr_un* cli_addr);
 
     /** Sincroniza o servidor com o diretorio "sync_dir_<nomeusuario>" do cliente.
      * 

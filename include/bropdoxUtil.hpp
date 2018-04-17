@@ -9,7 +9,6 @@
 
 #include <cstdio>
 #include <cstring>
-#include <iostream>
 #include <vector>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -17,9 +16,13 @@
 #include <unistd.h>
 #include <pthread.h>
 
+/******************************************************************************
+ * Types
+ */
+
 enum class req {sync, send, receive};
 
-typedef std::vector<char> con_buffer_t;
+typedef std::vector<char> data_buffer_t;
 
 struct file_info {
     char name[MAXNAME];
@@ -42,21 +45,19 @@ typedef struct {
 
 typedef struct {
     unsigned int num;
-    con_buffer_t data[PACKETSIZE];
+    data_buffer_t data[PACKETSIZE];
 } packet_t;
 
-
-// struct client {
-//     int devices[2];
-//     char userid[MAXNAME];
-//     struct file_info files[MAXFILES];
-//     int logged_in;
-// };
+/******************************************************************************
+ * Headers
+ */
 
 int init_unix_socket(struct sockaddr_un* sock, char const* path);
 
-void convert_to_handshake(handshake_t* hand, con_buffer_t* buffer);
+void convert_to_handshake(handshake_t* hand, data_buffer_t* buffer);
 
-void convert_to_data(con_buffer_t* data, packet_t* packet);
+void convert_to_data(data_buffer_t* data, packet_t* packet);
+void convert_to_data(data_buffer_t* data, handshake_t* hand);
+void convert_to_data(data_buffer_t* data, ack_t* ack);
 
 #endif // BROPDOXUTIL_HPP
