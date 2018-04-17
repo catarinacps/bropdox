@@ -11,7 +11,7 @@ Server::Server()
     }
 }
 
-void Server::treat_client_request(con_buffer_t* buf, struct sockaddr_un* cli_addr)
+void Server::treat_client_request(data_buffer_t* buf, struct sockaddr_un* cli_addr)
 {
     int n;
     bool pack_ok;
@@ -38,15 +38,15 @@ void Server::treat_client_request(con_buffer_t* buf, struct sockaddr_un* cli_add
     this->buffer.resize(sizeof(packet_t));
 
     switch (hand.req_type) {
-    case req::sync:
-        // Server::sync_server();
-        break;
-    case req::send:
-        // Server::send_file();
-        break;
-    case req::receive:
+    case req::sync: {
+        Server::sync_server();
+    } break;
+    case req::send: {
+        Server::send_file(hand.file.name);
+    } break;
+    case req::receive: {
         // Server::receive_file();
-        break;
+    } break;
     default:
         printf("Something went wrong...\n");
     }

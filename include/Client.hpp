@@ -7,7 +7,7 @@ class Client {
 private:
     int logged_in;
     int devices[2];
-    con_buffer_t buffer;
+    data_buffer_t buffer;
     char userid[MAXNAME];
     socklen_t server_len;
     struct file_info files[MAXFILES];

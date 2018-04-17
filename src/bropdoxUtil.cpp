@@ -14,12 +14,22 @@ int init_unix_socket(struct sockaddr_un* sock, char const* path)
     return socket_id;
 }
 
-void convert_to_handshake(handshake_t* hand, con_buffer_t* buffer)
+void convert_to_handshake(handshake_t* hand, data_buffer_t* data)
 {
-    memcpy(hand, (*buffer).data(), sizeof(handshake_t));
+    memcpy(hand, (*data).data(), sizeof(handshake_t));
 }
 
-void convert_to_data(con_buffer_t* data, packet_t* packet)
+void convert_to_data(data_buffer_t* data, packet_t* packet)
 {
     memcpy((*data).data(), packet, sizeof(packet_t));
+}
+
+void convert_to_data(data_buffer_t* data, handshake_t* hand)
+{
+    memcpy((*data).data(), hand, sizeof(handshake_t));
+}
+
+void convert_to_data(data_buffer_t* data, ack_t* ack)
+{
+    memcpy((*data).data(), ack, sizeof(ack_t));
 }
