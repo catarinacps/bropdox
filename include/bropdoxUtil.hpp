@@ -8,13 +8,13 @@
 #define PORT 4000
 
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <vector>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/un.h>
 #include <unistd.h>
-#include <pthread.h>
 
 /******************************************************************************
  * Types

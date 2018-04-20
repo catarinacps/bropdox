@@ -11,13 +11,35 @@ Server::Server()
     }
 }
 
-void Server::treat_client_request(data_buffer_t* buf, struct sockaddr_un* cli_addr)
+int Server::wait_client_request(int* desc)
 {
-    int n;
+    pid_t id;
+
+    *desc = recvfrom(this->sockfd, (void*)this->buffer.data(), sizeof(handshake_t), 0, (struct sockaddr*)&(this->client_address), &(this->client_len));
+    if (*desc < 0) {
+        printf("Error while receiving handshake...\n\n");
+        return 0;
+    }
+
+    printf("=> New handshake received, forking receiver process...\n");
+    id = fork();
+    if (id == 0) {
+        this->treat_client_request();
+
+        exit(0);
+    }
+
+    return (int)id;
+}
+
+void Server::treat_client_request()
+{
+    int n, f_size;
+    ack_t ack;
     bool pack_ok;
     handshake_t hand;
 
-    // @TODO
+    // TODO:
     // - check package (checksum) (is it really necessary?)
     pack_ok = true;
 
@@ -26,16 +48,7 @@ void Server::treat_client_request(data_buffer_t* buf, struct sockaddr_un* cli_ad
         return;
     }
 
-    n = sendto(this->sockfd, "t", 2, 0, (struct sockaddr*)cli_addr, sizeof(struct sockaddr));
-    if (n < 0) {
-        return;
-        printf("Error while sending ack...\n");
-    }
-
-    this->client_address = *cli_addr;
-    convert_to_handshake(&hand, buf);
-
-    this->buffer.resize(sizeof(packet_t));
+    convert_to_handshake(&hand, &(this->buffer));
 
     switch (hand.req_type) {
     case req::sync: {
@@ -45,9 +58,14 @@ void Server::treat_client_request(data_buffer_t* buf, struct sockaddr_un* cli_ad
         Server::send_file(hand.file.name);
     } break;
     case req::receive: {
-        // Server::receive_file();
+        Server::receive_file(hand.file.name);
     } break;
     default:
         printf("Something went wrong...\n");
     }
+}
+
+void Server::send_file(char* file)
+{
+    //
 }

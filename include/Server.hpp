@@ -6,6 +6,9 @@
 #include <bropdoxUtil.hpp>
 
 class Server {
+public:
+    int wait_client_request(int* desc);
+
 private:
     int sockfd;
     socklen_t client_len;
@@ -17,7 +20,7 @@ private:
      * Esse metodo somente sera chamado na thread criada para tratar a 
      * requisicao do cliente.
      */
-    void treat_client_request(data_buffer_t* buf, struct sockaddr_un* cli_addr);
+    void treat_client_request();
 
     /** Sincroniza o servidor com o diretorio "sync_dir_<nomeusuario>" do cliente.
      * 
