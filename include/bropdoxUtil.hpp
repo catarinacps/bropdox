@@ -32,6 +32,11 @@ struct file_info {
 };
 
 typedef struct {
+    pthread_t handler_id;
+    char user_id[MAXNAME];
+} user_id_t;
+
+typedef struct {
     req req_type;
     char userid[MAXNAME];
     struct file_info file;
@@ -52,12 +57,12 @@ typedef struct {
  * Headers
  */
 
-int init_unix_socket(struct sockaddr_un* sock, char const* path);
+int init_unix_socket(struct sockaddr_un& sock, char const* path);
 
-void convert_to_handshake(handshake_t* hand, data_buffer_t* buffer);
+void convert_to_handshake(handshake_t& hand, data_buffer_t& buffer);
 
-void convert_to_data(data_buffer_t* data, packet_t* packet);
-void convert_to_data(data_buffer_t* data, handshake_t* hand);
-void convert_to_data(data_buffer_t* data, ack_t* ack);
+void convert_to_data(data_buffer_t& data, packet_t& packet);
+void convert_to_data(data_buffer_t& data, handshake_t& hand);
+void convert_to_data(data_buffer_t& data, ack_t& ack);
 
 #endif // BROPDOXUTIL_HPP
