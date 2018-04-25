@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <vector>
+#include <string>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/un.h>
@@ -33,7 +34,7 @@ struct file_info {
 
 typedef struct {
     pthread_t handler_id;
-    char user_id[MAXNAME];
+    // Handler* handler
 } user_id_t;
 
 typedef struct {

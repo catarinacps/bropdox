@@ -15,7 +15,7 @@ CC = g++
 DEBUG = -g
 CFLAGS = -std=c++17 -Wall -Wextra -Wshadow -Wunreachable-code $(DEBUG)
 TFLAGS = --error-printer
-INC_FLAG = -I$(INC_DIR)
+INC_FLAG := -I$(INC_DIR)
 
 #	Diretorios do projeto
 INC_DIR = include
