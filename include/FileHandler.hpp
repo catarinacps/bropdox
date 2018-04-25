@@ -1,6 +1,6 @@
 #include <bropdoxUtil.hpp>
 
-class Handler {
+class FileHandler {
     bool write_file(char const* file_name);
 
     data_buffer_t* get_file(char const* file_name);
@@ -12,6 +12,6 @@ private:
 
     bool init_client(std::string client_id);
 public:
-    Handler(std::string client_id, bool init);
+    FileHandler(std::string client_id, bool init);
     //
 };
