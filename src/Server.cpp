@@ -1,26 +1,21 @@
 #include <Server.hpp>
 
-Server::Server()
+Server::Server() : sock_handler(SocketHandler(ADDR))
 {
-    this->buffer.resize(sizeof(handshake_t));
-    this->sockfd = init_unix_socket(this->server_address, ADDR);
-    this->client_len = sizeof(struct sockaddr_un);
-
-    if (bind(this->sockfd, (struct sockaddr*)&(this->server_address), sizeof(struct sockaddr)) < 0) {
-        printf("Error while binding the socket, please try again...\n");
-    }
+    // TODO: Construct a list of existing persistent clients
 }
 
 int Server::wait_client_request(int& desc)
 {
     pid_t id;
+    data_buffer_t* data;
 
-    desc = recvfrom(this->sockfd, (void*)this->buffer.data(), sizeof(handshake_t), 0, (struct sockaddr*)&(this->client_address), &(this->client_len));
-    if (desc < 0) {
-        printf("Error while receiving handshake...\n\n");
+    data = this->sock_handler.wait_packet(sizeof(handshake_t));
+    if(data == NULL) {
         return 0;
     }
 
+    // ! Probably the following will change as soon as I implement the request handler class...
     printf("=> New handshake received, forking receiver process...\n");
     id = fork();
     if (id == 0) {
@@ -38,6 +33,7 @@ void Server::treat_client_request()
     ack_t ack;
     bool pack_ok;
     handshake_t hand;
+    data_buffer_t buffer;
 
     // TODO:
     // - check package (checksum) (is it really necessary?)
@@ -48,7 +44,8 @@ void Server::treat_client_request()
         return;
     }
 
-    convert_to_handshake(hand, this->buffer);
+    buffer.resize(sizeof(handshake_t));
+    convert_to_handshake(hand, buffer);
 
     // TODO:
     // - init client info/folder if necessary
@@ -66,11 +63,6 @@ void Server::treat_client_request()
     default:
         printf("Something went wrong...\n");
     }
-}
-
-void Server::init_client_sync_folder(char const* user_id)
-{
-    //
 }
 
 void Server::send_file(char* file)

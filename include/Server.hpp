@@ -4,17 +4,15 @@
 #define ADDR "BropDoxServer"
 
 #include <bropdoxUtil.hpp>
+#include <SocketHandler.hpp>
 
 class Server {
 public:
     int wait_client_request(int& desc);
 
 private:
-    int sockfd;
-    socklen_t client_len;
-    data_buffer_t buffer;
+    SocketHandler sock_handler;
     std::vector<user_id_t> user_list;
-    struct sockaddr_un server_address, client_address;
 
     void init_client_sync_folder(char const* user_id);
 
@@ -43,7 +41,7 @@ private:
     void send_file(char* file);
 
 public:
-    Server();
+    Server() : sock_handler(SocketHandler(ADDR)) {};
 };
 
 #endif // SERVER_HPP
