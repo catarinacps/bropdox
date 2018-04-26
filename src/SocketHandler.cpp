@@ -36,3 +36,8 @@ bool SocketHandler::send_packet(data_buffer_t& data, size_t size)
 
     return true;
 }
+
+SocketHandler::~SocketHandler()
+{
+    close(this->sockfd);
+}

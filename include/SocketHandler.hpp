@@ -13,4 +13,5 @@ private:
 
 public:
     SocketHandler(std::string address);
+    ~SocketHandler();
 };
