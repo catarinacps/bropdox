@@ -15,7 +15,7 @@ between the *Server* and the *Client* threads.
 ### **Make**
 The Makefile has the following interface:
 - **all**\
-Builds the target `dropboxServer` and `dropboxClient` executables.
+Builds the target `mainClient` and `mainServer` executables.
 - **clean**\
 Cleans the generated `.o`'s, binaries and temporary files.
 - **redo**\
@@ -24,5 +24,9 @@ Does the `all` and then the `clean` rules.
 Does the `all` rule and then nothing because the tests do not exist yet.
 
 ---
+
+## **Logic**
+As of now, the project follows roughly this beautiful diagram I made myself:
+![My masterpiece](img/funcionamento.png)
 
 Extra details can be found in the Moodle course page. I'll later populate this Readme further.
