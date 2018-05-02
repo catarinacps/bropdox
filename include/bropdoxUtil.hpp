@@ -7,15 +7,19 @@
 
 #define PORT 4000
 
+#include "SocketHandler.hpp"
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <vector>
 #include <string>
+#include <map>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <pthread.h>
 
 /******************************************************************************
  * Types
@@ -33,8 +37,8 @@ struct file_info {
 };
 
 typedef struct {
-    pthread_t handler_id;
-    // Handler* handler
+    RequestHandler* handler_desc;
+    char userid[MAXNAME];
 } user_id_t;
 
 typedef struct {

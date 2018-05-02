@@ -1,6 +1,6 @@
-#include <SocketHandler.hpp>
+#include "../include/SocketHandler.hpp"
 
-SocketHandler::SocketHandler(std::string address)
+SocketHandler::SocketHandler(std::string address = "DEF_ID")
 {
     this->sockfd = init_unix_socket(this->handler_address, address.c_str());
     this->client_len = sizeof(struct sockaddr_un);

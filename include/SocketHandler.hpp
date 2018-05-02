@@ -1,4 +1,4 @@
-#include <bropdoxUtil.hpp>
+#include "bropdoxUtil.hpp"
 
 class SocketHandler {
 public:
@@ -12,6 +12,6 @@ private:
     struct sockaddr_un handler_address, client_address;
 
 public:
-    SocketHandler(std::string address);
+    SocketHandler(std::string address = "DEF_ID");
     ~SocketHandler();
 };
