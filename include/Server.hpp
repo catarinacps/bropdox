@@ -21,9 +21,9 @@ private:
      * Esse metodo somente sera chamado na thread criada para tratar a 
      * requisicao do cliente.
      */
-    void* treat_client_request();
+    void* treat_client_request(data_buffer_t* package);
 
-    static void* treat_helper(void* context); 
+    static void* treat_helper(void* arg); 
 
 public:
     Server() : sock_handler(SocketHandler(ADDR)) {};

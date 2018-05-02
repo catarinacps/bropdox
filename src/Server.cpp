@@ -11,16 +11,20 @@ int Server::wait_client_request(int& desc)
     pid_t id;
     data_buffer_t* data;
     pthread_t new_thread;
+    arg_thread_t* arguments;
 
     data = this->sock_handler.wait_packet(sizeof(handshake_t));
     if (data == NULL) {
         return 0;
     }
 
-    // ! Probably the following will change as soon as I implement the request handler class...
-    printf("=> New handshake received, forking receiver process...\n");
+    // Allocates the arguments struct to the pthread_create call
+    arguments = (arg_thread_t*) malloc(sizeof(arg_thread_t));
+    arguments->context = this;
+    arguments->hand_package = data;
 
-    if (pthread_create(&new_thread, NULL, &Server::treat_helper, this)) {
+    printf("=> New handshake received, forking receiver process...\n");
+    if (pthread_create(&new_thread, NULL, &Server::treat_helper, arguments)) {
         //ERRO
         return -1;
     }
@@ -29,13 +33,12 @@ int Server::wait_client_request(int& desc)
     return (int)id;
 }
 
-void* Server::treat_client_request()
+void* Server::treat_client_request(data_buffer_t* package)
 {
     int n, f_size;
     ack_t ack;
     bool pack_ok;
     handshake_t hand;
-    data_buffer_t buffer;
     RequestHandler* rh;
 
     // TODO:
@@ -44,12 +47,11 @@ void* Server::treat_client_request()
 
     if (!pack_ok) {
         printf("Bad request/handshake, turning down connection...\n");
-        return;
+        pthread_exit(NULL);
     }
 
-    // Resizes the buffer and converts the received byte-array to a handshake struct
-    buffer.resize(sizeof(handshake_t));
-    convert_to_handshake(hand, buffer);
+    // Converts the received byte-array to a handshake struct
+    convert_to_handshake(hand, *package);
 
     // Checks if the userid already has a declared RequestHandler
     if (this->user_list.count(hand.userid)) {
@@ -79,10 +81,10 @@ void* Server::treat_client_request()
         printf("Something went wrong...\n");
     }
 
-    pthread_exit(0);
+    pthread_exit(NULL);
 }
 
-void* Server::treat_helper(void* context)
+void* Server::treat_helper(void* arg)
 {
-    return ((Server*)context)->treat_client_request();
+    return (((arg_thread_t*)arg)->context)->treat_client_request(((arg_thread_t*)arg)->hand_package);
 }

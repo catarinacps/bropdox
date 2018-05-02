@@ -37,11 +37,6 @@ struct file_info {
 };
 
 typedef struct {
-    RequestHandler* handler_desc;
-    char userid[MAXNAME];
-} user_id_t;
-
-typedef struct {
     req req_type;
     char userid[MAXNAME];
     struct file_info file;
@@ -57,6 +52,11 @@ typedef struct {
     unsigned int num;
     data_buffer_t data[PACKETSIZE];
 } packet_t;
+
+typedef struct {
+    Server* context;
+    data_buffer_t* hand_package;
+} arg_thread_t;
 
 /******************************************************************************
  * Headers
