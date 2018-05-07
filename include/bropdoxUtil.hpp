@@ -48,9 +48,10 @@ typedef struct {
     unsigned int num_packets;
 } ack_t;
 
-typedef struct {
+typedef struct packet {
     unsigned int num;
-    data_buffer_t data[PACKETSIZE];
+    data_buffer_t data;
+    packet() : data(PACKETSIZE) {};
 } packet_t;
 
 typedef struct {
