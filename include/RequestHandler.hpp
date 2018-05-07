@@ -6,6 +6,20 @@
 class RequestHandler {
 public:
     /**
+     * Tells the RequestHandler to wait a confirmation ack and start handling the request.
+     * 
+     * @param req_type the request type (i.e. sync, send or receive).
+     * @param finfo the requested or declared file_info.
+     * 
+     * @param a boolean representing success (true) or failure (false).
+     */
+    bool wait_request(req req_type, struct file_info const& finfo = file_info());
+
+private:
+    std::string client_id;
+    SocketHandler* sock_handler;
+
+    /**
      * Sincroniza o servidor com o diretorio "sync_dir_<nomeusuario>" do cliente.
      * 
      */
@@ -16,21 +30,17 @@ public:
      * 
      * @param file Caminho completo do arquivo em questao. 
      */
-    void receive_file(char* file);
+    void receive_file(char const* file);
 
     /**
      * Envia o arquivo file para o usuario.
      * 
      * @param file O nome e extensao do arquivo em questao.
      */
-    void send_file(char* file);
-
-private:
-    std::string client_id;
-    SocketHandler* sock_handler;
+    void send_file(char const* file);
 
 public:
-    RequestHandler(std::string address);
+    RequestHandler(std::string address = "");
 };
 
 #endif // REQUESTHANDLER_HPP

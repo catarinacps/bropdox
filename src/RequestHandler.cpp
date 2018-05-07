@@ -9,7 +9,36 @@ RequestHandler::RequestHandler(std::string address)
     sock_handler = new SocketHandler(address);
 }
 
-void RequestHandler::send_file(char* file)
+bool RequestHandler::wait_request(req req_type, struct file_info const& finfo)
 {
-    //coisas
+    data_buffer_t* data;
+
+    data = this->sock_handler->wait_packet(sizeof(handshake_t));
+    if (data == NULL) {
+        return false;
+    }
+
+    // TODO: init client info/folder if necessary
+
+    switch (req_type) {
+    case req::sync: {
+        this->sync_server();
+    } break;
+    case req::send: {
+        this->send_file(finfo.name);
+    } break;
+    case req::receive: {
+        this->receive_file(finfo.name);
+    } break;
+    default:
+        printf("Something went wrong...\n");
+        return false;
+    }
+
+    return true;
+}
+
+void RequestHandler::send_file(char const* file)
+{
+    //stuff
 }

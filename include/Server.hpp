@@ -12,7 +12,7 @@ public:
 
 private:
     SocketHandler* sock_handler;
-    std::map<std::string,RequestHandler*> user_list;
+    std::map<std::string,RequestHandler*[2]> user_list;
 
     void init_client_sync_folder(char const* user_id);
 

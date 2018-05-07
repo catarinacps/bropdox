@@ -17,27 +17,27 @@ int init_unix_socket(struct sockaddr_un& sock, char const* path)
 handshake_t* convert_to_handshake(data_buffer_t& data)
 {
     handshake_t* hand = new handshake_t;
-    memcpy(hand, data.data(), sizeof(handshake_t));
+    memcpy(hand, &data, sizeof(handshake_t));
     return hand;
 }
 
 data_buffer_t* convert_to_data(packet_t& packet)
 {
-    data_buffer_t* data = new data_buffer_t;
-    memcpy(data->data(), &packet, sizeof(packet_t));
+    data_buffer_t* data = new data_buffer_t[sizeof(packet_t)];
+    memcpy(data, &packet, sizeof(packet_t));
     return data;
 }
 
 data_buffer_t* convert_to_data(handshake_t& hand)
 {
-    data_buffer_t* data = new data_buffer_t;
-    memcpy(data->data(), &hand, sizeof(handshake_t));
+    data_buffer_t* data = new data_buffer_t[sizeof(handshake_t)];
+    memcpy(data, &hand, sizeof(handshake_t));
     return data;
 }
 
 data_buffer_t* convert_to_data(ack_t& ack)
 {
-    data_buffer_t* data = new data_buffer_t;
-    memcpy(data->data(), &ack, sizeof(ack_t));
+    data_buffer_t* data = new data_buffer_t[sizeof(ack_t)];
+    memcpy(data, &ack, sizeof(ack_t));
     return data;
 }

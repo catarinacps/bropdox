@@ -25,7 +25,7 @@ int Server::wait_client_request(int& desc)
 
     printf("=> New handshake received, forking receiver process...\n");
     if (pthread_create(&new_thread, NULL, &Server::treat_helper, arguments)) {
-        //ERRO
+        perror("Failed to create new thread...");
         return -1;
     }
     //TODO: Maybe store the thread descriptor?
@@ -37,7 +37,8 @@ void* Server::treat_client_request(data_buffer_t* package)
 {
     int n, f_size;
     ack_t ack;
-    bool pack_ok;
+    bool pack_ok, req_handl_ok;
+    std::string file_name;
     handshake_t* hand;
     RequestHandler* rh;
 
@@ -46,7 +47,7 @@ void* Server::treat_client_request(data_buffer_t* package)
     pack_ok = true;
 
     if (!pack_ok) {
-        printf("Bad request/handshake, turning down connection...\n");
+        perror("Bad request/handshake, turning down connection...\n");
         pthread_exit((void*)-1);
     }
 
@@ -55,34 +56,34 @@ void* Server::treat_client_request(data_buffer_t* package)
     delete package;
 
     // Checks if the userid already has a declared RequestHandler
+    rh = new RequestHandler(hand->userid);
     if (this->user_list.count(hand->userid)) {
-        // Declares on the heap a new Request Handler for the users request using the userid as the
+        // Declares on the heap a new Request Handler for the user's request using the userid as the
         // socket address/path
-        rh = new RequestHandler(hand->userid);
-        this->user_list[hand->userid] = rh;
+        this->user_list[hand->userid][0] = rh;
     } else {
-        // Just accesses the poiter to the already declared class
-        rh = this->user_list[hand->userid];
+        // Declares a new Request Handler for the new user's device
+        this->user_list[hand->userid][1] = rh;
     }
 
-    // TODO:
-    // - init client info/folder if necessary
-    // not here though kkkj
-
     switch (hand->req_type) {
-    case req::sync: {
-        rh->sync_server();
-    } break;
-    case req::send: {
-        rh->send_file(hand->file.name);
-    } break;
-    case req::receive: {
-        rh->receive_file(hand->file.name);
-    } break;
+    case req::sync:
+        req_handl_ok = rh->wait_request(hand->req_type);
+        break;
+    case req::send:
+    case req::receive:
+        req_handl_ok = rh->wait_request(hand->req_type, hand->file);
+        break;
     default:
         printf("Something went wrong...\n");
     }
 
+    if (!req_handl_ok) {
+        perror("Communication with RequestHandler failed...");
+        pthread_exit((void*)-1);
+    }
+
+    delete hand;
     pthread_exit((void*)0);
 }
 
@@ -90,7 +91,7 @@ void* Server::treat_helper(void* arg)
 {
     // This static class method helps the initialization of the helper thread
     // by calling the treat_client_request method using the parameter arg,
-    // that is, essentially, thread_helper_t, which contains the object context 
+    // that is, essentially, thread_helper_t, which contains the object context
     // and the package argument to the function.
     return (((arg_thread_t*)arg)->context)->treat_client_request(((arg_thread_t*)arg)->hand_package);
 }

@@ -1,6 +1,6 @@
 #include "../include/SocketHandler.hpp"
 
-SocketHandler::SocketHandler(std::string address = "DEF_ID")
+SocketHandler::SocketHandler(std::string address)
 {
     this->sockfd = init_unix_socket(this->handler_address, address.c_str());
     this->client_len = sizeof(struct sockaddr_un);
@@ -12,10 +12,9 @@ SocketHandler::SocketHandler(std::string address = "DEF_ID")
 
 data_buffer_t* SocketHandler::wait_packet(size_t size)
 {
-    data_buffer_t* buffer = new data_buffer_t;
-    buffer->resize(size);
+    data_buffer_t* buffer = new data_buffer_t[size];
 
-    int desc = recvfrom(this->sockfd, (void*)buffer->data(), size, 0, (struct sockaddr*)&(this->client_address), &(this->client_len));
+    int desc = recvfrom(this->sockfd, (void*)buffer, size, 0, (struct sockaddr*)&(this->client_address), &(this->client_len));
     if (desc < 0) {
         printf("Error while receiving packet...\n\n");
         delete buffer;
@@ -28,7 +27,7 @@ data_buffer_t* SocketHandler::wait_packet(size_t size)
 
 bool SocketHandler::send_packet(data_buffer_t& data, size_t size)
 {
-    int desc = sendto(this->sockfd, data.data(), size, 0, (struct sockaddr*)&(this->client_address), sizeof(struct sockaddr));
+    int desc = sendto(this->sockfd, &data, size, 0, (struct sockaddr*)&(this->client_address), sizeof(struct sockaddr));
     if (desc < 0) {
         printf("Error while sending packet...\n\n");
         return false;

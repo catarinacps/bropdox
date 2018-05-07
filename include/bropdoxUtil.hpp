@@ -27,7 +27,7 @@
 
 enum class req {sync, send, receive};
 
-typedef std::vector<char> data_buffer_t;
+typedef unsigned char data_buffer_t;
 
 struct file_info {
     char name[MAXNAME];
@@ -50,8 +50,7 @@ typedef struct {
 
 typedef struct packet {
     unsigned int num;
-    data_buffer_t data;
-    packet() : data(PACKETSIZE) {};
+    data_buffer_t data[PACKETSIZE];
 } packet_t;
 
 typedef struct {
@@ -63,7 +62,7 @@ typedef struct {
  * Headers
  */
 
-int init_unix_socket(struct sockaddr_un& sock, char const* path);
+int init_unix_socket(struct sockaddr_un& sock, const char* path);
 
 handshake_t* convert_to_handshake(data_buffer_t& data);
 data_buffer_t* convert_to_data(packet_t& packet);
