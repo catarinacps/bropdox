@@ -1,19 +1,25 @@
+#ifndef REQUESTHANDLER_HPP
+#define REQUESTHANDLER_HPP
+
 #include "bropdoxUtil.hpp"
 
 class RequestHandler {
 public:
-    /** Sincroniza o servidor com o diretorio "sync_dir_<nomeusuario>" do cliente.
+    /**
+     * Sincroniza o servidor com o diretorio "sync_dir_<nomeusuario>" do cliente.
      * 
      */
     void sync_server();
 
-    /** Recebe um arquivo file do cliente.
+    /**
+     * Recebe um arquivo file do cliente.
      * 
      * @param file Caminho completo do arquivo em questao. 
      */
     void receive_file(char* file);
 
-    /** Envia o arquivo file para o usuario.
+    /**
+     * Envia o arquivo file para o usuario.
      * 
      * @param file O nome e extensao do arquivo em questao.
      */
@@ -21,8 +27,10 @@ public:
 
 private:
     std::string client_id;
-    SocketHandler sock_handler;
+    SocketHandler* sock_handler;
 
 public:
     RequestHandler(std::string address);
 };
+
+#endif // REQUESTHANDLER_HPP

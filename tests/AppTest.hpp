@@ -1,7 +1,7 @@
 #include <cxxtest/TestSuite.h>
 
-#include <Client.hpp>
-#include <Server.hpp>
+#include "../include/Client.hpp"
+#include "../include/Server.hpp"
 
 class AppTest : public CxxTest::TestSuite {
     Server testServer;

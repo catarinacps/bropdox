@@ -14,22 +14,30 @@ int init_unix_socket(struct sockaddr_un& sock, char const* path)
     return socket_id;
 }
 
-void convert_to_handshake(handshake_t& hand, data_buffer_t& data)
+handshake_t* convert_to_handshake(data_buffer_t& data)
 {
-    memcpy(&hand, data.data(), sizeof(handshake_t));
+    handshake_t* hand = new handshake_t;
+    memcpy(hand, data.data(), sizeof(handshake_t));
+    return hand;
 }
 
-void convert_to_data(data_buffer_t& data, packet_t& packet)
+data_buffer_t* convert_to_data(packet_t& packet)
 {
-    memcpy(data.data(), &packet, sizeof(packet_t));
+    data_buffer_t* data = new data_buffer_t;
+    memcpy(data->data(), &packet, sizeof(packet_t));
+    return data;
 }
 
-void convert_to_data(data_buffer_t& data, handshake_t& hand)
+data_buffer_t* convert_to_data(handshake_t& hand)
 {
-    memcpy(data.data(), &hand, sizeof(handshake_t));
+    data_buffer_t* data = new data_buffer_t;
+    memcpy(data->data(), &hand, sizeof(handshake_t));
+    return data;
 }
 
-void convert_to_data(data_buffer_t& data, ack_t& ack)
+data_buffer_t* convert_to_data(ack_t& ack)
 {
-    memcpy(data.data(), &ack, sizeof(ack_t));
+    data_buffer_t* data = new data_buffer_t;
+    memcpy(data->data(), &ack, sizeof(ack_t));
+    return data;
 }

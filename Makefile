@@ -25,7 +25,7 @@ SRC_DIR = src
 TST_DIR = tests
 
 #	Caminho do arquivo estático final
-_TARGET = mainServer mainClient
+_TARGET = mserver mclient
 TARGET = $(patsubst %, $(BIN_DIR)/%, $(_TARGET))
 
 #	Dependencias, ou seja, arquivos de header

@@ -64,10 +64,9 @@ typedef struct {
 
 int init_unix_socket(struct sockaddr_un& sock, char const* path);
 
-void convert_to_handshake(handshake_t& hand, data_buffer_t& buffer);
-
-void convert_to_data(data_buffer_t& data, packet_t& packet);
-void convert_to_data(data_buffer_t& data, handshake_t& hand);
-void convert_to_data(data_buffer_t& data, ack_t& ack);
+handshake_t* convert_to_handshake(data_buffer_t& data);
+data_buffer_t* convert_to_data(packet_t& packet);
+data_buffer_t* convert_to_data(handshake_t& hand);
+data_buffer_t* convert_to_data(ack_t& ack);
 
 #endif // BROPDOXUTIL_HPP
