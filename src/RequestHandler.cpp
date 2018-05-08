@@ -38,7 +38,17 @@ bool RequestHandler::wait_request(req req_type, struct file_info const& finfo)
     return true;
 }
 
+void RequestHandler::sync_server()
+{
+    //stuff
+}
+
 void RequestHandler::send_file(char const* file)
+{
+    //stuff
+}
+
+void RequestHandler::receive_file(char const* file)
 {
     //stuff
 }

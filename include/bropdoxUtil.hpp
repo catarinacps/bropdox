@@ -1,5 +1,4 @@
-#ifndef BROPDOXUTIL_HPP
-#define BROPDOXUTIL_HPP
+#pragma once
 
 #define MAXNAME 255
 #define MAXFILES 65536
@@ -7,19 +6,16 @@
 
 #define PORT 4000
 
-#include "SocketHandler.hpp"
-
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <vector>
 #include <string>
-#include <map>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/un.h>
 #include <unistd.h>
-#include <pthread.h>
+
 
 /******************************************************************************
  * Types
@@ -53,11 +49,6 @@ typedef struct packet {
     data_buffer_t data[PACKETSIZE];
 } packet_t;
 
-typedef struct {
-    Server* context;
-    data_buffer_t* hand_package;
-} arg_thread_t;
-
 /******************************************************************************
  * Headers
  */
@@ -68,5 +59,3 @@ handshake_t* convert_to_handshake(data_buffer_t& data);
 data_buffer_t* convert_to_data(packet_t& packet);
 data_buffer_t* convert_to_data(handshake_t& hand);
 data_buffer_t* convert_to_data(ack_t& ack);
-
-#endif // BROPDOXUTIL_HPP

@@ -6,12 +6,12 @@ Server::Server()
     // TODO: Construct a list of existing persistent clients
 }
 
-int Server::wait_client_request(int& desc)
+int Server::wait_client_request()
 {
-    pid_t id;
     data_buffer_t* data;
     pthread_t new_thread;
     arg_thread_t* arguments;
+    int ret_pcreate;
 
     data = this->sock_handler->wait_packet(sizeof(handshake_t));
     if (data == NULL) {
@@ -24,19 +24,17 @@ int Server::wait_client_request(int& desc)
     arguments->hand_package = data;
 
     printf("=> New handshake received, forking receiver process...\n");
-    if (pthread_create(&new_thread, NULL, &Server::treat_helper, arguments)) {
+    if ((ret_pcreate = pthread_create(&new_thread, NULL, &Server::treat_helper, arguments))) {
         perror("Failed to create new thread...");
-        return -1;
+        return ret_pcreate;
     }
     //TODO: Maybe store the thread descriptor?
 
-    return (int)id;
+    return ret_pcreate;
 }
 
 void* Server::treat_client_request(data_buffer_t* package)
 {
-    int n, f_size;
-    ack_t ack;
     bool pack_ok, req_handl_ok;
     std::string file_name;
     handshake_t* hand;

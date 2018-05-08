@@ -1,3 +1,6 @@
+#ifndef SOCKETHANDLER_HPP
+#define SOCKETHANDLER_HPP
+
 #include "bropdoxUtil.hpp"
 
 class SocketHandler {
@@ -31,3 +34,5 @@ public:
     SocketHandler(std::string address = "");
     ~SocketHandler();
 };
+
+#endif // SOCKETHANDLER_HPP

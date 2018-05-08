@@ -1,6 +1,7 @@
 #ifndef REQUESTHANDLER_HPP
 #define REQUESTHANDLER_HPP
 
+#include "SocketHandler.hpp"
 #include "bropdoxUtil.hpp"
 
 class RequestHandler {

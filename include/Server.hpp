@@ -5,10 +5,14 @@
 
 #include "bropdoxUtil.hpp"
 #include "RequestHandler.hpp"
+#include "SocketHandler.hpp"
+
+#include <map>
+#include <pthread.h>
 
 class Server {
 public:
-    int wait_client_request(int& desc);
+    int wait_client_request();
 
 private:
     SocketHandler* sock_handler;
@@ -32,5 +36,10 @@ public:
     Server();
     ~Server();
 };
+
+typedef struct {
+    Server* context;
+    data_buffer_t* hand_package;
+} arg_thread_t;
 
 #endif // SERVER_HPP
