@@ -2,7 +2,8 @@
 
 Server::Server()
 {
-    this->sock_handler = new SocketHandler(ADDR);
+    sockaddr_un nothing;
+    this->sock_handler = new SocketHandler(nothing, ADDR);
     // TODO: Construct a list of existing persistent clients
 }
 
@@ -25,7 +26,7 @@ int Server::wait_client_request()
 
     printf("=> New handshake received, forking receiver process...\n");
     if ((ret_pcreate = pthread_create(&new_thread, NULL, &Server::treat_helper, arguments))) {
-        perror("Failed to create new thread...");
+        printf("Failed to create new thread...");
         return ret_pcreate;
     }
     //TODO: Maybe store the thread descriptor?
@@ -45,16 +46,16 @@ void* Server::treat_client_request(data_buffer_t* package)
     pack_ok = true;
 
     if (!pack_ok) {
-        perror("Bad request/handshake, turning down connection...\n");
+        printf("Bad request/handshake, turning down connection...\n");
         pthread_exit((void*)-1);
     }
 
     // Converts the received byte-array to a handshake struct
-    hand = convert_to_handshake(*package);
+    hand = convert_to_handshake(package);
     delete package;
 
     // Checks if the userid already has a declared RequestHandler
-    rh = new RequestHandler(hand->userid);
+    rh = new RequestHandler(this->sock_handler->get_last_clientaddr(), hand->userid);
     if (this->user_list.count(hand->userid)) {
         // Declares on the heap a new Request Handler for the user's request using the userid as the
         // socket address/path
@@ -77,7 +78,7 @@ void* Server::treat_client_request(data_buffer_t* package)
     }
 
     if (!req_handl_ok) {
-        perror("Communication with RequestHandler failed...");
+        printf("Communication with RequestHandler failed...");
         pthread_exit((void*)-1);
     }
 

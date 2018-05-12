@@ -25,13 +25,15 @@ public:
      */
     bool send_packet(data_buffer_t& data, size_t size);
 
+    sockaddr_un get_last_clientaddr();
+
 private:
     int sockfd;
     socklen_t client_len;
     struct sockaddr_un handler_address, client_address;
 
 public:
-    SocketHandler(std::string address = "");
+    SocketHandler(sockaddr_un client_addr, std::string address = "");
     ~SocketHandler();
 };
 

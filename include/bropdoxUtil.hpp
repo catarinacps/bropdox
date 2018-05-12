@@ -1,8 +1,11 @@
-#pragma once
+#ifndef BROPBOXUTIL_HPP
+#define BROPBOXUTIL_HPP
 
 #define MAXNAME 255
 #define MAXFILES 65536
 #define PACKETSIZE 16384
+
+#define TIMEOUT 200000
 
 #define PORT 4000
 
@@ -13,6 +16,7 @@
 #include <string>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <sys/un.h>
 #include <unistd.h>
 
@@ -40,14 +44,18 @@ typedef struct {
 } handshake_t;
 
 typedef struct {
-    bool ok;
     unsigned int num_packets;
 } ack_t;
 
-typedef struct packet {
+typedef struct {
     unsigned int num;
     data_buffer_t data[PACKETSIZE];
 } packet_t;
+
+typedef struct {
+    data_buffer_t* pointer;
+    size_t size;
+} convert_helper_t;
 
 /******************************************************************************
  * Headers
@@ -55,7 +63,16 @@ typedef struct packet {
 
 int init_unix_socket(struct sockaddr_un& sock, const char* path);
 
-handshake_t* convert_to_handshake(data_buffer_t& data);
-data_buffer_t* convert_to_data(packet_t& packet);
-data_buffer_t* convert_to_data(handshake_t& hand);
-data_buffer_t* convert_to_data(ack_t& ack);
+handshake_t* convert_to_handshake(data_buffer_t* data);
+ack_t* convert_to_ack(data_buffer_t* data);
+packet_t* convert_to_packet(data_buffer_t* data);
+convert_helper_t convert_to_data(packet_t& packet);
+convert_helper_t convert_to_data(packet_t const& packet);
+convert_helper_t convert_to_data(handshake_t& hand);
+convert_helper_t convert_to_data(ack_t& ack);
+
+/******************************************************************************
+ * Globals
+ */
+
+#endif // BROPBOXUTIL_HPP 

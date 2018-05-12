@@ -1,6 +1,7 @@
 #ifndef REQUESTHANDLER_HPP
 #define REQUESTHANDLER_HPP
 
+#include <ctime>
 #include "SocketHandler.hpp"
 #include "bropdoxUtil.hpp"
 
@@ -41,7 +42,7 @@ private:
     void send_file(char const* file);
 
 public:
-    RequestHandler(std::string address = "");
+    RequestHandler(sockaddr_un client_address, std::string address = "");
 };
 
 #endif // REQUESTHANDLER_HPP
