@@ -48,6 +48,11 @@ typedef struct {
 } ack_t;
 
 typedef struct {
+    unsigned int num_packets;
+    size_t file_size;
+} syn_t;
+
+typedef struct {
     unsigned int num;
     data_buffer_t data[PACKETSIZE];
 } packet_t;
@@ -70,6 +75,7 @@ convert_helper_t convert_to_data(packet_t& packet);
 convert_helper_t convert_to_data(packet_t const& packet);
 convert_helper_t convert_to_data(handshake_t& hand);
 convert_helper_t convert_to_data(ack_t& ack);
+convert_helper_t convert_to_data(syn_t& syn);
 
 /******************************************************************************
  * Globals

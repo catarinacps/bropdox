@@ -23,7 +23,7 @@ public:
      * 
      * @return a boolean representing success (true) or failure (false).
      */
-    bool send_packet(data_buffer_t& data, size_t size);
+    bool send_packet(data_buffer_t* data, size_t size);
 
     sockaddr_un get_last_clientaddr();
 

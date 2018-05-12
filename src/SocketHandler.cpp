@@ -30,9 +30,9 @@ data_buffer_t* SocketHandler::wait_packet(size_t size)
     return buffer;
 }
 
-bool SocketHandler::send_packet(data_buffer_t& data, size_t size)
+bool SocketHandler::send_packet(data_buffer_t* data, size_t size)
 {
-    int desc = sendto(this->sockfd, &data, size, 0, (struct sockaddr*)&(this->client_address), sizeof(struct sockaddr));
+    int desc = sendto(this->sockfd, data, size, 0, (struct sockaddr*)&(this->client_address), sizeof(struct sockaddr));
     if (desc < 0) {
         printf("Error while sending packet...\n\n");
         return false;

@@ -54,18 +54,19 @@ void RequestHandler::send_file(char const* file)
 
     convert_helper_t packet_to_be_sent;
     data_buffer_t* returned_packet;
-    ack_t syn;
+    syn_t syn;
     ack_t* returned;
 
     syn.num_packets = 8; // Arbitrary number
+    syn.file_size = file_size;
     packet_to_be_sent = convert_to_data(syn);
-    this->sock_handler->send_packet(*(packet_to_be_sent.pointer), packet_to_be_sent.size);
+    this->sock_handler->send_packet(packet_to_be_sent.pointer, packet_to_be_sent.size);
 
     // Packet sending loop
     for (packet_t const& packet : packets) {
         packet_to_be_sent = convert_to_data(packet);
         // MAYBE THE FOLLOWING WILL GO TERRIBLY BAD because the sizeof part
-        this->sock_handler->send_packet(*(packet_to_be_sent.pointer), packet_to_be_sent.size);
+        this->sock_handler->send_packet(packet_to_be_sent.pointer, packet_to_be_sent.size);
     }
 
     // The RequestHandler then procedes to wait for the Client's ack, which will contain the
@@ -116,20 +117,21 @@ void RequestHandler::receive_file(char const* file)
 
         delete received_packet;
     }
+    delete received;
 
     // After receiving all packets, we send an ack with the number of packets we received.
     // If the number doesnt match the expected number, the client should do something about it.
     ack.num_packets = received_packet_number;
     helper = convert_to_data(ack);
-    this->sock_handler->send_packet(*(helper.pointer), helper.size);
+    this->sock_handler->send_packet(helper.pointer, helper.size);
 
     // And we do nothing if the number doesnt match
     if (received_packet_number == packets_to_be_received) {
         //TODO: Send to FileHandler the received recv_file array
     }
 
+    for (auto const& point : recv_file) delete point;
     delete syn;
-    delete received;
     delete syn_packet;
     delete[] recv_file;
 

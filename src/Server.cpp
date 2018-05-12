@@ -2,7 +2,7 @@
 
 Server::Server()
 {
-    sockaddr_un nothing;
+    sockaddr_un nothing = {AF_UNIX, ""};
     this->sock_handler = new SocketHandler(nothing, ADDR);
     // TODO: Construct a list of existing persistent clients
 }
@@ -75,6 +75,7 @@ void* Server::treat_client_request(data_buffer_t* package)
         break;
     default:
         printf("Something went wrong...\n");
+        req_handl_ok = false;
     }
 
     if (!req_handl_ok) {

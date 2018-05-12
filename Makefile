@@ -13,7 +13,7 @@
 #	Flags de compilaçao. Debug para uso no GDB
 CC = g++
 DEBUG = -g
-CFLAGS = -std=c++17 -Wall -Wextra -Wshadow -Wunreachable-code -lpthread $(DEBUG)
+CFLAGS = -std=c++17 -O3 -Wall -Wextra -Wshadow -Wunreachable-code -lpthread $(DEBUG)
 TFLAGS = --error-printer
 INC_FLAG := -I$(INC_DIR)
 

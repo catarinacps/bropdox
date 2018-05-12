@@ -86,3 +86,16 @@ convert_helper_t convert_to_data(ack_t& ack)
 
     return helper;
 }
+
+convert_helper_t convert_to_data(syn_t& syn)
+{
+    data_buffer_t* data = new data_buffer_t[sizeof(syn_t)];
+    convert_helper_t helper;
+
+    helper.pointer = data;
+    helper.size = sizeof(data);
+
+    memcpy(data, &syn, sizeof(syn_t));
+
+    return helper;
+}
