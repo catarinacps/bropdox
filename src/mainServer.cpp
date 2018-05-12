@@ -45,7 +45,7 @@ int main()
     int sck_d, proc_id;
 
     while (true) {
-        if ((proc_id = server.wait_client_request(&sck_d)) > 0) {
+        if ((proc_id = server.wait_client_request(sck_d)) > 0) {
             printf("Treating a request in %d...\n", proc_id);
         } else {
             printf("Failed handshake attempt received...\n");

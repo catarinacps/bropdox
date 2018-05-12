@@ -7,13 +7,16 @@
 
 class Server {
 public:
-    int wait_client_request(int* desc);
+    int wait_client_request(int& desc);
 
 private:
     int sockfd;
     socklen_t client_len;
     data_buffer_t buffer;
+    std::vector<user_id_t> user_list;
     struct sockaddr_un server_address, client_address;
+
+    void init_client_sync_folder(char const* user_id);
 
     /** Trata o handshake do cliente.
      * 

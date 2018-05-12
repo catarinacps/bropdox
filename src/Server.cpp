@@ -3,7 +3,7 @@
 Server::Server()
 {
     this->buffer.resize(sizeof(handshake_t));
-    this->sockfd = init_unix_socket(&(this->server_address), ADDR);
+    this->sockfd = init_unix_socket(this->server_address, ADDR);
     this->client_len = sizeof(struct sockaddr_un);
 
     if (bind(this->sockfd, (struct sockaddr*)&(this->server_address), sizeof(struct sockaddr)) < 0) {
@@ -11,12 +11,12 @@ Server::Server()
     }
 }
 
-int Server::wait_client_request(int* desc)
+int Server::wait_client_request(int& desc)
 {
     pid_t id;
 
-    *desc = recvfrom(this->sockfd, (void*)this->buffer.data(), sizeof(handshake_t), 0, (struct sockaddr*)&(this->client_address), &(this->client_len));
-    if (*desc < 0) {
+    desc = recvfrom(this->sockfd, (void*)this->buffer.data(), sizeof(handshake_t), 0, (struct sockaddr*)&(this->client_address), &(this->client_len));
+    if (desc < 0) {
         printf("Error while receiving handshake...\n\n");
         return 0;
     }
@@ -48,21 +48,29 @@ void Server::treat_client_request()
         return;
     }
 
-    convert_to_handshake(&hand, &(this->buffer));
+    convert_to_handshake(hand, this->buffer);
+
+    // TODO:
+    // - init client info/folder if necessary
 
     switch (hand.req_type) {
     case req::sync: {
-        Server::sync_server();
+        this->sync_server();
     } break;
     case req::send: {
-        Server::send_file(hand.file.name);
+        this->send_file(hand.file.name);
     } break;
     case req::receive: {
-        Server::receive_file(hand.file.name);
+        this->receive_file(hand.file.name);
     } break;
     default:
         printf("Something went wrong...\n");
     }
+}
+
+void Server::init_client_sync_folder(char const* user_id)
+{
+    //
 }
 
 void Server::send_file(char* file)
