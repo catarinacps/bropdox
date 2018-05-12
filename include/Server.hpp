@@ -3,7 +3,7 @@
 
 #define ADDR "BropDoxServer"
 
-#include <bropdoxUtil.hpp>
+#include "../include/bropdoxUtil.hpp"
 
 class Server {
 public:
