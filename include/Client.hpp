@@ -1,7 +1,12 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
+#include "RequestHandler.hpp"
+#include "SocketHandler.hpp"
 #include "bropdoxUtil.hpp"
+
+#include <map>
+#include <pthread.h>
 
 class Client {
 private:
