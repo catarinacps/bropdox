@@ -1,7 +1,7 @@
 #include "bropdoxUtil.hpp"
 
 class FileHandler {
-    bool write_file(char const* file_name, data_buffer_t* file_data);
+    bool write_file(char const* file_name, data_buffer_t* file_data[]);
 
     data_buffer_t* get_file(char const* file_name);
 
