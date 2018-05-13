@@ -77,3 +77,14 @@ void Server::send_file(char* file)
 {
     //
 }
+
+
+void Server::sync_server()
+{
+    //
+}
+
+void Server::receive_file(char* file)
+{
+    //
+}

@@ -23,7 +23,7 @@
 
 enum class req {sync, send, receive};
 
-typedef std::vector<char> data_buffer_t;
+typedef std::vector<unsigned char> data_buffer_t;
 
 struct file_info {
     char name[MAXNAME];

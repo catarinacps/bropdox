@@ -1,7 +1,7 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include "../include/bropdoxUtil.hpp"
+#include "bropdoxUtil.hpp"
 
 class Client {
 private:
