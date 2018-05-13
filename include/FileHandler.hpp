@@ -1,11 +1,15 @@
 #include "bropdoxUtil.hpp"
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 class FileHandler {
-
 private:
-    std::string id;
-
+    std::string client_id;
+    fs::path syncDir;
+    bool initialized = false;
     bool init_client(std::string client_id);
+
 public:
     FileHandler(std::string client_id, bool init);
 
