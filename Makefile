@@ -13,9 +13,9 @@
 #	Flags de compilaçao. Debug para uso no GDB
 CC = g++
 DEBUG = -g
-CFLAGS = -std=c++17 -Wall -Wextra -Wshadow -Wunreachable-code $(DEBUG)
+CFLAGS = -std=c++17 -O3 -Wall -Wextra -Wshadow -Wunreachable-code -lpthread -lstdc++fs $(DEBUG)
 TFLAGS = --error-printer
-INC_FLAG = -I$(INC_DIR)
+INC_FLAG := -I$(INC_DIR)
 
 #	Diretorios do projeto
 INC_DIR = include
@@ -25,15 +25,15 @@ SRC_DIR = src
 TST_DIR = tests
 
 #	Caminho do arquivo estático final
-_TARGET = mainServer mainClient
+_TARGET = mserver mclient
 TARGET = $(patsubst %, $(BIN_DIR)/%, $(_TARGET))
 
 #	Dependencias, ou seja, arquivos de header
-_DEPS = Server.hpp Client.hpp bropdoxUtil.hpp
+_DEPS = Server.hpp Client.hpp bropdoxUtil.hpp SocketHandler.hpp RequestHandler.hpp FileHandler.hpp
 DEPS = $(patsubst %, $(INC_DIR)/%, $(_DEPS))
 
 #	Objetos a serem criados
-_OBJ = Server.o Client.o bropdoxUtil.o
+_OBJ = Server.o Client.o bropdoxUtil.o SocketHandler.o RequestHandler.o FileHandler.o
 OBJ = $(patsubst %, $(OBJ_DIR)/%, $(_OBJ))
 
 #	Target da regra test

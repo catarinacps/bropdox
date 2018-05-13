@@ -3,44 +3,43 @@
 
 #define ADDR "BropDoxServer"
 
-#include <bropdoxUtil.hpp>
+#include "RequestHandler.hpp"
+#include "SocketHandler.hpp"
+#include "bropdoxUtil.hpp"
+
+#include <map>
+#include <pthread.h>
 
 class Server {
 public:
-    int wait_client_request(int* desc);
+    int wait_client_request();
 
 private:
-    int sockfd;
-    socklen_t client_len;
-    data_buffer_t buffer;
-    struct sockaddr_un server_address, client_address;
+    SocketHandler* sock_handler;
+    std::map<std::string, RequestHandler * [2]> user_list;
 
-    /** Trata o handshake do cliente.
+    void init_client_sync_folder(char const* user_id);
+
+    /**
+     * Trata o handshake do cliente.
      * 
      * Esse metodo somente sera chamado na thread criada para tratar a 
      * requisicao do cliente.
-     */
-    void treat_client_request();
-
-    /** Sincroniza o servidor com o diretorio "sync_dir_<nomeusuario>" do cliente.
      * 
+     * @param package pacote de dados (handshake)
      */
-    void sync_server();
+    void* treat_client_request(data_buffer_t* package);
 
-    /** Recebe um arquivo file do cliente.
-     * 
-     * @param file Caminho completo do arquivo em questao. 
-     */
-    void receive_file(char* file);
-
-    /** Envia o arquivo file para o usuario.
-     * 
-     * @param file O nome e extensao do arquivo em questao.
-     */
-    void send_file(char* file);
+    static void* treat_helper(void* arg);
 
 public:
     Server();
+    ~Server();
 };
+
+typedef struct {
+    Server* context;
+    data_buffer_t* hand_package;
+} arg_thread_t;
 
 #endif // SERVER_HPP
