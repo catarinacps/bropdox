@@ -2,6 +2,9 @@
 #define REQUESTHANDLER_HPP
 
 #include <ctime>
+#include <vector>
+#include <algorithm>
+#include <cmath>
 #include "SocketHandler.hpp"
 #include "bropdoxUtil.hpp"
 

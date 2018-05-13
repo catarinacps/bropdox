@@ -3,9 +3,9 @@
 
 #define ADDR "BropDoxServer"
 
-#include "bropdoxUtil.hpp"
 #include "RequestHandler.hpp"
 #include "SocketHandler.hpp"
+#include "bropdoxUtil.hpp"
 
 #include <map>
 #include <pthread.h>
@@ -16,7 +16,7 @@ public:
 
 private:
     SocketHandler* sock_handler;
-    std::map<std::string,RequestHandler*[2]> user_list;
+    std::map<std::string, RequestHandler * [2]> user_list;
 
     void init_client_sync_folder(char const* user_id);
 
