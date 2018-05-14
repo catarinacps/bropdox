@@ -133,3 +133,15 @@ convert_helper_t convert_to_data(file_info_list_t const& list)
 
     return helper;
 }
+
+convert_helper_t convert_to_data(std::string string) {
+    auto* data = new data_buffer_t[string.size()];
+    convert_helper_t helper;
+
+    helper.pointer = data;
+    helper.size = sizeof(data);
+
+    std::memcpy(data, string.c_str(), string.size());
+
+    return helper;
+}

@@ -92,5 +92,6 @@ convert_helper_t convert_to_data(ack_t& ack);
 convert_helper_t convert_to_data(syn_t& syn);
 convert_helper_t convert_to_data(file_info_list_t& list);
 convert_helper_t convert_to_data(file_info_list_t const& list);
+convert_helper_t convert_to_data(std::string string);
 
 #endif // BROPBOXUTIL_HPP 
