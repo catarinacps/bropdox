@@ -9,6 +9,8 @@
 
 #define TIMEOUT 200000
 
+#define ADDR "BropDoxServer"
+
 #define PORT 4000
 
 #include <cstddef>

@@ -4,6 +4,7 @@ Server::Server()
 {
     sockaddr_un nothing = {AF_UNIX, ""};
     this->sock_handler = new SocketHandler(nothing, ADDR);
+    this->sock_handler->bind_socket();
     // TODO: Construct a list of existing persistent clients
 }
 

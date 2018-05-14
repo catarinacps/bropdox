@@ -1,8 +1,6 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#define ADDR "BropDoxServer"
-
 #include "RequestHandler.hpp"
 #include "SocketHandler.hpp"
 #include "bropdoxUtil.hpp"

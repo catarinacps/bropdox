@@ -1,3 +1,4 @@
+#include <bropdoxUtil.hpp>
 #include "../include/bropdoxUtil.hpp"
 
 int init_unix_socket(struct sockaddr_un& sock, char const* path)

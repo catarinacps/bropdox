@@ -9,8 +9,10 @@ SocketHandler::SocketHandler(sockaddr_un caddress, std::string address)
     this->client_len = sizeof(struct sockaddr_un);
 
     setsockopt(this->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(struct timeval));
+}
 
-    if (bind(this->sockfd, (struct sockaddr*)&(this->handler_address), sizeof(struct sockaddr)) < 0) {
+void SocketHandler::bind_socket() {
+    if (bind(sockfd, (struct sockaddr*)&(handler_address), sizeof(struct sockaddr)) < 0) {
         printf("Error while binding the socket, please try again...\n");
     }
 }
@@ -50,3 +52,4 @@ SocketHandler::~SocketHandler()
 {
     close(this->sockfd);
 }
+
