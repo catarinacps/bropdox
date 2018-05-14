@@ -26,16 +26,18 @@ public:
      */
     bool send_packet(data_buffer_t* data, size_t size);
 
-    sockaddr_un get_last_clientaddr();
+    sockaddr_in get_last_clientaddr();
 
 private:
     int sockfd;
     hostent* client;
     socklen_t client_len;
-    struct sockaddr_un handler_address, client_address;
+    struct sockaddr_in handler_address, client_address;
 
 public:
-    SocketHandler(sockaddr_un client_addr, std::string address);
+    SocketHandler(sockaddr_in client_addr, in_port_t port, hostent* server);
+    SocketHandler(sockaddr_in caddress, in_port_t port);
+    SocketHandler(in_port_t port);
     ~SocketHandler();
     void bind_socket();
 };

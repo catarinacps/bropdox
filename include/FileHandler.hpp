@@ -20,10 +20,13 @@ public:
     FileHandler(std::string client_id);
 
     //eu não sei se é public ou private alguém bota no lugar certo depois
-    bool write_file(char const* file_name, data_buffer_t* file_data[]);
+    bool write_file(char const* file_name, data_buffer_t* file_data[], int size_in_packets);
 
-    data_buffer_t** get_file(char const* file_name);
+    packet_t** get_file(char const* file_name, long int& file_size);
+
+    std::vector<file_info> get_file_info_list();
+
+    file_info get_file_info(char const* file_name);
 
     // TODO: some function that gets all modified files
-    std::vector<file_info> get_file_list();
 };
