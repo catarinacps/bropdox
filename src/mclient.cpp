@@ -1,6 +1,6 @@
 #include "../include/Client.hpp"
 
-int main()
+int main(int argc, char* argv[])
 {
     // int sockfd, n;
     // unsigned int length;
@@ -47,4 +47,12 @@ int main()
 
     // close(sockfd);
     // return 0;
+    if (argc < 3 || argc > 4){
+        printf("Incorrect parameter usage, please refer to the following model:\n");
+        printf("./mclient <userid> <address> <port>\n\n");
+
+        return -1;
+    }
+
+    Client* client = new Client(argv[2],(in_addr_t)argv[3],(in_port_t)argv[4]);
 }
