@@ -85,6 +85,7 @@ int init_unix_socket(struct sockaddr_in& sock, in_port_t port, hostent* server);
 
 handshake_t* convert_to_handshake(data_buffer_t* data);
 ack_t* convert_to_ack(data_buffer_t* data);
+syn_t* convert_to_syn(data_buffer_t* data);
 packet_t* convert_to_packet(data_buffer_t* data);
 file_info_list_t* convert_to_file_list(data_buffer_t* data);
 convert_helper_t convert_to_data(packet_t& packet);
