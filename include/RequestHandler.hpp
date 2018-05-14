@@ -5,7 +5,9 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
+
 #include "SocketHandler.hpp"
+#include "FileHandler.hpp"
 #include "bropdoxUtil.hpp"
 
 class RequestHandler {
@@ -23,6 +25,7 @@ public:
 private:
     std::string client_id;
     SocketHandler* sock_handler;
+    FileHandler* file_handler;
 
     /**
      * Sincroniza o servidor com o diretorio "sync_dir_<nomeusuario>" do cliente.

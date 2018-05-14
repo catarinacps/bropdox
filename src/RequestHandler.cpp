@@ -7,6 +7,8 @@ RequestHandler::RequestHandler(sockaddr_un client_address, std::string address)
     //! There are situations in which this constructor will fail to build
     //! a socket because the socket will already exist.
     sock_handler = new SocketHandler(client_address, address);
+
+    file_handler = new FileHandler(address);
 }
 
 bool RequestHandler::wait_request(req req_type, struct file_info const& finfo)
@@ -17,8 +19,6 @@ bool RequestHandler::wait_request(req req_type, struct file_info const& finfo)
     if (data == NULL) {
         return false;
     }
-
-    // TODO: init client info/folder if necessary
 
     switch (req_type) {
     case req::sync: {
@@ -46,9 +46,10 @@ void RequestHandler::sync_server()
     data_buffer_t* received_data;
     convert_helper_t helper;
     file_info_list_t* received_list;
-    std::vector<file_info> modified_files, server_files, diff_files, to_be_sent_files;
+    std::vector<file_info> modified_files, diff_files, to_be_sent_files;
     std::string name;
     std::vector<file_info>::iterator it1, it2;
+
 
     /*************************************************************************/
     // Receive the modified files and overwrite them
@@ -76,8 +77,8 @@ void RequestHandler::sync_server()
 
     /*************************************************************************/
     // Send the complete file list minus the just received modified files
-
-    //TODO: FileHandler returns complete file_info list with all existing server-side files
+    
+    std::vector<file_info> server_files = this->file_handler->get_file_info_list();
 
     // Sorts the modified_files and server_files vectors so that the set_difference method works.
     std::sort(server_files.begin(), server_files.end());
@@ -158,31 +159,27 @@ void RequestHandler::sync_server()
 
 void RequestHandler::send_file(char const* file)
 {
-    //TODO: FileHandler returns an array of packets relative to the file parameter
-    // This behaviour will be represented as the following array
-    packet_t packets[8]; // Arbitrary number
-    //TODO: FileHandler returns the size in bytes of said file
-    // This behaviour will be represented as the following unsigned int
-    unsigned int file_size = 34534; // Arbitrary number
+    long int file_size_in_packets;
+    packet_t** packets = this->file_handler->get_file(file, file_size_in_packets);
 
     convert_helper_t packet_to_be_sent;
     data_buffer_t* returned_packet;
     syn_t syn;
     ack_t* returned;
 
-    syn.num_packets = 8; // Arbitrary number
-    syn.file_size = file_size;
+    syn.num_packets = file_size_in_packets;
+    syn.file_size = file_size_in_packets * PACKETSIZE;
     packet_to_be_sent = convert_to_data(syn);
     this->sock_handler->send_packet(packet_to_be_sent.pointer, packet_to_be_sent.size);
     delete packet_to_be_sent.pointer;
 
     // Packet sending loop
-    for (packet_t const& packet : packets) {
-        packet_to_be_sent = convert_to_data(packet);
-        // MAYBE THE FOLLOWING WILL GO TERRIBLY BAD because the sizeof part
+    for (int i = 0; i < file_size_in_packets; i++) {
+        packet_to_be_sent = convert_to_data(*packets[i]);
+        //! MAYBE THE FOLLOWING WILL GO TERRIBLY BAD because the sizeof part
         this->sock_handler->send_packet(packet_to_be_sent.pointer, packet_to_be_sent.size);
         delete packet_to_be_sent.pointer;
-        usleep(10);
+        usleep(15);
     }
 
     // The RequestHandler then procedes to wait for the Client's ack, which will contain the
@@ -243,7 +240,7 @@ void RequestHandler::receive_file(char const* file)
 
     // And we do nothing if the number doesnt match
     if (received_packet_number == packets_to_be_received) {
-        //TODO: Send to FileHandler the received recv_file array
+        this->file_handler->write_file(file, recv_file, syn->num_packets);
     }
 
     for (auto const& point : recv_file)

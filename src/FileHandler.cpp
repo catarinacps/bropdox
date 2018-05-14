@@ -26,16 +26,19 @@ bool FileHandler::init_client(std::string client_id_param)
 }
 
 //Function that receives an *databuffer and a filename and writes on disk
-bool FileHandler::write_file(char const* file_name, data_buffer_t* file_data[])
+bool FileHandler::write_file(char const* file_name, data_buffer_t* file_data[], int size_in_packets)
 {
     std::ofstream myFile;
     myFile.exceptions(std::ios::failbit | std::ios::badbit);
     myFile.open(this->syncDir.string() + file_name, std::ios::binary | std::ios::in | std::ios::out);
 
     try {
-        for (auto const& item : **file_data) {
-            myFile << item;
+        for (int i = 0; i < size_in_packets; i++) {
+            myFile.write(reinterpret_cast<char *>(&file_data[i]), PACKETSIZE);
         }
+        /* for (auto const& item : file_data) {
+            myFile << (unsigned char*)file_data[i];
+        } */
     } catch (std::ios::failure& e) {
         std::cerr << "Erro ao escrever arquivo.\n"
                   << e.what();
@@ -48,11 +51,10 @@ bool FileHandler::write_file(char const* file_name, data_buffer_t* file_data[])
     return true;
 }
 
-data_buffer_t** FileHandler::get_file(char const* file_name)
+packet_t** FileHandler::get_file(char const* file_name, long int& file_size_in_packets)
 {
-    data_buffer_t* read_bytes;
-    data_buffer_t** file_data;
-    long int file_size;
+    packet_t* read_bytes;
+    packet_t** file_data;
     FILE* file_desc;
     int i = 0;
 
@@ -62,15 +64,16 @@ data_buffer_t** FileHandler::get_file(char const* file_name)
             file_desc = fopen(file_name, "rb");
 
             fseek(file_desc, 0L, SEEK_END);
-            file_size = ftell(file_desc);
+            file_size_in_packets = (long int)ceil(ftell(file_desc) % PACKETSIZE);
             rewind(file_desc);
 
-            file_data = new data_buffer_t*[(int)ceil(file_size % PACKETSIZE)];
-            read_bytes = new data_buffer_t[PACKETSIZE];
+            file_data = new packet_t*[file_size_in_packets];
+            read_bytes = new packet_t;
 
-            while (!fread(read_bytes, 1, PACKETSIZE, file_desc)) {
+            while (!fread(read_bytes->data, 1, PACKETSIZE, file_desc)) {
+                read_bytes->num = i;
                 file_data[i] = read_bytes;
-                read_bytes = new data_buffer_t[PACKETSIZE];
+                read_bytes = new packet_t;
                 i++;
             }
 
@@ -98,7 +101,7 @@ data_buffer_t** FileHandler::get_file(char const* file_name)
     return nullptr; */
 }
 
-std::vector<file_info> FileHandler::get_file_list()
+std::vector<file_info> FileHandler::get_file_info_list()
 {
     char const* file_name;
     struct stat attrib;
