@@ -1,16 +1,18 @@
-#include <bropdoxUtil.hpp>
-#include <FileHandler.hpp>
 #include "../include/Client.hpp"
 
-Client::Client(char* uid, char *host, int port) {
-    sprintf(this->userid,uid);
+Client::Client(char* uid, char* host, int port)
+{
+    sprintf(this->userid, uid);
     if (login_server(host, port))
         this->logged_in = 1;
+
+    this->file_handler = new FileHandler(this->userid);
 }
 
-int Client::login_server(char *host, int port) {
+int Client::login_server(char* host, int port)
+{
     hostent* server = gethostbyname(host);
-    if (server == NULL){
+    if (server == NULL) {
         printf("Host não encontrado.");
         return 0; //boo-hoo
     }
@@ -32,22 +34,23 @@ int Client::login_server(char *host, int port) {
     return 1;
 }
 
-void Client::sync_client() {
-
+void Client::sync_client()
+{
 }
 
-void Client::send_file(char *file) {
-
+void Client::send_file(char* file)
+{
 }
 
-void Client::get_file(char *file) {
+void Client::get_file(char* file)
+{
     file_info fileInfo;
-    strcpy(fileInfo.name,file);
+    strcpy(fileInfo.name, file);
     fileInfo.size = 0;
-    strcpy(fileInfo.last_modified,"");
+    strcpy(fileInfo.last_modified, "");
 
     handshake_t handshake;
-    strcpy(handshake.userid,this->userid);
+    strcpy(handshake.userid, this->userid);
     handshake.req_type = req::send;
     handshake.file = fileInfo;
     handshake.num_packets = 0;
@@ -67,7 +70,7 @@ void Client::get_file(char *file) {
     for (int i = 0; i < syn_package->num_packets; ++i) {
         recv_buffer = this->sock_handler->wait_packet(sizeof(packet_t));
 
-        if (recv_buffer != NULL){
+        if (recv_buffer != NULL) {
             recv_packet = convert_to_packet(recv_buffer);
             recv_file[recv_packet->num] = recv_packet->data;
             delete recv_packet;
@@ -76,14 +79,13 @@ void Client::get_file(char *file) {
         delete recv_buffer;
     }
 
-    FileHandler* fileHandler = new FileHandler(this->userid);
-    fileHandler->write_file(fileInfo.name,recv_file,syn_package->num_packets);
+    this->file_handler->write_file(fileInfo.name, recv_file, syn_package->num_packets);
 }
 
-void Client::delete_file(char *file) {
-
+void Client::delete_file(char* file)
+{
 }
 
-void Client::close_session() {
-
+void Client::close_session()
+{
 }

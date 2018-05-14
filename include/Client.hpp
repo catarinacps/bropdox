@@ -1,7 +1,7 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include "RequestHandler.hpp"
+#include "FileHandler.hpp"
 #include "SocketHandler.hpp"
 #include "bropdoxUtil.hpp"
 
@@ -17,6 +17,8 @@ private:
     socklen_t server_len;
     struct file_info files[MAXFILES];
     SocketHandler* sock_handler;
+    FileHandler* file_handler;
+
 public:
     Client(char* uid, char* host, int port);
 
