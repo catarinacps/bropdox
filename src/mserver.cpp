@@ -1,6 +1,6 @@
 #include "../include/Server.hpp"
 
-int main()
+int main(int argc, char* argv[])
 {
     // int sockfd, n;
     // socklen_t clilen;
@@ -41,7 +41,14 @@ int main()
     // close(sockfd);
     // return 0;
 
-    Server server = Server();
+    if (argc == 1 || argc > 3) {
+        printf("Incorrect parameter usage, please refer to the following model:\n");
+        printf("./mserver <address> <port>\n\n");
+
+        return -1;
+    }
+
+    Server server = Server((in_port_t)atoi(argv[3]));
     int proc_id;
 
     while (true) {

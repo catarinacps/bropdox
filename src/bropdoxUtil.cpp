@@ -1,15 +1,33 @@
 #include "../include/bropdoxUtil.hpp"
 
-int init_unix_socket(struct sockaddr_un& sock, char const* path)
+int init_unix_socket(struct sockaddr_in& sock, in_port_t port)
 {
     int socket_id;
-    if ((socket_id = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1) {
+    if ((socket_id = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
         printf("Error while initializing the socket\n");
         return -1;
     }
 
-    sock.sun_family = AF_UNIX;
-    std::memcpy(sock.sun_path, path, _PC_PATH_MAX);
+    sock.sin_family = AF_INET;
+    sock.sin_port = htons(port);
+    sock.sin_addr.s_addr = INADDR_ANY;
+    bzero(&(sock.sin_zero), 8);
+
+    return socket_id;
+}
+
+int init_unix_socket(struct sockaddr_in& sock, in_port_t port, hostent* server)
+{
+    int socket_id;
+    if ((socket_id = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+        printf("Error while initializing the socket\n");
+        return -1;
+    }
+
+    sock.sin_family = AF_INET;
+    sock.sin_port = htons(port);
+    sock.sin_addr = *((struct in_addr *)server->h_addr);
+    bzero(&(sock.sin_zero), 8);
 
     return socket_id;
 }

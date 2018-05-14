@@ -10,18 +10,19 @@
 #define TIMEOUT 200000
 
 #define PORT 4000
+#define MAXPORT 65535
 
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <netdb.h>
+#include <netinet/in.h>
 #include <string>
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <sys/time.h>
-#include <sys/un.h>
+#include <sys/types.h>
 #include <unistd.h>
-
 
 /******************************************************************************
  * Types
@@ -77,7 +78,8 @@ typedef struct {
  * Headers
  */
 
-int init_unix_socket(struct sockaddr_un& sock, const char* path);
+int init_unix_socket(struct sockaddr_in& sock, in_port_t port);
+int init_unix_socket(struct sockaddr_in& sock, in_port_t port, hostent* server);
 
 handshake_t* convert_to_handshake(data_buffer_t* data);
 ack_t* convert_to_ack(data_buffer_t* data);

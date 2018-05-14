@@ -48,7 +48,7 @@ private:
     void send_file(char const* file);
 
 public:
-    RequestHandler(sockaddr_un client_address, std::string address = "");
+    RequestHandler(sockaddr_in client_address, in_port_t port, std::string address = "");
 };
 
 #endif // REQUESTHANDLER_HPP

@@ -1,10 +1,10 @@
 #include "../include/Server.hpp"
 
-Server::Server()
+Server::Server(in_port_t port_param)
 {
-    sockaddr_un nothing = {AF_UNIX, ""};
-    this->sock_handler = new SocketHandler(nothing, ADDR);
-    // TODO: Construct a list of existing persistent clients
+    this->sock_handler = new SocketHandler(port_param);
+    this->port = port_param;
+    this->port_counter = port_param + 1;
 }
 
 int Server::wait_client_request()
@@ -55,14 +55,21 @@ void* Server::treat_client_request(data_buffer_t* package)
     delete package;
 
     // Checks if the userid already has a declared RequestHandler
-    rh = new RequestHandler(this->sock_handler->get_last_clientaddr(), hand->userid);
-    if (this->user_list.count(hand->userid)) {
-        // Declares on the heap a new Request Handler for the user's request using the userid as the
-        // socket address/path
-        this->user_list[hand->userid][0] = rh;
+    rh = new RequestHandler(this->sock_handler->get_last_clientaddr(), this->get_next_port(), hand->userid);
+    if (this->user_list.count(hand->userid) > 0) {
+        // Declares on the heap a new Request Handler for the user's request
+        if (this->user_list[hand->userid]->handlers[0] == nullptr) {
+            this->user_list[hand->userid]->handlers[0] = rh;
+            this->user_list[hand->userid]->ports[0] = this->get_next_port();
+        } else {
+            this->user_list[hand->userid]->handlers[1] = rh;
+            this->user_list[hand->userid]->ports[1] = this->get_next_port();
+        }
     } else {
         // Declares a new Request Handler for the new user's device
-        this->user_list[hand->userid][1] = rh;
+        this->user_list[hand->userid] = new client_data_t;
+        this->user_list[hand->userid]->handlers[0] = rh;
+        this->user_list[hand->userid]->ports[0] = this->get_next_port();
     }
 
     switch (hand->req_type) {
@@ -85,6 +92,28 @@ void* Server::treat_client_request(data_buffer_t* package)
 
     delete hand;
     pthread_exit((void*)0);
+}
+
+int Server::get_next_port()
+{
+    if (this->port_counter == MAXPORT) {
+        this->port_counter = this->port + 1;
+        return this->port_counter;
+    }
+    this->port_counter++;
+    return this->port_counter;
+}
+
+bool Server::deallocate_request_chandler(int device, std::string user_id)
+{
+    if (device <= 2 && this->user_list[user_id]->handlers[device] != nullptr) {
+        delete this->user_list[user_id]->handlers[device];
+        this->user_list[user_id]->ports[device] = 0;
+
+        return true;
+    }
+
+    return false;
 }
 
 void* Server::treat_helper(void* arg)

@@ -1,25 +1,18 @@
 #include "../include/RequestHandler.hpp"
 
-RequestHandler::RequestHandler(sockaddr_un client_address, std::string address)
+RequestHandler::RequestHandler(sockaddr_in client_address, in_port_t port, std::string address)
 {
     this->client_id = address;
 
     //! There are situations in which this constructor will fail to build
     //! a socket because the socket will already exist.
-    sock_handler = new SocketHandler(client_address, address);
+    sock_handler = new SocketHandler(client_address, port);
 
     file_handler = new FileHandler(address);
 }
 
 bool RequestHandler::wait_request(req req_type, struct file_info const& finfo)
 {
-    data_buffer_t* data;
-
-    data = this->sock_handler->wait_packet(sizeof(handshake_t));
-    if (data == NULL) {
-        return false;
-    }
-
     switch (req_type) {
     case req::sync: {
         this->sync_server();
