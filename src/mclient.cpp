@@ -54,5 +54,5 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    Client* client = new Client(argv[2],argv[3],(in_port_t)atoi(argv[4]));
+    Client* client = new Client(argv[1],argv[2],(in_port_t)atoi(argv[3]));
 }

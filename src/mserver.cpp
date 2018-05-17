@@ -41,14 +41,14 @@ int main(int argc, char* argv[])
     // close(sockfd);
     // return 0;
 
-    if (argc == 1 || argc > 3) {
+    if (argc != 2) {
         printf("Incorrect parameter usage, please refer to the following model:\n");
-        printf("./mserver <address> <port>\n\n");
+        printf("./mserver <port>\n\n");
 
         return -1;
     }
 
-    Server server = Server((in_port_t)atoi(argv[3]));
+    Server server = Server((in_port_t)atoi(argv[1]));
     int proc_id;
 
     while (true) {

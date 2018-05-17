@@ -7,6 +7,7 @@
 
 #include <map>
 #include <pthread.h>
+#include <algorithm>
 
 class Client {
 private:

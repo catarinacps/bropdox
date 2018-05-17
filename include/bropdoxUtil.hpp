@@ -7,7 +7,7 @@
 
 #define MAX_FILE_LIST_SIZE 10
 
-#define TIMEOUT 200000
+#define TIMEOUT 5000000
 
 #define ADDR "BropDoxServer"
 
@@ -25,6 +25,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 
 /******************************************************************************
  * Types

@@ -38,10 +38,8 @@ SocketHandler::SocketHandler(in_port_t port)
     this->client_len = sizeof(struct sockaddr_in);
 
     setsockopt(this->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(struct timeval));
-}
 
-void SocketHandler::bind_socket() {
-    if (bind(sockfd, (struct sockaddr*)&(handler_address), sizeof(struct sockaddr)) < 0) {
+    if (bind(sockfd, (struct sockaddr*)&(this->handler_address), sizeof(struct sockaddr)) < 0) {
         printf("Error while binding the socket, please try again...\n");
     }
 }
@@ -50,12 +48,14 @@ data_buffer_t* SocketHandler::wait_packet(size_t size)
 {
     data_buffer_t* buffer = new data_buffer_t[size];
 
+    printf("Waiting fo a packet\n");
     int desc = recvfrom(this->sockfd, (void*)buffer, size, 0, (struct sockaddr*)&(this->client_address), &(this->client_len));
     if (desc < 0) {
         printf("Error while receiving packet...\n\n");
-        delete buffer;
+        delete []buffer;
         return NULL;
     }
+    printf("Recieved Packet?\n");
 
     //! Caller must delete this object later
     return buffer;

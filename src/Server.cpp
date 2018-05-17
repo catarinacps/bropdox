@@ -53,7 +53,7 @@ void* Server::treat_client_request(data_buffer_t* package)
 
     // Converts the received byte-array to a handshake struct
     hand = convert_to_handshake(package);
-    delete package;
+    delete []package;
 
     // Checks if the userid already has a declared RequestHandler
     rh = new RequestHandler(this->sock_handler->get_last_clientaddr(), this->get_next_port(), hand->userid);
