@@ -1,7 +1,8 @@
 #include "../include/FileHandler.hpp"
 
 FileHandler::FileHandler(std::string client_id_param)
-{
+{   
+    //TODO: cortar
     this->syncDir = "~/sync_dir_" + client_id_param + "/";
     if (!this->initialized) {
         this->initialized = init_client(client_id_param);

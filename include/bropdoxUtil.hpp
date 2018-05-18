@@ -51,11 +51,14 @@ typedef struct {
     bool has_next;
 } file_info_list_t;
 
-typedef struct {
+typedef struct handshake{
     req req_type;
     char userid[MAXNAME];
     struct file_info file;
     unsigned int num_packets;
+
+    handshake(req request, char* id, file_info finfo, unsigned int num)
+    
 } handshake_t;
 
 typedef struct {
