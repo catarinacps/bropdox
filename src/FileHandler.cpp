@@ -1,28 +1,21 @@
 #include "../include/FileHandler.hpp"
 
 FileHandler::FileHandler(std::string client_id_param)
-{   
-    //TODO: cortar
-    this->syncDir = "~/sync_dir_" + client_id_param + "/";
-    if (!this->initialized) {
-        this->initialized = init_client(client_id_param);
-    }
-}
-
-bool FileHandler::init_client(std::string client_id_param)
+: syncDir(std::string(getenv("HOME")) + "/sync_dir_" + client_id_param + "/")
 {
-    if (this->client_id == client_id_param) {
-        return true;
-    } else {
-        this->client_id = client_id_param;
+    if (client_id_param.size() <= 0) {
+        throw new std::invalid_argument("Invalid ID size.");
+    }
 
-        if (!fs::exists(this->syncDir)) {
-            fs::create_directory(this->syncDir);
+    this->client_id = client_id_param;
+
+    try {
+        if (!bf::exists(this->syncDir)) {
+            bf::create_directory(this->syncDir);
         }
-
-        //TODO: ?? alguma coisa??
-
-        return true;
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << '\n';
+        throw e;
     }
 }
 
@@ -35,7 +28,7 @@ bool FileHandler::write_file(char const* file_name, data_buffer_t* file_data[], 
 
     try {
         for (int i = 0; i < size_in_packets; i++) {
-            myFile.write(reinterpret_cast<char *>(&file_data[i]), PACKETSIZE);
+            myFile.write(reinterpret_cast<char*>(&file_data[i]), PACKETSIZE);
         }
         /* for (auto const& item : file_data) {
             myFile << (unsigned char*)file_data[i];
@@ -59,7 +52,7 @@ packet_t** FileHandler::get_file(char const* file_name, long int& file_size_in_p
     FILE* file_desc;
     int i = 0;
 
-    for (auto const& p : fs::recursive_directory_iterator(this->syncDir)) {
+    for (auto const& p : bf::recursive_directory_iterator(this->syncDir)) {
         auto accessed_file = p.path();
         if (accessed_file.filename().c_str() == file_name) {
             file_desc = fopen(file_name, "rb");
@@ -109,7 +102,7 @@ std::vector<file_info> FileHandler::get_file_info_list()
     struct file_info info;
     std::vector<struct file_info> file_info_vector;
 
-    for (auto const& p : fs::recursive_directory_iterator(this->syncDir)) {
+    for (auto const& p : bf::recursive_directory_iterator(this->syncDir)) {
         auto accessed_file = p.path();
         file_name = accessed_file.filename().c_str();
         stat(file_name, &attrib);

@@ -50,7 +50,7 @@ void RequestHandler::sync_server()
         // Receives the file_info_list
         received_data = this->sock_handler->wait_packet(sizeof(file_info_list_t));
         received_list = convert_to_file_list(received_data);
-        delete received_data;
+        delete[] received_data;
 
         // If the received file_info_list has another incoming list, this field will be 'true'
         has_next_file_list = received_list->has_next;
@@ -119,7 +119,7 @@ void RequestHandler::sync_server()
     for (auto const& list : file_list_array) {
         helper = convert_to_data(list);
         this->sock_handler->send_packet(helper.pointer, helper.size);
-        delete helper.pointer;
+        delete[] helper.pointer;
         usleep(15);
     }
 
@@ -130,7 +130,7 @@ void RequestHandler::sync_server()
     do {
         received_data = this->sock_handler->wait_packet(sizeof(file_info_list_t));
         received_list = convert_to_file_list(received_data);
-        delete received_data;
+        delete[] received_data;
 
         has_next_file_list = received_list->has_next;
 
@@ -164,14 +164,14 @@ void RequestHandler::send_file(char const* file)
     syn.file_size = file_size_in_packets * PACKETSIZE;
     packet_to_be_sent = convert_to_data(syn);
     this->sock_handler->send_packet(packet_to_be_sent.pointer, packet_to_be_sent.size);
-    delete packet_to_be_sent.pointer;
+    delete[] packet_to_be_sent.pointer;
 
     // Packet sending loop
     for (int i = 0; i < file_size_in_packets; i++) {
         packet_to_be_sent = convert_to_data(*packets[i]);
         //! MAYBE THE FOLLOWING WILL GO TERRIBLY BAD because the sizeof part
         this->sock_handler->send_packet(packet_to_be_sent.pointer, packet_to_be_sent.size);
-        delete packet_to_be_sent.pointer;
+        delete[] packet_to_be_sent.pointer;
         usleep(15);
     }
 
@@ -187,7 +187,7 @@ void RequestHandler::send_file(char const* file)
     }
 
     delete returned;
-    delete returned_packet;
+    delete[] returned_packet;
 
     return;
 }
@@ -222,7 +222,7 @@ void RequestHandler::receive_file(char const* file)
             delete received;
         }
 
-        delete received_packet;
+        delete[] received_packet;
     }
 
     // After receiving all packets, we send an ack with the number of packets we received.
@@ -237,9 +237,9 @@ void RequestHandler::receive_file(char const* file)
     }
 
     for (auto const& point : recv_file)
-        delete point;
+        delete[] point;
     delete syn;
-    delete helper.pointer;
+    delete[] helper.pointer;
     delete syn_packet;
     delete[] recv_file;
 

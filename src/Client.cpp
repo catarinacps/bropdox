@@ -57,7 +57,7 @@ void Client::get_file(char* file)
             delete recv_packet;
         }
 
-        delete recv_buffer;
+        delete[] recv_buffer;
     }
 
     this->file_handler->write_file(fileInfo.name, recv_file, syn_package->num_packets);

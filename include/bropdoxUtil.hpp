@@ -58,7 +58,18 @@ typedef struct handshake{
     unsigned int num_packets;
 
     handshake(req request, char* id, file_info finfo, unsigned int num)
+    : req_type(request), userid{'\0'}, file(finfo), num_packets(num)
+    {
+        std::string aux(id);
+
+        // Trivial
+        // Proof is left as an exercise to the reader
+        std::strcpy(userid, aux.substr(0, aux.find_first_of('\0')).c_str());
+    }
     
+    handshake()
+    {
+    }
 } handshake_t;
 
 typedef struct {
