@@ -46,6 +46,12 @@ ack_t* convert_to_ack(data_buffer_t* data)
     return ack;
 }
 
+syn_t *convert_to_syn(data_buffer_t *data) {
+    syn_t* syn = new syn_t;
+    std::memcpy(syn, data, sizeof(syn_t));
+    return syn;
+}
+
 packet_t* convert_to_packet(data_buffer_t* data)
 {
     packet_t* packet = new packet_t;
@@ -147,6 +153,18 @@ convert_helper_t convert_to_data(file_info_list_t const& list)
     helper.size = sizeof(data);
 
     std::memcpy(data, &list, sizeof(file_info_list_t));
+
+    return helper;
+}
+
+convert_helper_t convert_to_data(std::string string) {
+    auto* data = new data_buffer_t[string.size()];
+    convert_helper_t helper;
+
+    helper.pointer = data;
+    helper.size = sizeof(data);
+
+    std::memcpy(data, string.c_str(), string.size());
 
     return helper;
 }

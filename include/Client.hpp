@@ -1,7 +1,12 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
+#include "FileHandler.hpp"
+#include "SocketHandler.hpp"
 #include "bropdoxUtil.hpp"
+
+#include <map>
+#include <pthread.h>
 
 class Client {
 private:
@@ -11,9 +16,11 @@ private:
     char userid[MAXNAME];
     socklen_t server_len;
     struct file_info files[MAXFILES];
+    SocketHandler* sock_handler;
+    FileHandler* file_handler;
 
 public:
-    Client();
+    Client(char* uid, char* host, int port);
 
     /**
      * Estabelece uma sessao entre o cliente e o servidor.

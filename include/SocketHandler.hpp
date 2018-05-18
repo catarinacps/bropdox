@@ -1,6 +1,7 @@
 #ifndef SOCKETHANDLER_HPP
 #define SOCKETHANDLER_HPP
 
+#include <netdb.h>
 #include "bropdoxUtil.hpp"
 
 class SocketHandler {
@@ -29,6 +30,7 @@ public:
 
 private:
     int sockfd;
+    hostent* client;
     socklen_t client_len;
     struct sockaddr_in handler_address, client_address;
 
@@ -37,6 +39,7 @@ public:
     SocketHandler(sockaddr_in caddress, in_port_t port);
     SocketHandler(in_port_t port);
     ~SocketHandler();
+    void bind_socket();
 };
 
 #endif // SOCKETHANDLER_HPP

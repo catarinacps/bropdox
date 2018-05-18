@@ -5,6 +5,7 @@ Server::Server(in_port_t port_param)
     this->sock_handler = new SocketHandler(port_param);
     this->port = port_param;
     this->port_counter = port_param + 1;
+
 }
 
 int Server::wait_client_request()
