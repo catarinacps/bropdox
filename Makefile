@@ -8,12 +8,13 @@
 #		"redo" - limpa binários e então compila
 #		"test" - compila e realiza testes
 #
-#	Se make não recebe parâmetros, a ação default é redo
+#	Se make não recebe parâmetros, a ação default é all
 
 #	Flags de compilaçao. Debug para uso no GDB
 CC = g++
-DEBUG = -g
-CFLAGS = -std=c++17 -O3 -Wall -Wextra -Wshadow -Wunreachable-code -lpthread -lstdc++fs $(DEBUG)
+DFLAG = 
+DEBUG = -g -fsanitize=address -O0
+CFLAGS = -std=c++11 -Wall -Wextra -Wshadow -Wunreachable-code -lpthread -lstdc++fs $(if $(DFLAG), $(DEBUG), -O3)
 TFLAGS = --error-printer
 INC_FLAG := -I$(INC_DIR)
 
