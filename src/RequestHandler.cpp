@@ -6,7 +6,7 @@ RequestHandler::RequestHandler(sockaddr_in client_address, in_port_t port, std::
 
     //! There are situations in which this constructor will fail to build
     //! a socket because the socket will already exist.
-    sock_handler = new SocketHandler(client_address, port);
+    sock_handler = new SocketHandler(port, client_address);
 
     file_handler = new FileHandler(address);
 }

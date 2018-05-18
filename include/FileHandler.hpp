@@ -1,16 +1,9 @@
-#ifndef BOOST_ALL_DYN_LINK
-#define BOOST_ALL_DYN_LINK
-#endif
-
 #include "bropdoxUtil.hpp"
-#include <boost/filesystem.hpp>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <sys/stat.h>
 #include <time.h>
-
-namespace bf = boost::filesystem;
 
 class FileHandler {
 private:

@@ -1,6 +1,10 @@
 #ifndef BROPBOXUTIL_HPP
 #define BROPBOXUTIL_HPP
 
+#ifndef BOOST_ALL_DYN_LINK
+#define BOOST_ALL_DYN_LINK
+#endif
+
 #define MAXNAME 255
 #define MAXFILES 65536
 #define PACKETSIZE 16384
@@ -18,6 +22,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <chrono>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <string>
@@ -25,7 +30,9 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <boost/filesystem.hpp>
 
+namespace bf = boost::filesystem;
 
 /******************************************************************************
  * Types
@@ -39,6 +46,19 @@ struct file_info {
     char name[MAXNAME*2];
     char last_modified[MAXNAME];
     int size;
+
+    file_info(std::string name_p)
+    : name{'\0'}, last_modified{'\0'}, size(bf::file_size(name_p))
+    {
+        auto last_time = bf::last_write_time(name_p);
+        
+        std::strcpy(name, name_p.c_str());
+        std::strcpy(last_modified, asctime(gmtime(&last_time)));
+    }
+
+    file_info()
+    {
+    }
 
     bool operator < (file_info const& a) const
     {

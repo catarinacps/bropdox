@@ -60,7 +60,6 @@ int main(int argc, char* argv[])
     int sockfd, n;
     unsigned int length;
     struct sockaddr_in serv_addr, from, server_address;
-    struct file_info finfo;
 
     char bufferf[256];
 
@@ -78,8 +77,23 @@ int main(int argc, char* argv[])
     server_address.sin_port = htons(port);
     bzero(&(server_address.sin_zero), 8);
 
-    handshake_t hand(req::send, user, finfo, 0);
+    struct file_info finfo("sync_dir_john/teste.txt");
+    handshake_t hand(req::receive, user, finfo, 0);
     n = sendto(sockfd, &hand, sizeof(handshake_t), 0, (const struct sockaddr*)&server_address, sizeof(struct sockaddr_in));
+
+    /*
+    hostent* server = gethostbyname(host);
+    if (server == NULL) {
+        printf("Host não encontrado.");
+        return 0; //boo-hoo
+    }
+    SocketHandler sock_hand(port, server);
+
+    struct file_info finfo("sync_dir_john/teste.txt");
+    handshake_t hand(req::receive, user, finfo, 0);
+    convert_helper_t helper = convert_to_data(hand);
+    sock_hand.send_packet(helper.pointer, helper.size);
+    */
 
     if (n < 0) {
         printf("ERROR sendto");

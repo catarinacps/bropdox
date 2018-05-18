@@ -1,23 +1,18 @@
 #include "../include/SocketHandler.hpp"
 
-SocketHandler::SocketHandler(sockaddr_in caddress, in_port_t port, hostent* server)
+SocketHandler::SocketHandler(in_port_t port, hostent* server)
 {
     struct timeval timeout = {0, TIMEOUT};
     
-    this->client_address = caddress;
     this->sockfd = init_unix_socket(this->handler_address, port, server);
     this->client_len = sizeof(struct sockaddr_in);
 
     setsockopt(this->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(struct timeval));
-
-    if (bind(this->sockfd, (struct sockaddr*)&(this->handler_address), sizeof(struct sockaddr)) < 0) {
-        printf("Error while binding the socket, please try again...\n");
-    }
 }
 
-SocketHandler::SocketHandler(sockaddr_in caddress, in_port_t port)
+SocketHandler::SocketHandler(in_port_t port, sockaddr_in caddress)
 {
-    struct timeval timeout = {0, TIMEOUT};
+    struct timeval timeout = {0, TIMEOUT*2};
     
     this->client_address = caddress;
     this->sockfd = init_unix_socket(this->handler_address, port);
@@ -32,7 +27,7 @@ SocketHandler::SocketHandler(sockaddr_in caddress, in_port_t port)
 
 SocketHandler::SocketHandler(in_port_t port)
 {
-    struct timeval timeout = {0, TIMEOUT};
+    struct timeval timeout = {0, TIMEOUT*2};
     
     this->sockfd = init_unix_socket(this->handler_address, port);
     this->client_len = sizeof(struct sockaddr_in);

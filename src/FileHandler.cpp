@@ -53,7 +53,7 @@ packet_t** FileHandler::get_file(char const* file_name, long int& file_size_in_p
     int i = 0;
 
     for (auto const& p : bf::recursive_directory_iterator(this->syncDir)) {
-        auto accessed_file = p.path();
+        auto const accessed_file = p.path();
         if (accessed_file.filename().c_str() == file_name) {
             file_desc = fopen(file_name, "rb");
 

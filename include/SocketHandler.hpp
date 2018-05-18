@@ -35,11 +35,22 @@ private:
     struct sockaddr_in handler_address, client_address;
 
 public:
-    SocketHandler(sockaddr_in client_addr, in_port_t port, hostent* server);
-    SocketHandler(sockaddr_in caddress, in_port_t port);
+    /**
+     * The one used by the client
+     */
+    SocketHandler(in_port_t port, hostent* server);
+
+    /**
+     * The one used by the RequestHandler
+     */
+    SocketHandler(in_port_t port, sockaddr_in caddress);
+
+    /**
+     * The one used by the server
+     */
     SocketHandler(in_port_t port);
+
     ~SocketHandler();
-    void bind_socket();
 };
 
 #endif // SOCKETHANDLER_HPP
