@@ -1,7 +1,26 @@
 #include "../include/FileHandler.hpp"
 
 FileHandler::FileHandler(std::string client_id_param)
-: syncDir(std::string(getenv("HOME")) + "/sync_dir_" + client_id_param + "/")
+    : syncDir(std::string(getenv("HOME")) + "/sync_dir_" + client_id_param + "/")
+{
+    if (client_id_param.size() <= 0) {
+        throw new std::invalid_argument("Invalid ID size.");
+    }
+
+    this->client_id = client_id_param;
+
+    try {
+        if (!bf::exists(this->syncDir)) {
+            bf::create_directory(this->syncDir);
+        }
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << '\n';
+        throw e;
+    }
+}
+
+FileHandler::FileHandler(std::string client_id_param, int flag)
+    : syncDir("sync_dir_" + client_id_param + "/")
 {
     if (client_id_param.size() <= 0) {
         throw new std::invalid_argument("Invalid ID size.");
@@ -51,9 +70,44 @@ packet_t** FileHandler::get_file(char const* file_name, long int& file_size_in_p
     packet_t** file_data;
     FILE* file_desc;
     int i = 0;
+    bf::recursive_directory_iterator end;
+    std::ifstream myFile;
 
-    for (auto const& p : bf::recursive_directory_iterator(this->syncDir)) {
+    for (bf::recursive_directory_iterator it(this->syncDir); it != end; it++) {
+        auto const& p = it->path();
+
+        std::cout << p.c_str() << std::endl;
+        if (p.generic_string() == this->syncDir.generic_string() + file_name) {
+
+            try {
+                myFile.exceptions(std::ios::failbit | std::ios::badbit);
+                myFile.open(p.string(), std::ios::binary | std::ios::in);
+                printf("open file\n");
+
+                file_data = new packet_t*[bf::file_size(p) % PACKETSIZE];
+                read_bytes = new packet_t;
+
+                while (myFile.read(reinterpret_cast<char*>(read_bytes->data), PACKETSIZE)) {
+                    printf("read something\n");
+                    read_bytes->num = i;
+                    file_data[i] = read_bytes;
+                    read_bytes = new packet_t;
+                    i++;
+                }
+            } catch (std::ios::failure const& e) {
+                std::cerr << e.what() << '\n';
+                myFile.close();
+                return nullptr;
+            }
+
+            myFile.close();
+            return file_data;
+        }
+    }
+
+    /* for (auto const& p : bf::recursive_directory_iterator(this->syncDir)) {
         auto const accessed_file = p.path();
+        std::cout << accessed_file.filename() << std::endl;
         if (accessed_file.filename().c_str() == file_name) {
             file_desc = fopen(file_name, "rb");
 
@@ -74,8 +128,8 @@ packet_t** FileHandler::get_file(char const* file_name, long int& file_size_in_p
             fclose(file_desc);
             return file_data;
         }
-    }
-
+    } */
+    printf("null file ptr");
     return nullptr;
 
     /* 

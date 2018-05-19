@@ -8,7 +8,7 @@ RequestHandler::RequestHandler(sockaddr_in client_address, in_port_t port, std::
     //! a socket because the socket will already exist.
     sock_handler = new SocketHandler(port, client_address);
 
-    file_handler = new FileHandler(address);
+    file_handler = new FileHandler(address, 0);
 }
 
 bool RequestHandler::handle_request(req req_type)

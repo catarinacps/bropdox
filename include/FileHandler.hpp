@@ -13,6 +13,7 @@ private:
 
 public:
     FileHandler(std::string client_id);
+    FileHandler(std::string client_id, int flag);
 
     //eu não sei se é public ou private alguém bota no lugar certo depois
     bool write_file(char const* file_name, data_buffer_t* file_data[], int size_in_packets);

@@ -57,12 +57,6 @@ int main(int argc, char* argv[])
     char* host = argv[2];
     char* user = argv[1];
 
-    int sockfd, n;
-    unsigned int length;
-    struct sockaddr_in serv_addr, from, server_address;
-
-    char bufferf[256];
-
     /* hostent* server = gethostbyname(host);
     if (server == NULL) {
         printf("Host não encontrado.");
@@ -87,13 +81,41 @@ int main(int argc, char* argv[])
         printf("Host não encontrado.");
         return 0; //boo-hoo
     }
+
     SocketHandler sock_hand(port, server);
+    FileHandler file_hand(user);
 
     std::strcat(user, "\0");
-    struct file_info finfo("sync_dir_john/teste.txt");
     handshake_t hand(req::receive, user);
     sock_hand.send_packet(&hand, sizeof(handshake_t));
-   
+
+    data_buffer_t* syn_data = sock_hand.wait_packet(sizeof(syn_t));
+    syn_t* syn = convert_to_syn(syn_data);
+
+    SocketHandler req_sock_hand(syn->port, server);
+    long int packet_size;
+    packet_t** packets = file_hand.get_file("teste.txt", packet_size);
+
+    struct file_info finfo(std::string(getenv("HOME")) + "/sync_dir_john/teste.txt");
+    file_data_t file_data(finfo, packet_size);
+
+    req_sock_hand.send_packet(&file_data, sizeof(file_data_t));
+
+    data_buffer_t* ack_data = req_sock_hand.wait_packet(sizeof(ack_t));
+    ack_t* ack = convert_to_ack(ack_data);
+
+    for (int i = 0; i < packet_size; i++) {
+        //! MAYBE THE FOLLOWING WILL GO TERRIBLY BAD because the sizeof part
+        req_sock_hand.send_packet(packets[i], sizeof(packet_t));
+        usleep(15);
+    }
+
+    data_buffer_t* ack_data2 = req_sock_hand.wait_packet(sizeof(ack_t));
+    ack_t* ack2 = convert_to_ack(ack_data2);
+
+    if (ack2->confirmation) {
+        printf("Success!");
+    }
 
     /* if (n < 0) {
         printf("ERROR sendto");
