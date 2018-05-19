@@ -33,7 +33,7 @@ private:
      * 
      * @param package pacote de dados (handshake)
      */
-    void* treat_client_request(data_buffer_t* package);
+    void* treat_client_request(handshake_t* package);
 
     bool deallocate_request_chandler(int device, std::string user_id);
 
@@ -48,7 +48,7 @@ public:
 
 typedef struct {
     Server* context;
-    data_buffer_t* hand_package;
+    handshake_t* hand_package;
 } arg_thread_t;
 
 #endif // SERVER_HPP

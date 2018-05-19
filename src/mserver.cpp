@@ -49,13 +49,12 @@ int main(int argc, char* argv[])
     }
 
     Server server = Server((in_port_t)atoi(argv[1]));
-    int proc_id;
 
     while (true) {
-        if ((proc_id = server.wait_client_request()) > 0) {
-            printf("Treating a request in %d...\n", proc_id);
+        if (server.wait_client_request() >= 0) {
+            printf("Server: Treating a request in a new thread...\n");
         } else {
-            printf("Failed handshake attempt received...\n");
+            printf("Server: Failed handshake attempt received...\n");
         }
     }
 }

@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
 
     char bufferf[256];
 
-    hostent* server = gethostbyname(host);
+    /* hostent* server = gethostbyname(host);
     if (server == NULL) {
         printf("Host não encontrado.");
         return 0; //boo-hoo
@@ -79,9 +79,9 @@ int main(int argc, char* argv[])
 
     struct file_info finfo("sync_dir_john/teste.txt");
     handshake_t hand(req::receive, user, finfo, 0);
-    n = sendto(sockfd, &hand, sizeof(handshake_t), 0, (const struct sockaddr*)&server_address, sizeof(struct sockaddr_in));
+    n = sendto(sockfd, &hand, sizeof(handshake_t), 0, (const struct sockaddr*)&server_address, sizeof(struct sockaddr_in)); */
 
-    /*
+    
     hostent* server = gethostbyname(host);
     if (server == NULL) {
         printf("Host não encontrado.");
@@ -89,13 +89,13 @@ int main(int argc, char* argv[])
     }
     SocketHandler sock_hand(port, server);
 
+    std::strcat(user, "\0");
     struct file_info finfo("sync_dir_john/teste.txt");
-    handshake_t hand(req::receive, user, finfo, 0);
-    convert_helper_t helper = convert_to_data(hand);
-    sock_hand.send_packet(helper.pointer, helper.size);
-    */
+    handshake_t hand(req::receive, user);
+    sock_hand.send_packet(&hand, sizeof(handshake_t));
+   
 
-    if (n < 0) {
+    /* if (n < 0) {
         printf("ERROR sendto");
         return -1;
     }
@@ -103,11 +103,11 @@ int main(int argc, char* argv[])
     length = sizeof(struct sockaddr_in);
     n = recvfrom(sockfd, bufferf, 256, 0, (struct sockaddr*)&from, &length);
     if (n < 0)
-        printf("ERROR recvfrom");
+        printf("ERROR recvfrom"); */
 
-    printf("Got an ack: %s\n", bufferf);
+    /* printf("Got an ack: %s\n", bufferf);
 
-    close(sockfd);
+    close(sockfd); */
 
     return 0;
 }

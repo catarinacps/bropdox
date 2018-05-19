@@ -11,17 +11,36 @@ RequestHandler::RequestHandler(sockaddr_in client_address, in_port_t port, std::
     file_handler = new FileHandler(address);
 }
 
-bool RequestHandler::wait_request(req req_type, struct file_info const& finfo)
+bool RequestHandler::handle_request(req req_type)
 {
     switch (req_type) {
     case req::sync: {
         this->sync_server();
     } break;
     case req::send: {
-        this->send_file(finfo.name);
+        data_buffer_t* data = this->sock_handler->wait_packet(sizeof(file_data_t));
+        file_data_t* finfo = convert_to_file_data(data);
+
+
+        delete[] data;
+        this->send_file(finfo->file.name);
     } break;
     case req::receive: {
-        this->receive_file(finfo.name);
+        data_buffer_t* data = this->sock_handler->wait_packet(sizeof(file_data_t));
+        file_data_t* finfo = convert_to_file_data(data);
+
+        if (!(finfo->num_packets > 0)) {
+            ack_t ack(false);
+            this->sock_handler->send_packet(&ack, sizeof(ack_t));
+
+            return false;
+        } else {
+            ack_t ack(true);
+            this->sock_handler->send_packet(&ack, sizeof(ack_t));
+        }
+
+        delete[] data;
+        this->receive_file(finfo->file.name, finfo->num_packets);
     } break;
     default:
         printf("Something went wrong...\n");
@@ -43,6 +62,9 @@ void RequestHandler::sync_server()
     std::string name;
     std::vector<file_info>::iterator it1, it2;
 
+    // !
+    //TODO: Fix this whole method
+    // !
 
     /*************************************************************************/
     // Receive the modified files and overwrite them
@@ -65,7 +87,7 @@ void RequestHandler::sync_server()
 
     // Then we proceed to receive every file that the client has sent us
     for (auto const& file : modified_files) {
-        this->receive_file(file.name);
+        //this->receive_file(file.name);
     }
 
     /*************************************************************************/
@@ -152,26 +174,20 @@ void RequestHandler::sync_server()
 
 void RequestHandler::send_file(char const* file)
 {
+    data_buffer_t* returned_ack;
+    ack_t* ack;
+
     long int file_size_in_packets;
     packet_t** packets = this->file_handler->get_file(file, file_size_in_packets);
 
-    convert_helper_t packet_to_be_sent;
-    data_buffer_t* returned_packet;
-    syn_t syn;
-    ack_t* returned;
-
-    syn.num_packets = file_size_in_packets;
-    syn.file_size = file_size_in_packets * PACKETSIZE;
-    packet_to_be_sent = convert_to_data(syn);
-    this->sock_handler->send_packet(packet_to_be_sent.pointer, packet_to_be_sent.size);
-    delete[] packet_to_be_sent.pointer;
+    struct file_info finfo(file);
+    file_data_t file_data(finfo, file_size_in_packets);
+    this->sock_handler->send_packet(&file_data, sizeof(file_data_t));
 
     // Packet sending loop
     for (int i = 0; i < file_size_in_packets; i++) {
-        packet_to_be_sent = convert_to_data(*packets[i]);
         //! MAYBE THE FOLLOWING WILL GO TERRIBLY BAD because the sizeof part
-        this->sock_handler->send_packet(packet_to_be_sent.pointer, packet_to_be_sent.size);
-        delete[] packet_to_be_sent.pointer;
+        this->sock_handler->send_packet(packets[i], sizeof(packet_t));
         usleep(15);
     }
 
@@ -179,32 +195,24 @@ void RequestHandler::send_file(char const* file)
     // number of packets that the client received.
     // This number of receveid packets will indicate a possible missing packet in the transmission,
     // calling for a repeat of the send_file() operation.
-    returned_packet = this->sock_handler->wait_packet(sizeof(ack_t));
-    returned = convert_to_ack(returned_packet);
+    returned_ack = this->sock_handler->wait_packet(sizeof(ack_t));
+    ack = convert_to_ack(returned_ack);
 
-    if (returned->num_packets != syn.num_packets) {
+    if (!ack->confirmation) {
         this->send_file(file);
     }
 
-    delete returned;
-    delete[] returned_packet;
+    delete ack;
+    delete[] returned_ack;
 
     return;
 }
 
-void RequestHandler::receive_file(char const* file)
+void RequestHandler::receive_file(char const* file, unsigned int packets_to_be_received)
 {
-    ack_t* syn;
-    ack_t ack;
     packet_t* received = NULL;
-    convert_helper_t helper;
-    data_buffer_t *syn_packet, *received_packet;
-    unsigned int packets_to_be_received, received_packet_number = 0;
-
-    // Waits for the client's syn packet to determine the expected number of packets
-    syn_packet = this->sock_handler->wait_packet(sizeof(ack_t));
-    syn = convert_to_ack(syn_packet);
-    packets_to_be_received = syn->num_packets;
+    data_buffer_t* received_packet;
+    unsigned int received_packet_number = 0;
 
     // Uses said number of packets to declare an array of data_buffer_t pointers
     // pointing to the received data
@@ -225,22 +233,26 @@ void RequestHandler::receive_file(char const* file)
         delete[] received_packet;
     }
 
-    // After receiving all packets, we send an ack with the number of packets we received.
+    // After receiving all packets, we send an ack with true if we received all the packets or
+    // false if we didn't.
     // If the number doesnt match the expected number, the client should do something about it.
-    ack.num_packets = received_packet_number;
-    helper = convert_to_data(ack);
-    this->sock_handler->send_packet(helper.pointer, helper.size);
-
-    // And we do nothing if the number doesnt match
+    // Also, we do nothing if the number doesnt match.
     if (received_packet_number == packets_to_be_received) {
-        this->file_handler->write_file(file, recv_file, syn->num_packets);
+        printf("RequestHandler: Success receiving the file");
+
+        ack_t ack(true);
+        this->sock_handler->send_packet(&ack, sizeof(ack_t));
+
+        this->file_handler->write_file(file, recv_file, packets_to_be_received);
+    } else {
+        printf("RequestHandler: Failure receiving the file");
+
+        ack_t ack(false);
+        this->sock_handler->send_packet(&ack, sizeof(ack_t));
     }
 
     for (auto const& point : recv_file)
         delete[] point;
-    delete syn;
-    delete[] helper.pointer;
-    delete syn_packet;
     delete[] recv_file;
 
     return;

@@ -18,11 +18,12 @@
 #define PORT 4000
 #define MAXPORT 65535
 
+#include <boost/filesystem.hpp>
+#include <chrono>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <chrono>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <string>
@@ -30,7 +31,6 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <boost/filesystem.hpp>
 
 namespace bf = boost::filesystem;
 
@@ -38,20 +38,22 @@ namespace bf = boost::filesystem;
  * Types
  */
 
-enum class req {sync, send, receive};
+enum class req { sync,
+    send,
+    receive };
 
 typedef unsigned char data_buffer_t;
 
 struct file_info {
-    char name[MAXNAME*2];
+    char name[MAXNAME * 2];
     char last_modified[MAXNAME];
     int size;
 
     file_info(std::string name_p)
-    : name{'\0'}, last_modified{'\0'}, size(bf::file_size(name_p))
+    : name{ '\0' }, last_modified{ '\0' }, size(bf::file_size(name_p))
     {
         auto last_time = bf::last_write_time(name_p);
-        
+
         std::strcpy(name, name_p.c_str());
         std::strcpy(last_modified, asctime(gmtime(&last_time)));
     }
@@ -60,7 +62,7 @@ struct file_info {
     {
     }
 
-    bool operator < (file_info const& a) const
+    bool operator<(file_info const& a) const
     {
         return name < a.name;
     }
@@ -71,14 +73,12 @@ typedef struct {
     bool has_next;
 } file_info_list_t;
 
-typedef struct handshake{
+typedef struct handshake {
     req req_type;
     char userid[MAXNAME];
-    struct file_info file;
-    unsigned int num_packets;
 
-    handshake(req request, char* id, file_info finfo, unsigned int num)
-    : req_type(request), userid{'\0'}, file(finfo), num_packets(num)
+    handshake(req request, char* id)
+    : req_type(request), userid{ '\0' }
     {
         std::string aux(id);
 
@@ -86,20 +86,53 @@ typedef struct handshake{
         // Proof is left as an exercise to the reader
         std::strcpy(userid, aux.substr(0, aux.find_first_of('\0')).c_str());
     }
-    
+
     handshake()
+    : userid{ '\0' }
     {
     }
 } handshake_t;
 
-typedef struct {
-    unsigned int num_packets;
+typedef struct ack {
+    bool confirmation;
+
+    ack(bool conf)
+    : confirmation(conf)
+    {
+    }
+
+    ack()
+    {
+    }
 } ack_t;
 
-typedef struct {
-    unsigned int num_packets;
-    size_t file_size;
+typedef struct syn {
+    bool confirmation;
+    in_port_t port;
+
+    syn(bool conf, in_port_t port_p)
+    : confirmation(conf), port(port_p)
+    {
+    }
+
+    syn()
+    {
+    }
 } syn_t;
+
+typedef struct file_data {
+    struct file_info file;
+    unsigned int num_packets;
+
+    file_data(file_info file_p, unsigned int packets)
+    : file(file_p), num_packets(packets)
+    {
+    }
+
+    file_data()
+    {
+    }
+} file_data_t;
 
 typedef struct {
     unsigned int num;
@@ -123,6 +156,7 @@ ack_t* convert_to_ack(data_buffer_t* data);
 syn_t* convert_to_syn(data_buffer_t* data);
 packet_t* convert_to_packet(data_buffer_t* data);
 file_info_list_t* convert_to_file_list(data_buffer_t* data);
+file_data_t* convert_to_file_data(data_buffer_t* data);
 convert_helper_t convert_to_data(packet_t& packet);
 convert_helper_t convert_to_data(packet_t const& packet);
 convert_helper_t convert_to_data(handshake_t& hand);
@@ -132,4 +166,4 @@ convert_helper_t convert_to_data(file_info_list_t& list);
 convert_helper_t convert_to_data(file_info_list_t const& list);
 convert_helper_t convert_to_data(std::string string);
 
-#endif // BROPBOXUTIL_HPP 
+#endif // BROPBOXUTIL_HPP

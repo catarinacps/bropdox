@@ -25,7 +25,7 @@ void Client::send_file(char* file)
 
 void Client::get_file(char* file)
 {
-    file_info fileInfo;
+    /* file_info fileInfo;
     strcpy(fileInfo.name, file);
     fileInfo.size = 0;
     strcpy(fileInfo.last_modified, "");
@@ -60,7 +60,7 @@ void Client::get_file(char* file)
         delete[] recv_buffer;
     }
 
-    this->file_handler->write_file(fileInfo.name, recv_file, syn_package->num_packets);
+    this->file_handler->write_file(fileInfo.name, recv_file, syn_package->num_packets); */
 }
 
 void Client::delete_file(char* file)
