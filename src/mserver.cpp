@@ -41,21 +41,20 @@ int main(int argc, char* argv[])
     // close(sockfd);
     // return 0;
 
-    if (argc == 1 || argc > 3) {
+    if (argc != 2) {
         printf("Incorrect parameter usage, please refer to the following model:\n");
-        printf("./mserver <address> <port>\n\n");
+        printf("./mserver <port>\n\n");
 
         return -1;
     }
 
-    Server server = Server((in_port_t)atoi(argv[3]));
-    int proc_id;
+    Server server = Server((in_port_t)atoi(argv[1]));
 
     while (true) {
-        if ((proc_id = server.wait_client_request()) > 0) {
-            printf("Treating a request in %d...\n", proc_id);
+        if (server.wait_client_request() >= 0) {
+            printf("Server: Treating a request in a new thread...\n");
         } else {
-            printf("Failed handshake attempt received...\n");
+            printf("Server: Failed handshake attempt received...\n");
         }
     }
 }

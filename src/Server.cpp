@@ -5,7 +5,6 @@ Server::Server(in_port_t port_param)
     this->sock_handler = new SocketHandler(port_param);
     this->port = port_param;
     this->port_counter = port_param + 1;
-
 }
 
 int Server::wait_client_request()
@@ -16,31 +15,33 @@ int Server::wait_client_request()
     int ret_pcreate;
 
     data = this->sock_handler->wait_packet(sizeof(handshake_t));
-    if (data == NULL) {
-        return 0;
+    if (data == nullptr) {
+        return -1;
     }
 
     // Allocates the arguments struct to the pthread_create call
     arguments = new arg_thread_t;
     arguments->context = this;
-    arguments->hand_package = data;
+    arguments->hand_package = convert_to_handshake(data);
 
     printf("=> New handshake received, forking receiver process...\n");
     if ((ret_pcreate = pthread_create(&new_thread, NULL, &Server::treat_helper, arguments))) {
         printf("Failed to create new thread...");
         return ret_pcreate;
     }
+
     //TODO: Maybe store the thread descriptor?
 
+    delete[] data;
     return ret_pcreate;
 }
 
-void* Server::treat_client_request(data_buffer_t* package)
+void* Server::treat_client_request(handshake_t* hand)
 {
     bool pack_ok, req_handl_ok;
     std::string file_name;
-    handshake_t* hand;
     RequestHandler* rh;
+    char aux[MAXNAME];
 
     // TODO:
     // - check package (checksum) (is it really necessary?)
@@ -51,35 +52,41 @@ void* Server::treat_client_request(data_buffer_t* package)
         pthread_exit((void*)-1);
     }
 
-    // Converts the received byte-array to a handshake struct
-    hand = convert_to_handshake(package);
-    delete package;
+    // Reserves a new port to the new RequestHandler
+    in_port_t new_port = this->get_next_port();
 
     // Checks if the userid already has a declared RequestHandler
-    rh = new RequestHandler(this->sock_handler->get_last_clientaddr(), this->get_next_port(), hand->userid);
+    std::strncpy(aux, hand->userid, MAXNAME - 1);
+    rh = new RequestHandler(this->sock_handler->get_last_peeraddr(), new_port, aux);
+
+    // Sends to the client a syn packet containing a bool and the new port he is supposed to use
+    syn_t syn(true, new_port);
+    this->sock_handler->send_packet(&syn, sizeof(syn_t));
+
+    // dasdasd
     if (this->user_list.count(hand->userid) > 0) {
         // Declares on the heap a new Request Handler for the user's request
         if (this->user_list[hand->userid]->handlers[0] == nullptr) {
             this->user_list[hand->userid]->handlers[0] = rh;
-            this->user_list[hand->userid]->ports[0] = this->get_next_port();
+            this->user_list[hand->userid]->ports[0] = new_port;
         } else {
             this->user_list[hand->userid]->handlers[1] = rh;
-            this->user_list[hand->userid]->ports[1] = this->get_next_port();
+            this->user_list[hand->userid]->ports[1] = new_port;
         }
     } else {
         // Declares a new Request Handler for the new user's device
         this->user_list[hand->userid] = new client_data_t;
         this->user_list[hand->userid]->handlers[0] = rh;
-        this->user_list[hand->userid]->ports[0] = this->get_next_port();
+        this->user_list[hand->userid]->ports[0] = new_port;
     }
 
     switch (hand->req_type) {
     case req::sync:
-        req_handl_ok = rh->wait_request(hand->req_type);
+        req_handl_ok = rh->handle_request(hand->req_type);
         break;
     case req::send:
     case req::receive:
-        req_handl_ok = rh->wait_request(hand->req_type, hand->file);
+        req_handl_ok = rh->handle_request(hand->req_type);
         break;
     default:
         printf("Something went wrong...\n");

@@ -1,20 +1,15 @@
 #include "bropdoxUtil.hpp"
 #include <cmath>
-#include <experimental/filesystem>
 #include <fstream>
 #include <iostream>
 #include <sys/stat.h>
 #include <time.h>
 
-namespace fs = std::experimental::filesystem;
-
 class FileHandler {
 private:
     std::string client_id;
-    fs::path syncDir;
+    bf::path syncDir;
     bool initialized = false;
-
-    bool init_client(std::string client_id);
 
 public:
     FileHandler(std::string client_id);

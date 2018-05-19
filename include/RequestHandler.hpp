@@ -20,7 +20,7 @@ public:
      * 
      * @param a boolean representing success (true) or failure (false).
      */
-    bool wait_request(req req_type, struct file_info const& finfo = file_info());
+    bool handle_request(req req_type);
 
 private:
     std::string client_id;
@@ -38,7 +38,7 @@ private:
      * 
      * @param file Caminho completo do arquivo em questao. 
      */
-    void receive_file(char const* file);
+    void receive_file(char const* file, unsigned int packets_to_be_received);
 
     /**
      * Envia o arquivo file para o usuario.

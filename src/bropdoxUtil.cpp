@@ -61,14 +61,25 @@ packet_t* convert_to_packet(data_buffer_t* data)
 
 file_info_list_t* convert_to_file_list(data_buffer_t* data)
 {
-    file_info_list_t* packet = new file_info_list_t;
-    std::memcpy(packet, data, sizeof(file_info_list_t));
-    return packet;
+    file_info_list_t* list = new file_info_list_t;
+    std::memcpy(list, data, sizeof(file_info_list_t));
+    return list;
 }
+
+file_data_t* convert_to_file_data(data_buffer_t* data)
+{
+    file_data_t* file = new file_data_t;
+    std::memcpy(file, data, sizeof(file_data_t));
+    return file;
+}
+
+//***************************************************************
+//TODO: Remove all following convert_to_data functions.
+// They aren't needed anymore.
 
 convert_helper_t convert_to_data(packet_t& packet)
 {
-    data_buffer_t* data = new data_buffer_t[sizeof(packet_t)];
+    data_buffer_t* data = new data_buffer_t[sizeof(packet_t)]();
     convert_helper_t helper;
 
     helper.pointer = data;
@@ -81,7 +92,7 @@ convert_helper_t convert_to_data(packet_t& packet)
 
 convert_helper_t convert_to_data(packet_t const& packet)
 {
-    data_buffer_t* data = new data_buffer_t[sizeof(packet_t)];
+    data_buffer_t* data = new data_buffer_t[sizeof(packet_t)]();
     convert_helper_t helper;
 
     helper.pointer = data;
@@ -94,7 +105,7 @@ convert_helper_t convert_to_data(packet_t const& packet)
 
 convert_helper_t convert_to_data(handshake_t& hand)
 {
-    data_buffer_t* data = new data_buffer_t[sizeof(handshake_t)];
+    data_buffer_t* data = new data_buffer_t[sizeof(handshake_t)]();
     convert_helper_t helper;
 
     helper.pointer = data;
@@ -107,7 +118,7 @@ convert_helper_t convert_to_data(handshake_t& hand)
 
 convert_helper_t convert_to_data(ack_t& ack)
 {
-    data_buffer_t* data = new data_buffer_t[sizeof(ack_t)];
+    data_buffer_t* data = new data_buffer_t[sizeof(ack_t)]();
     convert_helper_t helper;
 
     helper.pointer = data;
@@ -120,7 +131,7 @@ convert_helper_t convert_to_data(ack_t& ack)
 
 convert_helper_t convert_to_data(syn_t& syn)
 {
-    data_buffer_t* data = new data_buffer_t[sizeof(syn_t)];
+    data_buffer_t* data = new data_buffer_t[sizeof(syn_t)]();
     convert_helper_t helper;
 
     helper.pointer = data;
@@ -133,7 +144,7 @@ convert_helper_t convert_to_data(syn_t& syn)
 
 convert_helper_t convert_to_data(file_info_list_t& list)
 {
-    data_buffer_t* data = new data_buffer_t[sizeof(file_info_list_t)];
+    data_buffer_t* data = new data_buffer_t[sizeof(file_info_list_t)]();
     convert_helper_t helper;
 
     helper.pointer = data;
@@ -146,7 +157,7 @@ convert_helper_t convert_to_data(file_info_list_t& list)
 
 convert_helper_t convert_to_data(file_info_list_t const& list)
 {
-    data_buffer_t* data = new data_buffer_t[sizeof(file_info_list_t)];
+    data_buffer_t* data = new data_buffer_t[sizeof(file_info_list_t)]();
     convert_helper_t helper;
 
     helper.pointer = data;
@@ -158,7 +169,7 @@ convert_helper_t convert_to_data(file_info_list_t const& list)
 }
 
 convert_helper_t convert_to_data(std::string string) {
-    auto* data = new data_buffer_t[string.size()];
+    auto* data = new data_buffer_t[string.size()]();
     convert_helper_t helper;
 
     helper.pointer = data;

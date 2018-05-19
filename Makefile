@@ -14,7 +14,7 @@
 CC = g++
 DFLAG = 
 DEBUG = -g -fsanitize=address -O0
-CFLAGS = -std=c++11 -Wall -Wextra -Wshadow -Wunreachable-code -lpthread -lstdc++fs $(if $(DFLAG), $(DEBUG), -O3)
+CFLAGS = -std=c++11 -Wall -Wextra -Wshadow -Wunreachable-code -lpthread -lboost_system -lboost_filesystem $(if $(DFLAG), $(DEBUG), -O3)
 TFLAGS = --error-printer
 INC_FLAG := -I$(INC_DIR)
 

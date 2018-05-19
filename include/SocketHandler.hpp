@@ -1,7 +1,6 @@
 #ifndef SOCKETHANDLER_HPP
 #define SOCKETHANDLER_HPP
 
-#include <netdb.h>
 #include "bropdoxUtil.hpp"
 
 class SocketHandler {
@@ -24,22 +23,32 @@ public:
      * 
      * @return a boolean representing success (true) or failure (false).
      */
-    bool send_packet(data_buffer_t* data, size_t size);
+    bool send_packet(void* data, size_t size);
 
-    sockaddr_in get_last_clientaddr();
+    sockaddr_in get_last_peeraddr();
 
 private:
     int sockfd;
-    hostent* client;
-    socklen_t client_len;
-    struct sockaddr_in handler_address, client_address;
+    socklen_t peer_len;
+    struct sockaddr_in handler_address, peer_address;
 
 public:
-    SocketHandler(sockaddr_in client_addr, in_port_t port, hostent* server);
-    SocketHandler(sockaddr_in caddress, in_port_t port);
+    /**
+     * The one used by the client
+     */
+    SocketHandler(in_port_t port, hostent* server);
+
+    /**
+     * The one used by the RequestHandler
+     */
+    SocketHandler(in_port_t port, sockaddr_in peer_address);
+
+    /**
+     * The one used by the server
+     */
     SocketHandler(in_port_t port);
+
     ~SocketHandler();
-    void bind_socket();
 };
 
 #endif // SOCKETHANDLER_HPP
