@@ -7,7 +7,7 @@ Server::Server(in_port_t port_param)
     this->port_counter = port_param + 1;
 }
 
-int Server::wait_client_request()
+int Server::listen()
 {
     data_buffer_t* data;
     pthread_t new_thread;
@@ -47,7 +47,7 @@ void* Server::treat_client_request(handshake_t* hand)
     pack_ok = true;
 
     if (!pack_ok) {
-        printf("Bad request/handshake, turning down connection...\n");
+        this->log(hand->userid, "Bad request/handshake");
         pthread_exit((void*)-1);
     }
 
@@ -56,12 +56,14 @@ void* Server::treat_client_request(handshake_t* hand)
 
     // Checks if the userid already has a declared RequestHandler
     rh = new RequestHandler(this->sock_handler->get_last_peeraddr(), new_port, hand->userid);
+    this->log(hand->userid, "Declared a new RequestHandler for the request");
 
     // Sends to the client a syn packet containing a bool and the new port he is supposed to use
     syn_t syn(true, new_port);
     this->sock_handler->send_packet(&syn, sizeof(syn_t));
+    this->log(hand->userid, "Sent a SYN to the client");
 
-    // dasdasd
+    //TODO: Separate the following behaviour to another method
     if (this->user_list.count(hand->userid) > 0) {
         // Declares on the heap a new Request Handler for the user's request
         if (this->user_list[hand->userid]->handlers[0] == nullptr) {
@@ -78,21 +80,12 @@ void* Server::treat_client_request(handshake_t* hand)
         this->user_list[hand->userid]->ports[0] = new_port;
     }
 
-    switch (hand->req_type) {
-    case req::sync:
-        req_handl_ok = rh->handle_request(hand->req_type);
-        break;
-    case req::send:
-    case req::receive:
-        req_handl_ok = rh->handle_request(hand->req_type);
-        break;
-    default:
-        printf("Something went wrong...\n");
-        req_handl_ok = false;
-    }
+    // Calls the RequestHandler to handle the client's request
+    this->log(hand->userid, "Calling the created RequestHandler...");
+    req_handl_ok = rh->handle_request(hand->req_type);
 
     if (!req_handl_ok) {
-        printf("Communication with RequestHandler failed...");
+        this->log(hand->userid, "Communication with RequestHandler failed");
         pthread_exit((void*)-1);
     }
 
@@ -110,7 +103,7 @@ int Server::get_next_port()
     return this->port_counter;
 }
 
-bool Server::deallocate_request_chandler(int device, std::string user_id)
+bool Server::logout_client(int device, std::string user_id)
 {
     if (device <= 2 && this->user_list[user_id]->handlers[device] != nullptr) {
         delete this->user_list[user_id]->handlers[device];
@@ -120,6 +113,11 @@ bool Server::deallocate_request_chandler(int device, std::string user_id)
     }
 
     return false;
+}
+
+void Server::log(char const* userid, char const* message)
+{
+    printf("Server [UID: %s]: %s\n", userid, message);
 }
 
 void* Server::treat_helper(void* arg)

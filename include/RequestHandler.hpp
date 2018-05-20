@@ -47,8 +47,14 @@ private:
      */
     void send_file(char const* file);
 
+    /**
+     * Log's the message to the terminal using the UserID
+     */
+    void log(char const* message);
+
 public:
     RequestHandler(sockaddr_in client_address, in_port_t port, std::string address = "");
+    ~RequestHandler();
 };
 
 #endif // REQUESTHANDLER_HPP

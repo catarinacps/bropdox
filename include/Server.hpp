@@ -15,15 +15,13 @@ typedef struct {
 
 class Server {
 public:
-    int wait_client_request();
+    int listen();
 
 private:
-    SocketHandler* sock_handler;
     in_port_t port;
     int port_counter;
+    SocketHandler* sock_handler;
     std::map<std::string, client_data_t*> user_list;
-
-    void init_client_sync_folder(char const* user_id);
 
     /**
      * Trata o handshake do cliente.
@@ -35,7 +33,9 @@ private:
      */
     void* treat_client_request(handshake_t* package);
 
-    bool deallocate_request_chandler(int device, std::string user_id);
+    bool logout_client(int device, std::string user_id);
+
+    void log(char const* userid, char const* message);
 
     int get_next_port();
 
