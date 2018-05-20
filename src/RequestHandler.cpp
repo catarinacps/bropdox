@@ -187,7 +187,6 @@ void RequestHandler::send_file(char const* file)
 
     // Packet sending loop
     for (int i = 0; i < file_size_in_packets; i++) {
-        //! MAYBE THE FOLLOWING WILL GO TERRIBLY BAD because the sizeof part
         this->sock_handler->send_packet(packets[i], sizeof(packet_t));
         usleep(15);
     }
@@ -221,6 +220,7 @@ void RequestHandler::receive_file(char const* file, unsigned int packets_to_be_r
 
     // Packet receiving loop
     for (unsigned int i = 0; i < packets_to_be_received; i++) {
+        std::cout << i << std::endl;
         received_packet = this->sock_handler->wait_packet(sizeof(packet_t));
 
         // If the received packet is NULL, we do nothing

@@ -49,11 +49,8 @@ bool FileHandler::write_file(char const* file_name, data_buffer_t* file_data[], 
     try {
         for (int i = 0; i < size_in_packets; i++) {
             printf("I tried!\n");
-            //myFile.write(reinterpret_cast<char*>(&file_data[i]), PACKETSIZE);
-            myFile << reinterpret_cast<unsigned char*>(file_data[i]);
+            myFile.write(reinterpret_cast<char*>(file_data[i]), PACKETSIZE);
         }
-        /* for (auto const& item : file_data) {
-        } */
     } catch (std::ios::failure& e) {
         std::cerr << "Error while trying to write to the file:\n    " << e.what();
         myFile.close();
@@ -85,11 +82,12 @@ packet_t** FileHandler::get_file(char const* file_name, long int& file_size_in_p
         do {
             myFile.read(reinterpret_cast<char*>(read_bytes->data), PACKETSIZE);
             printf("read something\n");
-            read_bytes->num = i;
             file_data[i] = read_bytes;
             i++;
+            std::cout << i << std::endl;
             read_bytes = new packet_t(i);
-        } while (myFile.read(reinterpret_cast<char*>(read_bytes->data), PACKETSIZE));
+        } while (myFile);
+
         delete read_bytes;
 
         return file_data;

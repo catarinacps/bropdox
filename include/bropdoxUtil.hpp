@@ -38,9 +38,13 @@ namespace bf = boost::filesystem;
  * Types
  */
 
-enum class req { sync,
+enum class req { 
+    sync,
     send,
-    receive };
+    receive,
+    del,
+    close
+};
 
 typedef unsigned char data_buffer_t;
 
@@ -52,14 +56,15 @@ struct file_info {
     file_info(std::string name_p, std::string sync_dir)
     : name{ '\0' }, last_modified{ '\0' }, size(0)
     {
-        auto last_time = bf::last_write_time(sync_dir + name_p);
+        time_t last_time;
 
         if (bf::exists(sync_dir + name_p)) {
+            last_time = bf::last_write_time(sync_dir + name_p);
             size = bf::file_size(sync_dir + name_p);
+            std::strcpy(last_modified, asctime(gmtime(&last_time)));
         }
 
         std::strcpy(name, name_p.c_str());
-        std::strcpy(last_modified, asctime(gmtime(&last_time)));
     }
 
     file_info()
@@ -143,7 +148,7 @@ typedef struct packet {
     data_buffer_t data[PACKETSIZE];
 
     packet(unsigned int num_p)
-    : num(num_p), data{ '\0' } 
+    : num(num_p)
     {
     }
 

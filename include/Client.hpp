@@ -47,7 +47,7 @@ public:
      * 
      * @param file O nome e extensao do arquivo.
      */
-    void send_file(char* file);
+    void send_file(char const* file);
 
     /**
      * Obtem um arquivo file do servidor.
@@ -56,14 +56,14 @@ public:
      * 
      * @param file O nome e extensao do arquivo.
      */
-    void get_file(char* file);
+    void get_file(char const* file);
 
     /**
      * Exclui um arquivo de "sync_dir_<nomeusuario>".
      * 
      * @param file O nome e extensao do arquivo.
      */
-    void delete_file(char* file);
+    void delete_file(char const* file);
 
     /**
      * Fecha a sessao com o servidor.
