@@ -40,6 +40,7 @@ bool RequestHandler::handle_request(req req_type)
         }
 
         delete[] data;
+        std::cout << finfo->file.name << std::endl;
         this->receive_file(finfo->file.name, finfo->num_packets);
     } break;
     default:
@@ -180,7 +181,7 @@ void RequestHandler::send_file(char const* file)
     long int file_size_in_packets;
     packet_t** packets = this->file_handler->get_file(file, file_size_in_packets);
 
-    struct file_info finfo(file);
+    struct file_info finfo = this->file_handler->get_file_info(file);
     file_data_t file_data(finfo, file_size_in_packets);
     this->sock_handler->send_packet(&file_data, sizeof(file_data_t));
 
@@ -223,11 +224,11 @@ void RequestHandler::receive_file(char const* file, unsigned int packets_to_be_r
         received_packet = this->sock_handler->wait_packet(sizeof(packet_t));
 
         // If the received packet is NULL, we do nothing
-        if (received_packet != NULL) {
+        if (received_packet != nullptr) {
             received = convert_to_packet(received_packet);
+            //TODO: Copy the received data array to the recv_file array
             recv_file[received->num] = received->data;
             received_packet_number++;
-            delete received;
         }
 
         delete[] received_packet;
@@ -238,7 +239,7 @@ void RequestHandler::receive_file(char const* file, unsigned int packets_to_be_r
     // If the number doesnt match the expected number, the client should do something about it.
     // Also, we do nothing if the number doesnt match.
     if (received_packet_number == packets_to_be_received) {
-        printf("RequestHandler: Success receiving the file");
+        printf("RequestHandler: Success receiving the file\n");
 
         ack_t ack(true);
         this->sock_handler->send_packet(&ack, sizeof(ack_t));
@@ -250,10 +251,10 @@ void RequestHandler::receive_file(char const* file, unsigned int packets_to_be_r
         ack_t ack(false);
         this->sock_handler->send_packet(&ack, sizeof(ack_t));
     }
+    printf("sup\n");
 
-    for (auto const& point : recv_file)
-        delete[] point;
-    delete[] recv_file;
+    /* for (auto const& point : recv_file)
+        delete[] point; */
 
     return;
 }

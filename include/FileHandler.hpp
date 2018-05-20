@@ -9,7 +9,7 @@ class FileHandler {
 private:
     std::string client_id;
     bf::path syncDir;
-    bool initialized = false;
+    bool server;
 
 public:
     FileHandler(std::string client_id);

@@ -49,10 +49,14 @@ struct file_info {
     char last_modified[MAXNAME];
     int size;
 
-    file_info(std::string name_p)
-    : name{ '\0' }, last_modified{ '\0' }, size(bf::file_size(name_p))
+    file_info(std::string name_p, std::string sync_dir)
+    : name{ '\0' }, last_modified{ '\0' }, size(0)
     {
-        auto last_time = bf::last_write_time(name_p);
+        auto last_time = bf::last_write_time(sync_dir + name_p);
+
+        if (bf::exists(sync_dir + name_p)) {
+            size = bf::file_size(sync_dir + name_p);
+        }
 
         std::strcpy(name, name_p.c_str());
         std::strcpy(last_modified, asctime(gmtime(&last_time)));
@@ -134,9 +138,18 @@ typedef struct file_data {
     }
 } file_data_t;
 
-typedef struct {
+typedef struct packet {
     unsigned int num;
     data_buffer_t data[PACKETSIZE];
+
+    packet(unsigned int num_p)
+    : num(num_p), data{ '\0' } 
+    {
+    }
+
+    packet()
+    {
+    }
 } packet_t;
 
 typedef struct {

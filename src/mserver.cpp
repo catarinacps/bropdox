@@ -49,6 +49,7 @@ int main(int argc, char* argv[])
     }
 
     Server server = Server((in_port_t)atoi(argv[1]));
+    printf("Server: Server is live\n");
 
     while (true) {
         if (server.wait_client_request() >= 0) {

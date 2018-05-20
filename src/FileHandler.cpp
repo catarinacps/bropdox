@@ -1,7 +1,7 @@
 #include "../include/FileHandler.hpp"
 
 FileHandler::FileHandler(std::string client_id_param)
-    : syncDir(std::string(getenv("HOME")) + "/sync_dir_" + client_id_param + "/")
+    : syncDir(std::string(getenv("HOME")) + "/sync_dir_" + client_id_param + "/"), server(false)
 {
     if (client_id_param.size() <= 0) {
         throw new std::invalid_argument("Invalid ID size.");
@@ -20,7 +20,7 @@ FileHandler::FileHandler(std::string client_id_param)
 }
 
 FileHandler::FileHandler(std::string client_id_param, int flag)
-    : syncDir("sync_dir_" + client_id_param + "/")
+    : syncDir("sync_dir_" + client_id_param + "/"), server(true)
 {
     if (client_id_param.size() <= 0) {
         throw new std::invalid_argument("Invalid ID size.");
@@ -41,20 +41,21 @@ FileHandler::FileHandler(std::string client_id_param, int flag)
 //Function that receives an *databuffer and a filename and writes on disk
 bool FileHandler::write_file(char const* file_name, data_buffer_t* file_data[], int size_in_packets)
 {
+    std::cout << this->syncDir.string() + file_name << std::endl;
     std::ofstream myFile;
-    myFile.exceptions(std::ios::failbit | std::ios::badbit);
-    myFile.open(this->syncDir.string() + file_name, std::ios::binary | std::ios::in | std::ios::out);
+    //myFile.exceptions(std::ios::failbit | std::ios::badbit);
+    myFile.open(this->syncDir.string() + file_name, std::ios::binary | std::ios::out);
 
     try {
         for (int i = 0; i < size_in_packets; i++) {
-            myFile.write(reinterpret_cast<char*>(&file_data[i]), PACKETSIZE);
+            printf("I tried!\n");
+            //myFile.write(reinterpret_cast<char*>(&file_data[i]), PACKETSIZE);
+            myFile << reinterpret_cast<unsigned char*>(file_data[i]);
         }
         /* for (auto const& item : file_data) {
-            myFile << (unsigned char*)file_data[i];
         } */
     } catch (std::ios::failure& e) {
-        std::cerr << "Erro ao escrever arquivo.\n"
-                  << e.what();
+        std::cerr << "Error while trying to write to the file:\n    " << e.what();
         myFile.close();
         return false;
     }
@@ -68,85 +69,35 @@ packet_t** FileHandler::get_file(char const* file_name, long int& file_size_in_p
 {
     packet_t* read_bytes;
     packet_t** file_data;
-    FILE* file_desc;
-    int i = 0;
+    unsigned int i = 0;
     bf::recursive_directory_iterator end;
     std::ifstream myFile;
 
-    for (bf::recursive_directory_iterator it(this->syncDir); it != end; it++) {
-        auto const& p = it->path();
+    std::string fname_string(this->syncDir.string() + file_name);
 
-        std::cout << p.c_str() << std::endl;
-        if (p.generic_string() == this->syncDir.generic_string() + file_name) {
+    myFile.open(fname_string, std::ios::binary | std::ios::in);
 
-            try {
-                myFile.exceptions(std::ios::failbit | std::ios::badbit);
-                myFile.open(p.string(), std::ios::binary | std::ios::in);
-                printf("open file\n");
+    try {
+        file_size_in_packets = static_cast<long int>(ceil(static_cast<float>(bf::file_size(fname_string)) / static_cast<float>(PACKETSIZE)));
+        file_data = new packet_t*[file_size_in_packets];
+        read_bytes = new packet_t(i);
 
-                file_data = new packet_t*[bf::file_size(p) % PACKETSIZE];
-                read_bytes = new packet_t;
+        do {
+            myFile.read(reinterpret_cast<char*>(read_bytes->data), PACKETSIZE);
+            printf("read something\n");
+            read_bytes->num = i;
+            file_data[i] = read_bytes;
+            i++;
+            read_bytes = new packet_t(i);
+        } while (myFile.read(reinterpret_cast<char*>(read_bytes->data), PACKETSIZE));
+        delete read_bytes;
 
-                while (myFile.read(reinterpret_cast<char*>(read_bytes->data), PACKETSIZE)) {
-                    printf("read something\n");
-                    read_bytes->num = i;
-                    file_data[i] = read_bytes;
-                    read_bytes = new packet_t;
-                    i++;
-                }
-            } catch (std::ios::failure const& e) {
-                std::cerr << e.what() << '\n';
-                myFile.close();
-                return nullptr;
-            }
-
-            myFile.close();
-            return file_data;
-        }
+        return file_data;
+    } catch (std::ios::failure const& e) {
+        std::cerr << "Error while trying to read the file:\n    " << e.what() << '\n';
+        myFile.close();
+        return nullptr;
     }
-
-    /* for (auto const& p : bf::recursive_directory_iterator(this->syncDir)) {
-        auto const accessed_file = p.path();
-        std::cout << accessed_file.filename() << std::endl;
-        if (accessed_file.filename().c_str() == file_name) {
-            file_desc = fopen(file_name, "rb");
-
-            fseek(file_desc, 0L, SEEK_END);
-            file_size_in_packets = (long int)ceil(ftell(file_desc) % PACKETSIZE);
-            rewind(file_desc);
-
-            file_data = new packet_t*[file_size_in_packets];
-            read_bytes = new packet_t;
-
-            while (!fread(read_bytes->data, 1, PACKETSIZE, file_desc)) {
-                read_bytes->num = i;
-                file_data[i] = read_bytes;
-                read_bytes = new packet_t;
-                i++;
-            }
-
-            fclose(file_desc);
-            return file_data;
-        }
-    } */
-    printf("null file ptr");
-    return nullptr;
-
-    /* 
-    //isso aqui pega arquivo do server? hmm
-
-    for (auto& p : fs::recursive_directory_iterator(syncDir)) {
-        auto accessed_file = p.path();
-        if (accessed_file.filename().c_str() == file_name) {
-            auto buffer = new std::vector<data_buffer_t>;
-            std::ifstream file;
-            file.exceptions(std::ifstream::badbit | std::ifstream::failbit);
-            file.open(accessed_file);
-            //TODO: pegar o conteudo e passar pra data_buffer_t[]
-        }
-    }
-
-    return nullptr; */
 }
 
 std::vector<file_info> FileHandler::get_file_info_list()
@@ -170,4 +121,9 @@ std::vector<file_info> FileHandler::get_file_info_list()
     }
 
     return file_info_vector;
+}
+
+file_info FileHandler::get_file_info(char const* file_name)
+{
+    return file_info(file_name, this->syncDir.string());
 }

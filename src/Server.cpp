@@ -24,7 +24,7 @@ int Server::wait_client_request()
     arguments->context = this;
     arguments->hand_package = convert_to_handshake(data);
 
-    printf("=> New handshake received, forking receiver process...\n");
+    printf("=> New handshake received, creating receiver thread...\n");
     if ((ret_pcreate = pthread_create(&new_thread, NULL, &Server::treat_helper, arguments))) {
         printf("Failed to create new thread...");
         return ret_pcreate;
@@ -41,7 +41,6 @@ void* Server::treat_client_request(handshake_t* hand)
     bool pack_ok, req_handl_ok;
     std::string file_name;
     RequestHandler* rh;
-    char aux[MAXNAME];
 
     // TODO:
     // - check package (checksum) (is it really necessary?)
@@ -56,8 +55,7 @@ void* Server::treat_client_request(handshake_t* hand)
     in_port_t new_port = this->get_next_port();
 
     // Checks if the userid already has a declared RequestHandler
-    std::strncpy(aux, hand->userid, MAXNAME - 1);
-    rh = new RequestHandler(this->sock_handler->get_last_peeraddr(), new_port, aux);
+    rh = new RequestHandler(this->sock_handler->get_last_peeraddr(), new_port, hand->userid);
 
     // Sends to the client a syn packet containing a bool and the new port he is supposed to use
     syn_t syn(true, new_port);

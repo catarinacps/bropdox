@@ -16,7 +16,6 @@ DFLAG =
 DEBUG = -g -fsanitize=address -O0
 CFLAGS = -std=c++11 -Wall -Wextra -Wshadow -Wunreachable-code -lpthread -lboost_system -lboost_filesystem $(if $(DFLAG), $(DEBUG), -O3)
 TFLAGS = --error-printer
-INC_FLAG := -I$(INC_DIR)
 
 #	Diretorios do projeto
 INC_DIR = include
@@ -24,6 +23,8 @@ OBJ_DIR = build
 BIN_DIR = bin
 SRC_DIR = src
 TST_DIR = tests
+
+INC_FLAG := -I$(INC_DIR)
 
 #	Caminho do arquivo estático final
 _TARGET = mserver mclient

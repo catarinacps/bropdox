@@ -94,9 +94,9 @@ int main(int argc, char* argv[])
 
     SocketHandler req_sock_hand(syn->port, server);
     long int packet_size;
-    packet_t** packets = file_hand.get_file("teste.txt", packet_size);
+    packet_t** packets = file_hand.get_file("dropbox.png", packet_size);
 
-    struct file_info finfo(std::string(getenv("HOME")) + "/sync_dir_john/teste.txt");
+    struct file_info finfo = file_hand.get_file_info("dropbox.png");
     file_data_t file_data(finfo, packet_size);
 
     req_sock_hand.send_packet(&file_data, sizeof(file_data_t));
@@ -104,11 +104,15 @@ int main(int argc, char* argv[])
     data_buffer_t* ack_data = req_sock_hand.wait_packet(sizeof(ack_t));
     ack_t* ack = convert_to_ack(ack_data);
 
+    std::cout << packet_size << std::endl;
     for (int i = 0; i < packet_size; i++) {
-        //! MAYBE THE FOLLOWING WILL GO TERRIBLY BAD because the sizeof part
-        req_sock_hand.send_packet(packets[i], sizeof(packet_t));
+        std::cout << packets[i] << std::endl;
+        if (!req_sock_hand.send_packet(packets[i], sizeof(packet_t))) {
+            printf("Failed sending packet number %d\n", i);
+        }
         usleep(15);
     }
+    printf("Finished trying to send the packets \n");
 
     data_buffer_t* ack_data2 = req_sock_hand.wait_packet(sizeof(ack_t));
     ack_t* ack2 = convert_to_ack(ack_data2);
