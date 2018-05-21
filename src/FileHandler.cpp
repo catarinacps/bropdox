@@ -43,7 +43,13 @@ FileHandler::FileHandler(std::string client_id_param, int flag)
 bool FileHandler::write_file(char const* file_name, data_buffer_t* file_data[], int size_in_packets)
 {
     std::ofstream myFile;
-    std::string fname_string(this->syncDir.string() + file_name);
+    std::string fname_string;
+
+    if (std::string(file_name).find("/") == 0) {
+        fname_string = this->syncDir.string() + bf::path(file_name).filename().string();
+    } else {
+        fname_string = this->syncDir.string() + file_name;
+    }
 
     myFile.open(fname_string, std::ios::binary | std::ios::out);
     this->log("Opened the file");
@@ -69,14 +75,17 @@ packet_t** FileHandler::get_file(char const* file_name, long int& file_size_in_p
     packet_t* read_bytes;
     packet_t** file_data;
     unsigned int i = 0;
-    std::string fname_string(this->syncDir.string() + file_name);
     std::ifstream myFile;
+    std::string fname_string;
 
     if (std::string(file_name).find("/") == 0) {
         bf::copy_file(std::string(file_name), this->syncDir.string() + bf::path(file_name).filename().string(), bf::copy_option::overwrite_if_exists);
+
+        fname_string = this->syncDir.string() + bf::path(file_name).filename().string();
+    } else {
+        fname_string = this->syncDir.string() + file_name;
     }
 
-    std::string fname_string(this->syncDir.string() + bf::path(file_name).filename().string());
     if (!bf::exists(fname_string)) {
         this->log("File doesn't exist");
         file_size_in_packets = 0;
@@ -134,6 +143,9 @@ std::vector<file_info> FileHandler::get_file_info_list()
 
 file_info FileHandler::get_file_info(char const* file_name)
 {
+    if (std::string(file_name).find("/") == 0) {
+        return file_info(bf::path(file_name).filename().string(), this->syncDir.string());
+    }
     return file_info(file_name, this->syncDir.string());
 }
 

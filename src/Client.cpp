@@ -118,6 +118,7 @@ bool Client::send_file(char const* file)
         this->sock_handler_req->send_packet(packets[i], sizeof(packet_t));
         usleep(15);
     }
+    this->log("Finished sending the file");
 
     // The Client then procedes to wait for the RequestHandler's ack, which will contain the
     // number of packets that he received.
@@ -130,7 +131,10 @@ bool Client::send_file(char const* file)
     if (!ack->confirmation) {
         this->log("Bad ACK received, sending file again...");
         this->send_file(file);
+    } else {
+        this->log("Success uploading the file");
     }
+
 
     delete ack;
     delete[] returned_ack;
@@ -156,7 +160,7 @@ bool Client::get_file(char const* file)
 
     received_packet = this->sock_handler_req->wait_packet(sizeof(file_data_t));
     received_finfo = convert_to_file_data(received_packet);
-    delete received_packet;
+    delete[] received_packet;
 
     if (received_finfo->num_packets == 0) {
         this->log("Bad file info received");
