@@ -2,7 +2,6 @@
 
 int main(int argc, char* argv[])
 {
-    printf("here\n\n\n\n");
     // int sockfd, n;
     // unsigned int length;
     // struct sockaddr_in serv_addr, from;

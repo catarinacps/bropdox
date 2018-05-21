@@ -6,9 +6,9 @@
 #include "bropdoxUtil.hpp"
 
 #include <map>
-#include <queue>
 #include <pthread.h>
 #include <algorithm>
+#include <boost/algorithm/string.hpp>
 
 class Client {
 public:
@@ -20,7 +20,7 @@ private:
     std::string userid;
     hostent* server;
 
-    struct file_info files[MAXFILES];
+    // struct file_info files[MAXFILES];
     SocketHandler* sock_handler_server, *sock_handler_req;
     FileHandler* file_handler;
 
@@ -73,7 +73,7 @@ private:
      */
     bool close_session();
 
-    bool parse_input(std::queue<std::string> tokens);
+    bool parse_input(std::vector<std::string> tokens);
 
     bool send_handshake(req request);
 

@@ -11,52 +11,40 @@ void Client::command_line_interface()
     char* token;
     std::string input;
     unsigned int length;
-    std::queue<std::string> tokens;
+    std::vector<std::string> tokens;
 
     while (true) {
         std::cout << "$ ";
-        std::cin >> input;
+        std::getline(std::cin, input);
 
         length = input.length();
         if (length > 0) {
-            char* input_ar = new char[length];
-            std::memcpy(input_ar, input.c_str(), length);
+            boost::split(tokens, input, boost::is_any_of(" "));
 
-            token = std::strtok(input_ar, " ");
-            while (token != NULL) {
-                tokens.push(token);
-                token = std::strtok(NULL, " ");
-            }
-
-            delete[] input_ar;
             this->log("Parsing input");
             this->parse_input(tokens);
         }
     }
 }
 
-bool Client::parse_input(std::queue<std::string> tokens)
+bool Client::parse_input(std::vector<std::string> tokens)
 {
-    std::string command(tokens.front());
-    tokens.pop();
+    std::string command(tokens[0]);
 
     if (command == "login") {
-        std::string address(tokens.front());
-        tokens.pop();
-        in_port_t port = atoi(tokens.front().c_str());
-        tokens.pop();
+        std::string address(tokens[1]);
+        std::string port_s(tokens[2]);
+        in_port_t port = atoi(port_s.c_str());
 
         return this->login_server(address.c_str(), port);
     } else if (command == "upload") {
-        std::string file_path(tokens.front());
-        tokens.pop();
+        std::string file_path(tokens[1]);
 
         // ATTENTION
         // The file_path variable contains the whole path to the file.
         return this->send_file(file_path.c_str());
     } else if (command == "download") {
-        std::string file_path(tokens.front());
-        tokens.pop();
+        std::string file_path(tokens[1]);
 
         return this->get_file(file_path.c_str());
     } else if (command == "exit") {
@@ -235,6 +223,7 @@ bool Client::send_handshake(req request)
     // Sends a handshake to the server containing the request type
     handshake_t hand(request, this->userid.c_str());
     this->sock_handler_server->send_packet(&hand, sizeof(handshake_t));
+    this->log("Sent handshake to server");
 
     // Waits the SYN data containing the port
     syn_data = this->sock_handler_server->wait_packet(sizeof(syn_t));

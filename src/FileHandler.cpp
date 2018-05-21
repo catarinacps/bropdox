@@ -71,7 +71,7 @@ packet_t** FileHandler::get_file(char const* file_name, long int& file_size_in_p
     std::ifstream myFile;
 
     if (std::string(file_name).find("/") == 0) {
-        bf::copy_file(std::string(file_name), this->syncDir.string(), bf::copy_option::overwrite_if_exists);
+        bf::copy_file(std::string(file_name), this->syncDir.string() + bf::path(file_name).filename().string(), bf::copy_option::overwrite_if_exists);
     }
 
     std::string fname_string(this->syncDir.string() + bf::path(file_name).filename().string());
