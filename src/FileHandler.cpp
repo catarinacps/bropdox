@@ -141,6 +141,16 @@ std::vector<file_info> FileHandler::get_file_info_list()
     return file_info_vector;
 }
 
+bool FileHandler::delete_file(char const* file_name)
+{
+    if (bf::exists(this->syncDir.string() + file_name)) {
+        bf::remove(this->syncDir.string() + file_name);
+        return true;
+    }
+
+    return false;
+}
+
 file_info FileHandler::get_file_info(char const* file_name)
 {
     if (std::string(file_name).find("/") == 0) {

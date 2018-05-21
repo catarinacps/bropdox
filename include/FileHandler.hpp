@@ -12,6 +12,8 @@ public:
 
     packet_t** get_file(char const* file_name, long int& file_size);
 
+    bool delete_file(char const* file_name);
+
     std::vector<file_info> get_file_info_list();
 
     file_info get_file_info(char const* file_name);

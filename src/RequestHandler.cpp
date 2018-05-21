@@ -44,6 +44,14 @@ bool RequestHandler::handle_request(req req_type)
 
         this->receive_file(finfo->file.name, finfo->num_packets);
     } break;
+    case req::del: {
+        data_buffer_t* data = this->sock_handler->wait_packet(sizeof(file_data_t));
+        file_data_t* finfo = convert_to_file_data(data);
+        this->log("Received the to-be-deleted file name");
+        delete[] data;
+
+        this->delete_file(finfo->file.name);
+    } break;
     default:
         printf("Something went wrong...\n");
         return false;
@@ -54,21 +62,21 @@ bool RequestHandler::handle_request(req req_type)
 
 void RequestHandler::sync_server()
 {
-    int i = 0, dummy_file_info_num;
+    /* int i = 0, dummy_file_info_num;
     bool has_next_file_list = false;
     double num_file_lists;
     data_buffer_t* received_data;
     convert_helper_t helper;
     file_info_list_t* received_list;
-    std::vector<file_info> modified_files, diff_files, to_be_sent_files;
+    std::vector<file_data_t> modified_files, diff_files, to_be_sent_files;
     std::string name;
-    std::vector<file_info>::iterator it1, it2;
+    std::vector<file_data_t>::iterator it1, it2;
 
     // !
     //TODO: Fix this whole method
     // !
 
-    /*************************************************************************/
+    /************************************************************************
     // Receive the modified files and overwrite them
     do {
         // Receives the file_info_list
@@ -76,23 +84,24 @@ void RequestHandler::sync_server()
         received_list = convert_to_file_list(received_data);
         delete[] received_data;
 
-        // If the received file_info_list has another incoming list, this field will be 'true'
-        has_next_file_list = received_list->has_next;
-
         // Pushes every received file_info to the modified_files array
-        while (i < MAX_FILE_LIST_SIZE && received_list->file_list[i].size > 0) {
+        while (i < MAX_FILE_LIST_SIZE && received_list->file_list[i].num_packets > 0) {
             modified_files.push_back(received_list->file_list[i]);
             i++;
         }
+
+        // If the received file_info_list has another incoming list, this field will be 'true'
+        has_next_file_list = received_list->has_next;
+        delete received_list;
     } while (has_next_file_list);
     // Iterates while there is an incoming list
 
     // Then we proceed to receive every file that the client has sent us
-    for (auto const& file : modified_files) {
-        //this->receive_file(file.name);
+    for (auto const& file_d : modified_files) {
+        this->receive_file(file_d.file.name, file_d.num_packets);
     }
 
-    /*************************************************************************/
+    /************************************************************************
     // Send the complete file list minus the just received modified files
     
     std::vector<file_info> server_files = this->file_handler->get_file_info_list();
@@ -114,7 +123,7 @@ void RequestHandler::sync_server()
     dummy_file_info_num = num_file_lists * MAX_FILE_LIST_SIZE - diff_files.size();
     // Fills out the 'padding' part
     if (dummy_file_info_num > 0) {
-        file_info dummy;
+        file_data_t dummy;
         for (i = 0; i < dummy_file_info_num; i++) diff_files.push_back(dummy);
     }
 
@@ -147,7 +156,7 @@ void RequestHandler::sync_server()
         usleep(15);
     }
 
-    /*************************************************************************/
+    /************************************************************************
     // Receive the actual file list that the client does not yet have
     // It's basically the same as above
 
@@ -158,20 +167,20 @@ void RequestHandler::sync_server()
 
         has_next_file_list = received_list->has_next;
 
-        while (i < MAX_FILE_LIST_SIZE && received_list->file_list[i].size > 0) {
+        while (i < MAX_FILE_LIST_SIZE && received_list->file_list[i].num_packets > 0) {
             to_be_sent_files.push_back(received_list->file_list[i]);
             i++;
         }
     } while (has_next_file_list);
 
-    /*************************************************************************/
+    /************************************************************************
     // Send to the client all files new to him
 
-    for (auto const& file : to_be_sent_files) {
-        this->send_file(file.name);
+    for (auto const& file_d : to_be_sent_files) {
+        this->send_file(file_d.file.name);
     }
 
-    return;
+    return; */
 }
 
 void RequestHandler::send_file(char const* file)
@@ -272,12 +281,26 @@ void RequestHandler::receive_file(char const* file, unsigned int packets_to_be_r
     return;
 }
 
+void RequestHandler::delete_file(char const* file)
+{
+    if (!this->file_handler->delete_file(file)) {
+        this->log("Failure deleting the file");
+
+        ack_t ack(false);
+        this->sock_handler->send_packet(&ack, sizeof(ack_t));
+    } else {
+        this->log("Success deleting the file");
+
+        ack_t ack(true);
+        this->sock_handler->send_packet(&ack, sizeof(ack_t));
+    }
+
+    return;
+}
+
 void RequestHandler::log(char const* message)
 {
-    printf("RequestHandler [UID: %s]: %s\n", 
-        this->client_id.c_str(),
-        message
-    );
+    printf("RequestHandler [UID: %s]: %s\n", this->client_id.c_str(), message);
 }
 
 RequestHandler::~RequestHandler()

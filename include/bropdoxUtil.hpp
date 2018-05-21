@@ -79,11 +79,6 @@ struct file_info {
     }
 };
 
-typedef struct {
-    file_info file_list[MAX_FILE_LIST_SIZE];
-    bool has_next;
-} file_info_list_t;
-
 typedef struct handshake {
     req req_type;
     char userid[MAXNAME];
@@ -144,6 +139,11 @@ typedef struct file_data {
     {
     }
 } file_data_t;
+
+typedef struct file_info_list {
+    file_data_t file_list[MAX_FILE_LIST_SIZE];
+    bool has_next;
+} file_info_list_t;
 
 typedef struct packet {
     unsigned int num;

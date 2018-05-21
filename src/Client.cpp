@@ -54,6 +54,15 @@ bool Client::parse_input(std::vector<std::string> tokens)
         }
 
         return this->get_file(file_path.c_str());
+    } else if (command == "delete") {
+        std::string file_path(tokens[1]);
+
+        // We start by sending a handshake containing the request to the server
+        if (!this->send_handshake(req::del)) {
+            return false;
+        }
+
+        return this->delete_file(file_path.c_str());
     } else if (command == "exit") {
         return this->close_session();
     } else {
@@ -219,7 +228,28 @@ bool Client::get_file(char const* file)
 
 bool Client::delete_file(char const* file)
 {
-    return false;
+    data_buffer_t* returned_ack;
+    ack_t* ack;
+    
+    if (!this->file_handler->delete_file(file)) {
+        this->log("File does not exist");
+        return false;
+    }
+
+    file_data_t file_data(this->file_handler->get_file_info(file), 0);
+    this->sock_handler_req->send_packet(&file_data, sizeof(file_data_t));
+
+    returned_ack = this->sock_handler_req->wait_packet(sizeof(ack_t));
+    ack = convert_to_ack(returned_ack);
+
+    // If it's 'false' we try again
+    if (!ack->confirmation) {
+        this->log("Failed deleting the file");
+        return false;
+    } else {
+        this->log("Success deleting the file");
+        return true;
+    }
 }
 
 bool Client::close_session()

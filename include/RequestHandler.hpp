@@ -48,6 +48,13 @@ private:
     void send_file(char const* file);
 
     /**
+     * Deletes the file.
+     * 
+     * @param file The file to be deleted.
+     */
+    void delete_file(char const* file);
+
+    /**
      * Log's the message to the terminal using the UserID
      */
     void log(char const* message);
