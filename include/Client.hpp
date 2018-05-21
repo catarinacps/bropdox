@@ -6,22 +6,23 @@
 #include "bropdoxUtil.hpp"
 
 #include <map>
+#include <queue>
 #include <pthread.h>
 #include <algorithm>
 
 class Client {
-private:
-    int logged_in;
-    int devices[2];
-    data_buffer_t buffer;
-    char userid[MAXNAME];
-    socklen_t server_len;
-    struct file_info files[MAXFILES];
-    SocketHandler* sock_handler;
-    FileHandler* file_handler;
-
 public:
-    Client(char* uid, char* host, int port);
+    void command_line_interface();
+
+private:
+    int device;
+    bool logged_in;
+    std::string userid;
+    hostent* server;
+
+    struct file_info files[MAXFILES];
+    SocketHandler* sock_handler_server, *sock_handler_req;
+    FileHandler* file_handler;
 
     /**
      * Estabelece uma sessao entre o cliente e o servidor.
@@ -31,14 +32,14 @@ public:
      * 
      * @return O descritor da conexao ou -1 caso tenha falhado a conexao.
      */
-    int login_server(char* host, int port);
+    bool login_server(char const* host, int port);
 
     /**
      * Sincroniza o diretorio "sync_dir_<nomeusuario>" com o servidor.
      * 
      * @see Daemon de sincronizacao
      */
-    void sync_client();
+    bool sync_client();
 
     /**
      * Envia o arquivo file para o servidor
@@ -47,7 +48,7 @@ public:
      * 
      * @param file O nome e extensao do arquivo.
      */
-    void send_file(char const* file);
+    bool send_file(char const* file);
 
     /**
      * Obtem um arquivo file do servidor.
@@ -56,21 +57,30 @@ public:
      * 
      * @param file O nome e extensao do arquivo.
      */
-    void get_file(char const* file);
+    bool get_file(char const* file);
 
     /**
      * Exclui um arquivo de "sync_dir_<nomeusuario>".
      * 
      * @param file O nome e extensao do arquivo.
      */
-    void delete_file(char const* file);
+    bool delete_file(char const* file);
 
     /**
      * Fecha a sessao com o servidor.
      * 
      * @see login_server()
      */
-    void close_session();
+    bool close_session();
+
+    bool parse_input(std::queue<std::string> tokens);
+
+    bool send_handshake(req request);
+
+    void log(char const* message);
+
+public:
+    Client(char* uid);
 };
 
 #endif // CLIENT_HPP

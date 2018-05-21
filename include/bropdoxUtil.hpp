@@ -12,6 +12,7 @@
 #define MAX_FILE_LIST_SIZE 10
 
 #define TIMEOUT 5000000
+#define DAEMON_SLEEP 10000000
 
 #define ADDR "BropDoxServer"
 
@@ -86,7 +87,7 @@ typedef struct handshake {
     req req_type;
     char userid[MAXNAME];
 
-    handshake(req request, char* id)
+    handshake(req request, char const* id)
     : req_type(request), userid{ '\0' }
     {
         std::string aux(id);

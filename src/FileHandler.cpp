@@ -70,7 +70,11 @@ packet_t** FileHandler::get_file(char const* file_name, long int& file_size_in_p
     bf::recursive_directory_iterator end;
     std::ifstream myFile;
 
-    std::string fname_string(this->syncDir.string() + file_name);
+    if (std::string(file_name).find("/") == 0) {
+        bf::copy_file(std::string(file_name), this->syncDir.string(), bf::copy_option::overwrite_if_exists);
+    }
+
+    std::string fname_string(this->syncDir.string() + bf::path(file_name).filename().string());
 
     myFile.open(fname_string, std::ios::binary | std::ios::in);
 
