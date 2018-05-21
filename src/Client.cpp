@@ -8,7 +8,6 @@ Client::Client(char* uid)
 
 void Client::command_line_interface()
 {
-    char* token;
     std::string input;
     unsigned int length;
     std::vector<std::string> tokens;
@@ -40,16 +39,27 @@ bool Client::parse_input(std::vector<std::string> tokens)
     } else if (command == "upload") {
         std::string file_path(tokens[1]);
 
-        // ATTENTION
-        // The file_path variable contains the whole path to the file.
+        // We start by sending a handshake containing the request to the server
+        if (!this->send_handshake(req::receive)) {
+            return false;
+        }
+
         return this->send_file(file_path.c_str());
     } else if (command == "download") {
         std::string file_path(tokens[1]);
+
+        // We start by sending a handshake containing the request to the server
+        if (!this->send_handshake(req::send)) {
+            return false;
+        }
 
         return this->get_file(file_path.c_str());
     } else if (command == "exit") {
         return this->close_session();
     }
+
+    this->log("Unknown command");
+    return false;
 }
 
 bool Client::login_server(char const* host, int port)
@@ -87,11 +97,6 @@ bool Client::send_file(char const* file)
     packet_t** packets;
     long int file_size_in_packets;
     data_buffer_t *returned_ack;
-
-    // We start by sending a handshake containing the request to the server
-    if (!this->send_handshake(req::receive)) {
-        return false;
-    }
 
     // Get the file data and file size in packets
     packets = this->file_handler->get_file(file, file_size_in_packets);
@@ -150,11 +155,6 @@ bool Client::get_file(char const* file)
     unsigned int received_packet_number = 0, packets_to_be_received;
     file_data_t* received_finfo;
 
-    // We start by sending a handshake containing the request to the server
-    if (!this->send_handshake(req::send)) {
-        return false;
-    }
-
     file_data_t file_data(this->file_handler->get_file_info(file), 0);
     this->sock_handler_req->send_packet(&file_data, sizeof(file_data_t));
 
@@ -206,6 +206,7 @@ bool Client::get_file(char const* file)
         this->sock_handler_req->send_packet(&ack, sizeof(ack_t));
     }
 
+    delete this->sock_handler_req;
     return true;
 }
 

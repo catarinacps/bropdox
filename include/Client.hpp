@@ -20,7 +20,6 @@ private:
     std::string userid;
     hostent* server;
 
-    // struct file_info files[MAXFILES];
     SocketHandler* sock_handler_server, *sock_handler_req;
     FileHandler* file_handler;
 
