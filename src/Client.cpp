@@ -49,6 +49,13 @@ bool Client::parse_input(std::vector<std::string> tokens)
         return this->get_file(file_path.c_str());
     } else if (command == "exit") {
         return this->close_session();
+    } else {
+        std::cout << "usage:\n"
+                  << "login <hostname> <port>\n"
+                  << "upload <file path>\n"
+                  << "download <file>\n"
+                  << "exit\n";
+        return false;
     }
 }
 
