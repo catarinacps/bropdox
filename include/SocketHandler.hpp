@@ -18,7 +18,7 @@ public:
      * Sends a data packet to the last known client (aka the last client that the socket
      * heard from).
      * 
-     * @param data a reference to the data buffer.
+     * @param data a reference to the data pointer.
      * @param size the size of the said packet.
      * 
      * @return a boolean representing success (true) or failure (false).
@@ -31,6 +31,8 @@ private:
     int sockfd;
     socklen_t peer_len;
     struct sockaddr_in handler_address, peer_address;
+
+    void log(char const* message);
 
 public:
     /**

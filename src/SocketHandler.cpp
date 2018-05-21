@@ -12,7 +12,7 @@ SocketHandler::SocketHandler(in_port_t port, hostent* server)
 
 SocketHandler::SocketHandler(in_port_t port, sockaddr_in caddress)
 {
-    struct timeval timeout = {0, TIMEOUT*2};
+    struct timeval timeout = {0, TIMEOUT};
     
     this->peer_address = caddress;
     this->sockfd = init_unix_socket(this->handler_address, port);
@@ -21,21 +21,17 @@ SocketHandler::SocketHandler(in_port_t port, sockaddr_in caddress)
     setsockopt(this->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(struct timeval));
 
     if (bind(this->sockfd, (struct sockaddr*)&(this->handler_address), sizeof(struct sockaddr)) < 0) {
-        printf("Error while binding the socket, please try again...\n");
+        this->log("Error while binding the socket, please try again...");
     }
 }
 
 SocketHandler::SocketHandler(in_port_t port)
 {
-    struct timeval timeout = {0, TIMEOUT*2};
-    
     this->sockfd = init_unix_socket(this->handler_address, port);
     this->peer_len = sizeof(struct sockaddr_in);
 
-    setsockopt(this->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(struct timeval));
-
     if (bind(sockfd, (struct sockaddr*)&(this->handler_address), sizeof(struct sockaddr)) < 0) {
-        printf("Error while binding the socket, please try again...\n");
+        this->log("Error while binding the socket, please try again...");
     }
 }
 
@@ -45,7 +41,7 @@ data_buffer_t* SocketHandler::wait_packet(size_t size)
 
     int desc = recvfrom(this->sockfd, (void*)buffer, size, 0, (struct sockaddr*)&(this->peer_address), &(this->peer_len));
     if (desc < 0) {
-        printf("Error while receiving packet...\n");
+        this->log("Error while receiving packet...");
         delete []buffer;
         return nullptr;
     }
@@ -58,7 +54,7 @@ bool SocketHandler::send_packet(void* data, size_t size)
 {
     int desc = sendto(this->sockfd, data, size, 0, (struct sockaddr*)&(this->peer_address), sizeof(struct sockaddr_in));
     if (desc < 0) {
-        printf("Error while sending packet...\n");
+        this->log("Error while sending packet...");
         return false;
     }
 
@@ -75,3 +71,10 @@ SocketHandler::~SocketHandler()
     close(this->sockfd);
 }
 
+void SocketHandler::log(char const* message)
+{
+    printf("SocketHandler [sockfd: %d]: %s\n",
+        this->sockfd,
+        message
+    );
+}

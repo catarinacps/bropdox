@@ -11,8 +11,8 @@
 
 #define MAX_FILE_LIST_SIZE 10
 
-#define TIMEOUT 5000000
 #define DAEMON_SLEEP 10000000
+#define TIMEOUT 500000
 
 #define ADDR "BropDoxServer"
 
@@ -69,6 +69,7 @@ struct file_info {
     }
 
     file_info()
+    : name{ '\0' }, last_modified{ '\0' }, size(0)
     {
     }
 
