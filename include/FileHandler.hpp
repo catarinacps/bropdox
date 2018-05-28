@@ -8,22 +8,21 @@
 class FileHandler {
 public:
     //eu não sei se é public ou private alguém bota no lugar certo depois
-    bool write_file(char const* file_name, data_buffer_t* file_data[], int size_in_packets);
+    bool write_file(char const* file_name, std::vector<std::unique_ptr<packet_t>> file_data) const;
 
     packet_t** get_file(char const* file_name, long int& file_size);
 
-    bool delete_file(char const* file_name);
+    bool delete_file(char const* file_name) const;
 
-    std::vector<file_info> get_file_info_list();
+    std::vector<file_info> get_file_info_list() const;
 
-    file_info get_file_info(char const* file_name);
+    file_info get_file_info(char const* file_name) const;
 
 private:
     std::string client_id;
-    bf::path syncDir;
-    bool server;
+    bf::path const syncDir;
 
-    void log(char const* message);
+    void log(char const* message) const;
 
 public:
     FileHandler(std::string client_id);

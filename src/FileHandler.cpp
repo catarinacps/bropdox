@@ -1,7 +1,7 @@
 #include "../include/FileHandler.hpp"
 
 FileHandler::FileHandler(std::string client_id_param)
-    : syncDir(std::string(getenv("HOME")) + "/sync_dir_" + client_id_param + "/"), server(false)
+    : syncDir(std::string(getenv("HOME")) + "/sync_dir_" + client_id_param + "/")
 {
     if (client_id_param.size() <= 0) {
         throw new std::invalid_argument("Invalid ID size.");
@@ -20,7 +20,7 @@ FileHandler::FileHandler(std::string client_id_param)
 }
 
 FileHandler::FileHandler(std::string client_id_param, int flag)
-    : syncDir("sync_dir_" + client_id_param + "/"), server(true)
+    : syncDir("sync_dir_" + client_id_param + "/")
 {
     if (client_id_param.size() <= 0) {
         throw new std::invalid_argument("Invalid ID size.");
@@ -40,7 +40,7 @@ FileHandler::FileHandler(std::string client_id_param, int flag)
 }
 
 //Function that receives an *databuffer and a filename and writes on disk
-bool FileHandler::write_file(char const* file_name, data_buffer_t* file_data[], int size_in_packets)
+bool FileHandler::write_file(char const* file_name, std::vector<std::unique_ptr<packet_t>> file_data) const
 {
     std::ofstream myFile;
     std::string fname_string;
@@ -55,11 +55,12 @@ bool FileHandler::write_file(char const* file_name, data_buffer_t* file_data[], 
     this->log("Opened the file");
 
     try {
-        for (int i = 0; i < size_in_packets; i++) {
-            myFile.write(reinterpret_cast<char*>(file_data[i]), PACKETSIZE);
+        for (auto const& packet : file_data) {
+            myFile.write(reinterpret_cast<char*>(packet->data), PACKETSIZE);
         }
     } catch (std::ios::failure& e) {
-        std::cerr << "Error while trying to write to the file:\n    " << e.what();
+        std::cerr << "Error while trying to write to the file:\n" << e.what();
+        bf::remove(fname_string);
         myFile.close();
         return false;
     }
@@ -103,8 +104,7 @@ packet_t** FileHandler::get_file(char const* file_name, long int& file_size_in_p
         do {
             myFile.read(reinterpret_cast<char*>(read_bytes->data), PACKETSIZE);
             file_data[i] = read_bytes;
-            i++;
-            read_bytes = new packet_t(i);
+            read_bytes = new packet_t(++i);
         } while (myFile);
         this->log("Finished reading the file");
 
@@ -118,7 +118,7 @@ packet_t** FileHandler::get_file(char const* file_name, long int& file_size_in_p
     }
 }
 
-std::vector<file_info> FileHandler::get_file_info_list()
+std::vector<file_info> FileHandler::get_file_info_list() const
 {
     char const* file_name;
     struct stat attrib;
@@ -141,7 +141,7 @@ std::vector<file_info> FileHandler::get_file_info_list()
     return file_info_vector;
 }
 
-bool FileHandler::delete_file(char const* file_name)
+bool FileHandler::delete_file(char const* file_name) const
 {
     if (bf::exists(this->syncDir.string() + file_name)) {
         bf::remove(this->syncDir.string() + file_name);
@@ -151,7 +151,7 @@ bool FileHandler::delete_file(char const* file_name)
     return false;
 }
 
-file_info FileHandler::get_file_info(char const* file_name)
+file_info FileHandler::get_file_info(char const* file_name) const
 {
     if (std::string(file_name).find("/") == 0) {
         return file_info(bf::path(file_name).filename().string(), this->syncDir.string());
@@ -159,7 +159,7 @@ file_info FileHandler::get_file_info(char const* file_name)
     return file_info(file_name, this->syncDir.string());
 }
 
-void FileHandler::log(char const* message)
+void FileHandler::log(char const* message) const
 {
     printf("FileHandler [UID: %s]: %s\n",
         this->client_id.c_str(),

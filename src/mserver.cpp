@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
     printf("Server: Server is live\n");
 
     while (true) {
-        if (server.listen() >= 0) {
+        if (server.listen()) {
             printf("Server: Treating a request in a new thread...\n");
         } else {
             printf("Server: Failed handshake attempt received...\n");

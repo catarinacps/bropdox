@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <vector>
+#include <array>
 #include <algorithm>
 #include <cmath>
 
@@ -26,6 +27,8 @@ private:
     std::string client_id;
     SocketHandler* sock_handler;
     FileHandler* file_handler;
+
+    //TODO: Make recv, send and delete receive the whole file_info as the parameter?
 
     /**
      * Sincroniza o servidor com o diretorio "sync_dir_<nomeusuario>" do cliente.

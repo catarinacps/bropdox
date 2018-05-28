@@ -6,7 +6,7 @@
 #include "bropdoxUtil.hpp"
 
 #include <map>
-#include <pthread.h>
+#include <thread>
 
 typedef struct {
     RequestHandler* handlers[2];
@@ -15,7 +15,7 @@ typedef struct {
 
 class Server {
 public:
-    int listen();
+    bool listen();
 
 private:
     in_port_t port;
@@ -33,24 +33,17 @@ private:
      * 
      * @param package pacote de dados (handshake)
      */
-    void* treat_client_request(handshake_t* package);
+    void treat_client_request(std::unique_ptr<handshake_t> package);
 
     bool logout_client(int device, std::string user_id);
 
-    void log(char const* userid, char const* message);
+    void log(char const* userid, char const* message) const;
 
     int get_next_port();
-
-    static void* treat_helper(void* arg);
 
 public:
     Server(in_port_t port);
     ~Server();
 };
-
-typedef struct {
-    Server* context;
-    handshake_t* hand_package;
-} arg_thread_t;
 
 #endif // SERVER_HPP

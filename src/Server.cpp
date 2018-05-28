@@ -7,36 +7,30 @@ Server::Server(in_port_t port_param)
     this->port_counter = port_param + 1;
 }
 
-int Server::listen()
+bool Server::listen()
 {
-    data_buffer_t* data;
     pthread_t new_thread;
-    arg_thread_t* arguments;
     int ret_pcreate;
 
-    data = this->sock_handler->wait_packet(sizeof(handshake_t));
-    if (data == nullptr) {
-        return -1;
+    auto data = this->sock_handler->wait_packet(sizeof(handshake_t));
+    if (!data) {
+        return false;
     }
-
-    // Allocates the arguments struct to the pthread_create call
-    arguments = new arg_thread_t;
-    arguments->context = this;
-    arguments->hand_package = convert_to_handshake(data);
 
     printf("=> New handshake received, creating receiver thread...\n");
-    if ((ret_pcreate = pthread_create(&new_thread, NULL, &Server::treat_helper, arguments))) {
+    std::thread request_thread(&Server::treat_client_request, this, convert_to_handshake(data.get()));
+
+    if (!request_thread.joinable()) {
         printf("Failed to create new thread...");
-        return ret_pcreate;
+        return false;
+    } else {
+        request_thread.detach();
     }
 
-    //TODO: Maybe store the thread descriptor?
-
-    delete[] data;
-    return ret_pcreate;
+    return true;
 }
 
-void* Server::treat_client_request(handshake_t* hand)
+void Server::treat_client_request(std::unique_ptr<handshake_t> hand)
 {
     bool pack_ok, req_handl_ok;
     std::string file_name;
@@ -48,7 +42,7 @@ void* Server::treat_client_request(handshake_t* hand)
 
     if (!pack_ok) {
         this->log(hand->userid, "Bad request/handshake");
-        pthread_exit((void*)-1);
+        return;
     }
 
     // Reserves a new port to the new RequestHandler
@@ -64,6 +58,7 @@ void* Server::treat_client_request(handshake_t* hand)
     this->log(hand->userid, "Sent a SYN to the client");
 
     //TODO: Separate the following behaviour to another method
+    //FIXME: Fix the memory leak on new client_data_t
     if (this->user_list.count(hand->userid) > 0) {
         // Declares on the heap a new Request Handler for the user's request
         if (this->user_list[hand->userid]->handlers[0] == nullptr) {
@@ -86,11 +81,10 @@ void* Server::treat_client_request(handshake_t* hand)
 
     if (!req_handl_ok) {
         this->log(hand->userid, "Communication with RequestHandler failed");
-        pthread_exit((void*)-1);
+        return;
     }
 
-    delete hand;
-    pthread_exit((void*)0);
+    return;
 }
 
 int Server::get_next_port()
@@ -115,18 +109,9 @@ bool Server::logout_client(int device, std::string user_id)
     return false;
 }
 
-void Server::log(char const* userid, char const* message)
+void Server::log(char const* userid, char const* message) const
 {
     printf("Server [UID: %s]: %s\n", userid, message);
-}
-
-void* Server::treat_helper(void* arg)
-{
-    // This static class method helps the initialization of the helper thread
-    // by calling the treat_client_request method using the parameter arg,
-    // that is, essentially, thread_helper_t, which contains the object context
-    // and the package argument to the function.
-    return (((arg_thread_t*)arg)->context)->treat_client_request(((arg_thread_t*)arg)->hand_package);
 }
 
 Server::~Server()

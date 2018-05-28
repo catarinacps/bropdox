@@ -18,18 +18,16 @@ bool RequestHandler::handle_request(req req_type)
         this->sync_server();
     } break;
     case req::send: {
-        data_buffer_t* data = this->sock_handler->wait_packet(sizeof(file_data_t));
-        file_data_t* finfo = convert_to_file_data(data);
+        auto data = this->sock_handler->wait_packet(sizeof(file_data_t));
+        auto finfo = convert_to_file_data(data.get());
         this->log("Received the requested file name");
-        delete[] data;
 
         this->send_file(finfo->file.name);
     } break;
     case req::receive: {
-        data_buffer_t* data = this->sock_handler->wait_packet(sizeof(file_data_t));
-        file_data_t* finfo = convert_to_file_data(data);
+        auto data = this->sock_handler->wait_packet(sizeof(file_data_t));
+        auto finfo = convert_to_file_data(data.get());
         this->log("Received the to-be-received file_info");
-        delete[] data;
 
         if (!(finfo->num_packets > 0)) {
             ack_t ack(false);
@@ -45,15 +43,14 @@ bool RequestHandler::handle_request(req req_type)
         this->receive_file(finfo->file.name, finfo->num_packets);
     } break;
     case req::del: {
-        data_buffer_t* data = this->sock_handler->wait_packet(sizeof(file_data_t));
-        file_data_t* finfo = convert_to_file_data(data);
+        auto data = this->sock_handler->wait_packet(sizeof(file_data_t));
+        auto finfo = convert_to_file_data(data.get());
         this->log("Received the to-be-deleted file name");
-        delete[] data;
 
         this->delete_file(finfo->file.name);
     } break;
     default:
-        printf("Something went wrong...\n");
+        this->log("Something went wrong...");
         return false;
     }
 
@@ -65,7 +62,7 @@ void RequestHandler::sync_server()
     /* int i = 0, dummy_file_info_num;
     bool has_next_file_list = false;
     double num_file_lists;
-    data_buffer_t* received_data;
+    byte_t* received_data;
     convert_helper_t helper;
     file_info_list_t* received_list;
     std::vector<file_data_t> modified_files, diff_files, to_be_sent_files;
@@ -185,8 +182,6 @@ void RequestHandler::sync_server()
 
 void RequestHandler::send_file(char const* file)
 {
-    data_buffer_t* returned_ack;
-    ack_t* ack;
     long int file_size_in_packets;
     struct file_info finfo;
 
@@ -198,7 +193,6 @@ void RequestHandler::send_file(char const* file)
         this->log("Requested file doesn't exist");
         return;
     }
-
     // If all goes well, the server sends the complete file_info to the client
     finfo = this->file_handler->get_file_info(file);
     file_data_t file_data(finfo, file_size_in_packets);
@@ -216,8 +210,8 @@ void RequestHandler::send_file(char const* file)
     // number of packets that the client received.
     // This number of receveid packets will indicate a possible missing packet in the transmission,
     // calling for a repeat of the send_file() operation.
-    returned_ack = this->sock_handler->wait_packet(sizeof(ack_t));
-    ack = convert_to_ack(returned_ack);
+    auto returned_ack = this->sock_handler->wait_packet(sizeof(ack_t));
+    auto ack = convert_to_ack(returned_ack.get());
 
     if (!ack->confirmation) {
         this->log("Failure sending the file, trying again...");
@@ -226,35 +220,30 @@ void RequestHandler::send_file(char const* file)
         this->log("Success sending the file");
     }
 
-    delete ack;
-    delete[] returned_ack;
-
     return;
 }
 
-void RequestHandler::receive_file(char const* file, unsigned int packets_to_be_received)
+//TODO: Check if packets can arrive in another order
+void RequestHandler::receive_file(char const* file, unsigned int const packets_to_be_received)
 {
-    packet_t* received;
-    data_buffer_t* received_packet;
     unsigned int received_packet_number = 0;
 
-    // Uses said number of packets to declare an array of data_buffer_t pointers
+    // Uses said number of packets to declare an array of byte_t pointers
     // pointing to the received data
-    data_buffer_t* recv_file[packets_to_be_received];
+    std::vector<std::unique_ptr<packet_t>> recv_file(packets_to_be_received);
 
     // Packet receiving loop
-    for (unsigned int i = 0; i < packets_to_be_received; i++) {
-        received_packet = this->sock_handler->wait_packet(sizeof(packet_t));
+    for (auto& packet : recv_file) {
+        auto received_packet = this->sock_handler->wait_packet(sizeof(packet_t));
 
         // If the received packet is NULL, we do nothing
         if (received_packet != nullptr) {
-            received = convert_to_packet(received_packet);
-            //TODO: Copy the received data array to the recv_file array
-            recv_file[received->num] = received->data;
+            auto received = convert_to_packet(received_packet.get());
+
+            // Can the packets arrive in another order?
+            packet = std::move(received);
             received_packet_number++;
         }
-
-        delete[] received_packet;
     }
 
     // After receiving all packets, we send an ack with true if we received all the packets or
@@ -267,16 +256,13 @@ void RequestHandler::receive_file(char const* file, unsigned int packets_to_be_r
         ack_t ack(true);
         this->sock_handler->send_packet(&ack, sizeof(ack_t));
 
-        this->file_handler->write_file(file, recv_file, packets_to_be_received);
+        this->file_handler->write_file(file, recv_file);
     } else {
         this->log("Failure receiving the file");
 
         ack_t ack(false);
         this->sock_handler->send_packet(&ack, sizeof(ack_t));
     }
-
-    /* for (auto const& point : recv_file)
-        delete[] point; */
 
     return;
 }
