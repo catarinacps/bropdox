@@ -18,7 +18,8 @@ bool Server::listen()
     }
 
     printf("=> New handshake received, creating receiver thread...\n");
-    std::thread request_thread(&Server::treat_client_request, this, convert_to_handshake(data.get()));
+    auto hand = convert_to_handshake(data.get());
+    std::thread request_thread(&Server::treat_client_request, this, std::move(hand));
 
     if (!request_thread.joinable()) {
         printf("Failed to create new thread...");
