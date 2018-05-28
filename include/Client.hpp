@@ -23,6 +23,8 @@ private:
     SocketHandler* sock_handler_server, *sock_handler_req;
     FileHandler* file_handler;
 
+    // client-dev
+
     /**
      * Estabelece uma sessao entre o cliente e o servidor.
      * 
