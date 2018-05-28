@@ -23,6 +23,8 @@ private:
     SocketHandler* sock_handler;
     std::map<std::string, client_data_t*> user_list;
 
+    // server-dev
+
     /**
      * Trata o handshake do cliente.
      * 
