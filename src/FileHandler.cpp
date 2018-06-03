@@ -71,6 +71,7 @@ bool FileHandler::write_file(char const* file_name, std::vector<std::unique_ptr<
     return true;
 }
 
+//TODO: Refactor the pointers
 packet_t** FileHandler::get_file(char const* file_name, long int& file_size_in_packets)
 {
     packet_t* read_bytes;

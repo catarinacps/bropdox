@@ -5,23 +5,29 @@
 #include "SocketHandler.hpp"
 #include "bropdoxUtil.hpp"
 
-#include <map>
+#include <unordered_map>
+#include <array>
 #include <thread>
 
-typedef struct {
+using client_data_t = std::pair<std::unique_ptr<RequestHandler>, unsigned int>;
+
+/* typedef struct {
     RequestHandler* handlers[2];
     in_port_t ports[2];
-} client_data_t;
+} client_data_t; */
 
 class Server {
 public:
     bool listen();
 
 private:
-    in_port_t port;
-    int port_counter;
-    SocketHandler* sock_handler;
-    std::map<std::string, client_data_t*> user_list;
+    in_port_t const port;
+    std::vector<bool> port_counter;
+    
+    SocketHandler sock_handler;
+
+    std::unordered_map<std::string, std::array<client_data_t, MAX_CONCURRENT_USERS>> users;
+    //std::unordered_map<std::string, client_data_t*> users;
 
     // server-dev
 
@@ -35,11 +41,15 @@ private:
      */
     void treat_client_request(std::unique_ptr<handshake_t> package);
 
-    bool logout_client(int device, std::string user_id);
+    std::pair<client_data_t, unsigned short> login(std::string const& user_id, unsigned short int device);
 
-    void log(char const* userid, char const* message) const;
+    bool logout(std::string const& user_id, unsigned short int const& device);
 
-    int get_next_port();
+    unsigned int get_next_port() noexcept;
+
+    unsigned short int get_device(std::string const& user_id) const noexcept;
+
+    void log(char const* userid, char const* message) const noexcept;
 
 public:
     Server(in_port_t port);

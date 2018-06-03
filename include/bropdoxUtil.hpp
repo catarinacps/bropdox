@@ -11,10 +11,14 @@
 
 #define MAX_FILE_LIST_SIZE 10
 
+#define MAX_CONCURRENT_USERS 2
+
 #define DAEMON_SLEEP 10000000
 #define TIMEOUT 500000
 
 #define MAXPORT 65535
+
+#include "Exception.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -45,10 +49,11 @@ enum class req {
     send,
     receive,
     del,
+    login,
     close
 };
 
-typedef unsigned char byte_t;
+using byte_t = unsigned char;
 
 struct file_info {
     char name[MAXNAME * 2];
@@ -87,10 +92,12 @@ struct file_info {
 typedef struct handshake {
     req req_type;
     char userid[MAXNAME];
+    unsigned short int device;
 
-    handshake(req request, char const* id)
+    handshake(req request, char const* id, unsigned short int dev = 0)
         : req_type(request)
         , userid{ '\0' }
+        , device(dev)
     {
         std::string aux(id);
 
@@ -99,7 +106,7 @@ typedef struct handshake {
         std::strcpy(userid, aux.substr(0, aux.find_first_of('\0')).c_str());
     }
 
-    handshake() {}
+    handshake() = default;
 } handshake_t;
 
 typedef struct ack {
@@ -110,33 +117,36 @@ typedef struct ack {
     {
     }
 
-    ack() {}
+    ack() = default;
 } ack_t;
 
+//TODO: add device return value
 typedef struct syn {
     bool confirmation;
     in_port_t port;
+    unsigned short int device;
 
-    syn(bool conf, in_port_t port_p)
-        : confirmation(conf)
+    syn(bool conf_p, in_port_t port_p, unsigned short int device_p)
+        : confirmation(conf_p)
         , port(port_p)
+        , device(device_p)
     {
     }
 
-    syn() {}
+    syn() = default;
 } syn_t;
 
 typedef struct file_data {
     struct file_info file;
     unsigned int num_packets;
 
-    file_data(file_info file_p, unsigned int packets)
+    file_data(file_info const& file_p, unsigned int packets)
         : file(file_p)
         , num_packets(packets)
     {
     }
 
-    file_data() {}
+    file_data() = default;
 } file_data_t;
 
 typedef struct file_info_list {
@@ -153,7 +163,7 @@ typedef struct packet {
     {
     }
 
-    packet() {}
+    packet() = default;
 } packet_t;
 
 typedef struct {
@@ -165,8 +175,8 @@ typedef struct {
  * Headers
  */
 
-int init_unix_socket(struct sockaddr_in& sock, in_port_t port) throw();
-int init_unix_socket(struct sockaddr_in& sock, in_port_t port, hostent* server) throw();
+int init_unix_socket(struct sockaddr_in& sock, in_port_t port);
+int init_unix_socket(struct sockaddr_in& sock, in_port_t port, hostent* server);
 
 std::unique_ptr<handshake_t> convert_to_handshake(byte_t* data);
 std::unique_ptr<ack_t> convert_to_ack(byte_t* data);
@@ -174,33 +184,5 @@ std::unique_ptr<syn_t> convert_to_syn(byte_t* data);
 std::unique_ptr<packet_t> convert_to_packet(byte_t* data);
 std::unique_ptr<file_info_list_t> convert_to_file_list(byte_t* data);
 std::unique_ptr<file_data_t> convert_to_file_data(byte_t* data);
-
-/******************************************************************************
- * Exceptions
- */
-
-class socket_bad_bind : public std::exception {
-public:
-    const char* what() const throw()
-    {
-        return "Bad socket bind\n";
-    }
-};
-
-class socket_bad_opt : public std::exception {
-public:
-    const char* what() const throw()
-    {
-        return "Bad setsockopt\n";
-    }
-};
-
-class socket_bad_create : public std::exception {
-public:
-    const char* what() const throw()
-    {
-        return "Bad socket creation\n";
-    }
-};
 
 #endif // BROPBOXUTIL_HPP

@@ -1,10 +1,10 @@
 #include "../include/Server.hpp"
 
 Server::Server(in_port_t port_param)
+    : sock_handler(port_param)
+    , port(port_param)
+    , port_counter(MAXPORT - port)
 {
-    this->sock_handler = new SocketHandler(port_param);
-    this->port = port_param;
-    this->port_counter = port_param + 1;
 }
 
 bool Server::listen()
@@ -12,7 +12,7 @@ bool Server::listen()
     pthread_t new_thread;
     int ret_pcreate;
 
-    auto data = this->sock_handler->wait_packet(sizeof(handshake_t));
+    auto data = this->sock_handler.wait_packet(sizeof(handshake_t));
     if (!data) {
         return false;
     }
@@ -46,34 +46,40 @@ void Server::treat_client_request(std::unique_ptr<handshake_t> hand)
         return;
     }
 
-    // Reserves a new port to the new RequestHandler
-    in_port_t new_port = this->get_next_port();
+    std::pair<client_data_t, unsigned short> client_info;
 
-    // Checks if the userid already has a declared RequestHandler
-    rh = new RequestHandler(this->sock_handler->get_last_peeraddr(), new_port, hand->userid);
+    try {
+        client_info = this->login(hand->userid, hand->device);
+    } catch (std::invalid_argument const& e) {
+        // Invalid device
+        std::cerr << e.what() << '\n';
+
+        syn_t syn(false, 0, 0);
+        this->sock_handler.send_packet(&syn, sizeof(syn_t));
+        this->log(hand->userid, "Invalid device argument in handshake");
+
+        return;
+    } catch (std::domain_error const& e) {
+        // No device left
+        std::cerr << e.what() << '\n';
+
+        syn_t syn(false, 0, 0);
+        this->sock_handler.send_packet(&syn, sizeof(syn_t));
+        this->log(hand->userid, "Too many devices logged in");
+
+        return;
+    }
+
     this->log(hand->userid, "Declared a new RequestHandler for the request");
 
     // Sends to the client a syn packet containing a bool and the new port he is supposed to use
-    syn_t syn(true, new_port);
-    this->sock_handler->send_packet(&syn, sizeof(syn_t));
+    syn_t syn(true, client_info.first.second, client_info.second);
+    this->sock_handler.send_packet(&syn, sizeof(syn_t));
     this->log(hand->userid, "Sent a SYN to the client");
 
-    //TODO: Separate the following behaviour to another method
-    //FIXME: Fix the memory leak on new client_data_t
-    if (this->user_list.count(hand->userid) > 0) {
-        // Declares on the heap a new Request Handler for the user's request
-        if (this->user_list[hand->userid]->handlers[0] == nullptr) {
-            this->user_list[hand->userid]->handlers[0] = rh;
-            this->user_list[hand->userid]->ports[0] = new_port;
-        } else {
-            this->user_list[hand->userid]->handlers[1] = rh;
-            this->user_list[hand->userid]->ports[1] = new_port;
-        }
-    } else {
-        // Declares a new Request Handler for the new user's device
-        this->user_list[hand->userid] = new client_data_t;
-        this->user_list[hand->userid]->handlers[0] = rh;
-        this->user_list[hand->userid]->ports[0] = new_port;
+    if (hand->req_type == req::login) {
+        this->log(hand->userid, "Client logged in");
+        return;
     }
 
     // Calls the RequestHandler to handle the client's request
@@ -88,34 +94,71 @@ void Server::treat_client_request(std::unique_ptr<handshake_t> hand)
     return;
 }
 
-int Server::get_next_port()
+std::pair<client_data_t, unsigned short> Server::login(std::string const& user_id, unsigned short int device)
 {
-    if (this->port_counter == MAXPORT) {
-        this->port_counter = this->port + 1;
-        return this->port_counter;
-    }
-    this->port_counter++;
-    return this->port_counter;
-}
-
-bool Server::logout_client(int device, std::string user_id)
-{
-    if (device <= 2 && this->user_list[user_id]->handlers[device] != nullptr) {
-        delete this->user_list[user_id]->handlers[device];
-        this->user_list[user_id]->ports[device] = 0;
-
-        return true;
+    if (device > MAX_CONCURRENT_USERS) {
+        throw std::invalid_argument("Server::login : invalid device argument");
     }
 
-    return false;
+    if (device == 0) {
+        device = this->get_device(user_id);
+        if (device == 0) {
+            throw std::domain_error("Server::login : too many devices logged in");
+        }
+
+        // Reserves a new port to the new RequestHandler
+        auto const new_port = this->get_next_port();
+        auto const client_addr = this->sock_handler.get_last_peeraddr();
+
+        auto rh = std::make_unique<RequestHandler>(client_addr, new_port, user_id);
+
+        auto client = std::make_pair(std::move(rh), new_port);
+
+        this->users.at(user_id).at(device - 1) = std::move(client);
+    }
+
+    return std::make_pair(this->users[user_id].at(device - 1), device);
 }
 
-void Server::log(char const* userid, char const* message) const
+bool Server::logout(std::string const& user_id, unsigned short int const& device)
+{
+    if (device > MAX_CONCURRENT_USERS || device == 0) {
+        throw std::invalid_argument("Server::login : invalid device argument");
+    }
+
+    this->users.at(user_id).at(device).first.reset();
+    this->users.at(user_id).at(device).second = 0;
+
+    return true;
+}
+
+unsigned short int Server::get_device(std::string const& user_id) const noexcept
+{
+    auto i = 0;
+    for (auto const& item : this->users.at(user_id)) {
+        if (item.second == 0) {
+            return i;
+        }
+        i++;
+    }
+
+    return 0;
+}
+
+unsigned int Server::get_next_port() noexcept
+{
+    auto i = 1;
+    for (auto const& occupied : this->port_counter) {
+        if (!occupied) {
+            return this->port + i;
+        }
+        i++;
+    }
+
+    return 0;
+}
+
+void Server::log(char const* userid, char const* message) const noexcept
 {
     printf("Server [UID: %s]: %s\n", userid, message);
-}
-
-Server::~Server()
-{
-    delete this->sock_handler;
 }

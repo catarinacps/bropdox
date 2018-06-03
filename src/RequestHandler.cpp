@@ -1,14 +1,10 @@
 #include "../include/RequestHandler.hpp"
 
-RequestHandler::RequestHandler(sockaddr_in client_address, in_port_t port, std::string address)
+RequestHandler::RequestHandler(sockaddr_in client_sock_address, in_port_t port, std::string address)
+    : sock_handler(port, client_sock_address)
+    , file_handler(address, 0)
+    , client_id(address)
 {
-    this->client_id = address;
-
-    //! There are situations in which this constructor will fail to build
-    //! a socket because the socket will already exist.
-    sock_handler = new SocketHandler(port, client_address);
-
-    file_handler = new FileHandler(address, 0);
 }
 
 bool RequestHandler::handle_request(req req_type)
@@ -18,32 +14,32 @@ bool RequestHandler::handle_request(req req_type)
         this->sync_server();
     } break;
     case req::send: {
-        auto data = this->sock_handler->wait_packet(sizeof(file_data_t));
+        auto data = this->sock_handler.wait_packet(sizeof(file_data_t));
         auto finfo = convert_to_file_data(data.get());
         this->log("Received the requested file name");
 
         this->send_file(finfo->file.name);
     } break;
     case req::receive: {
-        auto data = this->sock_handler->wait_packet(sizeof(file_data_t));
+        auto data = this->sock_handler.wait_packet(sizeof(file_data_t));
         auto finfo = convert_to_file_data(data.get());
         this->log("Received the to-be-received file_info");
 
         if (!(finfo->num_packets > 0)) {
             ack_t ack(false);
-            this->sock_handler->send_packet(&ack, sizeof(ack_t));
+            this->sock_handler.send_packet(&ack, sizeof(ack_t));
             this->log("Bad number of packets, sending false ack back...");
 
             return false;
         } else {
             ack_t ack(true);
-            this->sock_handler->send_packet(&ack, sizeof(ack_t));
+            this->sock_handler.send_packet(&ack, sizeof(ack_t));
         }
 
         this->receive_file(finfo->file.name, finfo->num_packets);
     } break;
     case req::del: {
-        auto data = this->sock_handler->wait_packet(sizeof(file_data_t));
+        auto data = this->sock_handler.wait_packet(sizeof(file_data_t));
         auto finfo = convert_to_file_data(data.get());
         this->log("Received the to-be-deleted file name");
 
@@ -77,7 +73,7 @@ void RequestHandler::sync_server()
     // Receive the modified files and overwrite them
     do {
         // Receives the file_info_list
-        received_data = this->sock_handler->wait_packet(sizeof(file_info_list_t));
+        received_data = this->sock_handler.wait_packet(sizeof(file_info_list_t));
         received_list = convert_to_file_list(received_data);
         delete[] received_data;
 
@@ -101,7 +97,7 @@ void RequestHandler::sync_server()
     /************************************************************************
     // Send the complete file list minus the just received modified files
     
-    std::vector<file_info> server_files = this->file_handler->get_file_info_list();
+    std::vector<file_info> server_files = this->file_handler.get_file_info_list();
 
     // Sorts the modified_files and server_files vectors so that the set_difference method works.
     std::sort(server_files.begin(), server_files.end());
@@ -148,7 +144,7 @@ void RequestHandler::sync_server()
     // Then iterates over the array and sends every item to the client
     for (auto const& list : file_list_array) {
         helper = convert_to_data(list);
-        this->sock_handler->send_packet(helper.pointer, helper.size);
+        this->sock_handler.send_packet(helper.pointer, helper.size);
         delete[] helper.pointer;
         usleep(15);
     }
@@ -158,7 +154,7 @@ void RequestHandler::sync_server()
     // It's basically the same as above
 
     do {
-        received_data = this->sock_handler->wait_packet(sizeof(file_info_list_t));
+        received_data = this->sock_handler.wait_packet(sizeof(file_info_list_t));
         received_list = convert_to_file_list(received_data);
         delete[] received_data;
 
@@ -186,22 +182,22 @@ void RequestHandler::send_file(char const* file)
     struct file_info finfo;
 
     // If get_file returns nullptr, something has gone wrong
-    packet_t** packets = this->file_handler->get_file(file, file_size_in_packets);
+    packet_t** packets = this->file_handler.get_file(file, file_size_in_packets);
     if (packets == nullptr) {
         file_data_t file_data(finfo, file_size_in_packets);
-        this->sock_handler->send_packet(&file_data, sizeof(file_data_t));
+        this->sock_handler.send_packet(&file_data, sizeof(file_data_t));
         this->log("Requested file doesn't exist");
         return;
     }
     // If all goes well, the server sends the complete file_info to the client
-    finfo = this->file_handler->get_file_info(file);
+    finfo = this->file_handler.get_file_info(file);
     file_data_t file_data(finfo, file_size_in_packets);
-    this->sock_handler->send_packet(&file_data, sizeof(file_data_t));
+    this->sock_handler.send_packet(&file_data, sizeof(file_data_t));
     this->log("Sent the requested file_info");
 
     // Packet sending loop
     for (int i = 0; i < file_size_in_packets; i++) {
-        this->sock_handler->send_packet(packets[i], sizeof(packet_t));
+        this->sock_handler.send_packet(packets[i], sizeof(packet_t));
         usleep(15);
     }
     this->log("Finished sending the packets");
@@ -210,7 +206,7 @@ void RequestHandler::send_file(char const* file)
     // number of packets that the client received.
     // This number of receveid packets will indicate a possible missing packet in the transmission,
     // calling for a repeat of the send_file() operation.
-    auto returned_ack = this->sock_handler->wait_packet(sizeof(ack_t));
+    auto returned_ack = this->sock_handler.wait_packet(sizeof(ack_t));
     auto ack = convert_to_ack(returned_ack.get());
 
     if (!ack->confirmation) {
@@ -234,7 +230,7 @@ void RequestHandler::receive_file(char const* file, unsigned int const packets_t
 
     // Packet receiving loop
     for (auto& packet : recv_file) {
-        auto received_packet = this->sock_handler->wait_packet(sizeof(packet_t));
+        auto received_packet = this->sock_handler.wait_packet(sizeof(packet_t));
 
         // If the received packet is NULL, we do nothing
         if (received_packet != nullptr) {
@@ -254,14 +250,14 @@ void RequestHandler::receive_file(char const* file, unsigned int const packets_t
         this->log("Success receiving the file");
 
         ack_t ack(true);
-        this->sock_handler->send_packet(&ack, sizeof(ack_t));
+        this->sock_handler.send_packet(&ack, sizeof(ack_t));
 
-        this->file_handler->write_file(file, recv_file);
+        this->file_handler.write_file(file, recv_file);
     } else {
         this->log("Failure receiving the file");
 
         ack_t ack(false);
-        this->sock_handler->send_packet(&ack, sizeof(ack_t));
+        this->sock_handler.send_packet(&ack, sizeof(ack_t));
     }
 
     return;
@@ -269,16 +265,16 @@ void RequestHandler::receive_file(char const* file, unsigned int const packets_t
 
 void RequestHandler::delete_file(char const* file)
 {
-    if (!this->file_handler->delete_file(file)) {
+    if (!this->file_handler.delete_file(file)) {
         this->log("Failure deleting the file");
 
         ack_t ack(false);
-        this->sock_handler->send_packet(&ack, sizeof(ack_t));
+        this->sock_handler.send_packet(&ack, sizeof(ack_t));
     } else {
         this->log("Success deleting the file");
 
         ack_t ack(true);
-        this->sock_handler->send_packet(&ack, sizeof(ack_t));
+        this->sock_handler.send_packet(&ack, sizeof(ack_t));
     }
 
     return;
@@ -287,10 +283,4 @@ void RequestHandler::delete_file(char const* file)
 void RequestHandler::log(char const* message)
 {
     printf("RequestHandler [UID: %s]: %s\n", this->client_id.c_str(), message);
-}
-
-RequestHandler::~RequestHandler()
-{
-    delete this->sock_handler;
-    delete this->file_handler;
 }

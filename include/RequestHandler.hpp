@@ -25,8 +25,8 @@ public:
 
 private:
     std::string client_id;
-    SocketHandler* sock_handler;
-    FileHandler* file_handler;
+    SocketHandler sock_handler;
+    FileHandler file_handler;
 
     //TODO: Make recv, send and delete receive the whole file_info as the parameter?
 
@@ -64,7 +64,6 @@ private:
 
 public:
     RequestHandler(sockaddr_in client_address, in_port_t port, std::string address = "");
-    ~RequestHandler();
 };
 
 #endif // REQUESTHANDLER_HPP
