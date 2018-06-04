@@ -66,7 +66,7 @@ void RequestHandler::sync_server()
     std::vector<file_data_t>::iterator it1, it2;
 
     // !
-    //TODO: Fix this whole method
+    //FIXME: Fix this whole method
     // !
 
     /************************************************************************

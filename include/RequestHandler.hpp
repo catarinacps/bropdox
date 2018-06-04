@@ -3,7 +3,6 @@
 
 #include <ctime>
 #include <vector>
-#include <array>
 #include <algorithm>
 #include <cmath>
 
@@ -64,6 +63,7 @@ private:
 
 public:
     RequestHandler(sockaddr_in client_address, in_port_t port, std::string address = "");
+    RequestHandler() = default;
 };
 
 #endif // REQUESTHANDLER_HPP

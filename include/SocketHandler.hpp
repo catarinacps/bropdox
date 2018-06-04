@@ -41,17 +41,19 @@ public:
     /**
      * The one used by the client
      */
-    SocketHandler(in_port_t port, hostent* server) throw();
+    SocketHandler(in_port_t port, hostent* server);
 
     /**
      * The one used by the RequestHandler
      */
-    SocketHandler(in_port_t port, sockaddr_in peer_address) throw();
+    SocketHandler(in_port_t port, sockaddr_in peer_address);
 
     /**
      * The one used by the server
      */
-    SocketHandler(in_port_t port) throw();
+    SocketHandler(in_port_t port);
+
+    SocketHandler() = default;
 
     ~SocketHandler();
 };

@@ -4,7 +4,7 @@
  * Constructors
  */
 
-SocketHandler::SocketHandler(in_port_t port, hostent* server) throw()
+SocketHandler::SocketHandler(in_port_t port, hostent* server)
 {
     struct timeval timeout = { 0, TIMEOUT };
 
@@ -12,17 +12,17 @@ SocketHandler::SocketHandler(in_port_t port, hostent* server) throw()
 
     try {
         this->sockfd = init_unix_socket(this->handler_address, port);
-    } catch (socket_bad_create const& e) {
+    } catch (bdu::socket_bad_create const& e) {
         throw e;
     }
 
     if (setsockopt(this->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(struct timeval)) < 0) {
         this->log("Error while setting the timeout, please try again...");
-        throw socket_bad_opt();
+        throw bdu::socket_bad_opt();
     }
 }
 
-SocketHandler::SocketHandler(in_port_t port, sockaddr_in peer_address) throw()
+SocketHandler::SocketHandler(in_port_t port, sockaddr_in peer_address)
 {
     struct timeval timeout = { 0, TIMEOUT };
 
@@ -31,34 +31,34 @@ SocketHandler::SocketHandler(in_port_t port, sockaddr_in peer_address) throw()
 
     try {
         this->sockfd = init_unix_socket(this->handler_address, port);
-    } catch (socket_bad_create const& e) {
+    } catch (bdu::socket_bad_create const& e) {
         throw e;
     }
 
     if (setsockopt(this->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(struct timeval)) < 0) {
         this->log("Error while setting the timeout, please try again...");
-        throw socket_bad_opt();
+        throw bdu::socket_bad_opt();
     }
 
     if (bind(this->sockfd, (struct sockaddr*)&(this->handler_address), sizeof(struct sockaddr)) < 0) {
         this->log("Error while binding the socket, please try again...");
-        throw socket_bad_bind();
+        throw bdu::socket_bad_bind();
     }
 }
 
-SocketHandler::SocketHandler(in_port_t port) throw()
+SocketHandler::SocketHandler(in_port_t port)
 {
     this->peer_len = sizeof(struct sockaddr_in);
 
     try {
         this->sockfd = init_unix_socket(this->handler_address, port);
-    } catch (socket_bad_create const& e) {
+    } catch (bdu::socket_bad_create const& e) {
         throw e;
     }
 
     if (bind(sockfd, (struct sockaddr*)&(this->handler_address), sizeof(struct sockaddr)) < 0) {
         this->log("Error while binding the socket, please try again...");
-        throw socket_bad_bind();
+        throw bdu::socket_bad_bind();
     }
 }
 

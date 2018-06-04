@@ -4,6 +4,8 @@
  * Exceptions
  */
 
+namespace bdu {
+
 class socket_bad_bind : public std::exception {
 public:
     const char* what() const noexcept
@@ -27,3 +29,4 @@ public:
         return "Bad socket creation\n";
     }
 };
+}

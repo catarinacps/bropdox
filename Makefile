@@ -11,10 +11,10 @@
 #	Se make não recebe parâmetros, a ação default é all
 
 #	Flags de compilaçao. Debug para uso no GDB
-CC = g++
+CC = clang++
 DFLAG = 
 DEBUG = -g -fsanitize=address -O0
-CFLAGS = -std=c++14 -Wall -Wextra -Wshadow -Wunreachable-code -lpthread -lboost_system -lboost_filesystem $(if $(DFLAG), $(DEBUG), -O3)
+CFLAGS = -std=c++14 -Wall -Wextra -Wshadow -Wunreachable-code -lboost_system -lboost_filesystem $(if $(DFLAG), $(DEBUG), -O3)
 TFLAGS = --error-printer
 
 #	Diretorios do projeto

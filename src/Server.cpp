@@ -9,9 +9,6 @@ Server::Server(in_port_t port_param)
 
 bool Server::listen()
 {
-    pthread_t new_thread;
-    int ret_pcreate;
-
     auto data = this->sock_handler.wait_packet(sizeof(handshake_t));
     if (!data) {
         return false;
@@ -45,11 +42,11 @@ void Server::treat_client_request(std::unique_ptr<handshake_t> hand)
         this->log(hand->userid, "Bad request/handshake");
         return;
     }
+    
+    auto client_info = this->login(hand->userid, hand->device);
 
-    std::pair<client_data_t, unsigned short> client_info;
+    /* try {
 
-    try {
-        client_info = this->login(hand->userid, hand->device);
     } catch (std::invalid_argument const& e) {
         // Invalid device
         std::cerr << e.what() << '\n';
@@ -68,7 +65,7 @@ void Server::treat_client_request(std::unique_ptr<handshake_t> hand)
         this->log(hand->userid, "Too many devices logged in");
 
         return;
-    }
+    } */
 
     this->log(hand->userid, "Declared a new RequestHandler for the request");
 
@@ -84,7 +81,7 @@ void Server::treat_client_request(std::unique_ptr<handshake_t> hand)
 
     // Calls the RequestHandler to handle the client's request
     this->log(hand->userid, "Calling the created RequestHandler...");
-    req_handl_ok = rh->handle_request(hand->req_type);
+    req_handl_ok = client_info.first.first.handle_request(hand->req_type);
 
     if (!req_handl_ok) {
         this->log(hand->userid, "Communication with RequestHandler failed");
@@ -94,7 +91,7 @@ void Server::treat_client_request(std::unique_ptr<handshake_t> hand)
     return;
 }
 
-std::pair<client_data_t, unsigned short> Server::login(std::string const& user_id, unsigned short int device)
+std::pair<std::pair<RequestHandler, unsigned int>, unsigned short> Server::login(std::string const& user_id, unsigned short int device)
 {
     if (device > MAX_CONCURRENT_USERS) {
         throw std::invalid_argument("Server::login : invalid device argument");
@@ -110,22 +107,22 @@ std::pair<client_data_t, unsigned short> Server::login(std::string const& user_i
         auto const new_port = this->get_next_port();
         auto const client_addr = this->sock_handler.get_last_peeraddr();
 
-        auto rh = std::make_unique<RequestHandler>(client_addr, new_port, user_id);
+        RequestHandler rh(client_addr, new_port, user_id);
 
-        auto client = std::make_pair(std::move(rh), new_port);
+        // auto client = std::make_pair(std::move(rh), new_port);
 
-        this->users.at(user_id).at(device - 1) = std::move(client);
+        this->users.at(user_id).at(device - 1) = std::make_pair(std::move(rh), new_port);
     }
 
     return std::make_pair(this->users[user_id].at(device - 1), device);
 }
 
-bool Server::logout(std::string const& user_id, unsigned short int const& device)
+bool Server::logout(std::string const& user_id, unsigned short int device)
 {
     if (device > MAX_CONCURRENT_USERS || device == 0) {
         throw std::invalid_argument("Server::login : invalid device argument");
     }
-
+    
     this->users.at(user_id).at(device).first.reset();
     this->users.at(user_id).at(device).second = 0;
 

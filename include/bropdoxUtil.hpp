@@ -60,7 +60,7 @@ struct file_info {
     char last_modified[MAXNAME];
     int size;
 
-    file_info(std::string name_p, std::string sync_dir)
+    file_info(std::string const& name_p, std::string const& sync_dir)
         : name{ '\0' }
         , last_modified{ '\0' }
         , size(0)
@@ -89,12 +89,12 @@ struct file_info {
     }
 };
 
-typedef struct handshake {
+struct handshake_t {
     req req_type;
     char userid[MAXNAME];
     unsigned short int device;
 
-    handshake(req request, char const* id, unsigned short int dev = 0)
+    handshake_t(req request, char const* id, unsigned short int dev = 0)
         : req_type(request)
         , userid{ '\0' }
         , device(dev)
@@ -106,70 +106,69 @@ typedef struct handshake {
         std::strcpy(userid, aux.substr(0, aux.find_first_of('\0')).c_str());
     }
 
-    handshake() = default;
-} handshake_t;
+    handshake_t() = default;
+};
 
-typedef struct ack {
+struct ack_t {
     bool confirmation;
 
-    ack(bool conf)
+    ack_t(bool conf)
         : confirmation(conf)
     {
     }
 
-    ack() = default;
-} ack_t;
+    ack_t() = default;
+};
 
-//TODO: add device return value
-typedef struct syn {
+struct syn_t {
     bool confirmation;
     in_port_t port;
     unsigned short int device;
 
-    syn(bool conf_p, in_port_t port_p, unsigned short int device_p)
+    syn_t(bool conf_p, in_port_t port_p, unsigned short int device_p)
         : confirmation(conf_p)
         , port(port_p)
         , device(device_p)
     {
     }
 
-    syn() = default;
-} syn_t;
+    syn_t() = default;
+};
 
-typedef struct file_data {
+struct file_data_t {
     struct file_info file;
     unsigned int num_packets;
 
-    file_data(file_info const& file_p, unsigned int packets)
+    file_data_t(file_info const& file_p, unsigned int packets)
         : file(file_p)
         , num_packets(packets)
     {
     }
 
-    file_data() = default;
-} file_data_t;
+    file_data_t() = default;
+};
 
-typedef struct file_info_list {
+struct file_info_list_t {
     file_data_t file_list[MAX_FILE_LIST_SIZE];
     bool has_next;
-} file_info_list_t;
+};
 
-typedef struct packet {
+struct packet_t {
     unsigned int num;
     byte_t data[PACKETSIZE];
 
-    packet(unsigned int num_p)
+    packet_t(unsigned int num_p)
         : num(num_p)
     {
     }
 
-    packet() = default;
-} packet_t;
+    packet_t() = default;
+};
 
-typedef struct {
+struct convert_helper_t {
     byte_t* pointer;
     size_t size;
-} convert_helper_t;
+};
 
 /******************************************************************************
  * Headers

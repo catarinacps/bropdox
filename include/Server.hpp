@@ -6,30 +6,21 @@
 #include "bropdoxUtil.hpp"
 
 #include <unordered_map>
-#include <array>
 #include <thread>
 
-using client_data_t = std::pair<std::unique_ptr<RequestHandler>, unsigned int>;
-
-/* typedef struct {
-    RequestHandler* handlers[2];
-    in_port_t ports[2];
-} client_data_t; */
+using client_data_t = std::pair<RequestHandler, unsigned int>;
 
 class Server {
 public:
     bool listen();
 
 private:
-    in_port_t const port;
-    std::vector<bool> port_counter;
-    
     SocketHandler sock_handler;
 
-    std::unordered_map<std::string, std::array<client_data_t, MAX_CONCURRENT_USERS>> users;
-    //std::unordered_map<std::string, client_data_t*> users;
+    in_port_t const port;
+    std::vector<bool> port_counter;
 
-    // server-dev
+    std::unordered_map<std::string, std::vector<std::pair<RequestHandler, unsigned int>>> users;
 
     /**
      * Trata o handshake do cliente.
@@ -43,7 +34,7 @@ private:
 
     std::pair<client_data_t, unsigned short> login(std::string const& user_id, unsigned short int device);
 
-    bool logout(std::string const& user_id, unsigned short int const& device);
+    bool logout(std::string const& user_id, unsigned short int device);
 
     unsigned int get_next_port() noexcept;
 
