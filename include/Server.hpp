@@ -7,7 +7,9 @@
 
 #include <array>
 #include <thread>
+#include <mutex>
 #include <unordered_map>
+
 
 struct client_data_t {
     RequestHandler handler;
@@ -36,12 +38,14 @@ struct client_data_t {
 };
 
 class Server {
-    SocketHandler sock_handler;
-
+    SocketHandler sock_handler;    
     in_port_t const port;
     std::vector<bool> port_counter;
 
     std::unordered_map<std::string, std::array<client_data_t, MAX_CONCURRENT_USERS>> users;
+
+    std::mutex m_login;
+    std::mutex m_port;
 
 public:
     /**

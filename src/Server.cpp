@@ -50,9 +50,8 @@ void Server::treat_client_request(std::unique_ptr<handshake_t> hand)
         if (hand->req_type == req::login) {
             client_device = this->treat_client_login(hand->userid);
 
-            if (client_device != 0) {
-                this->log(hand->userid, "Client logged in");
-            }
+            this->log(hand->userid, "Client logged in");
+            
         } else {
             syn_t syn(false, 0, 0);
             this->sock_handler.send_packet(&syn, sizeof(syn_t));
@@ -74,11 +73,6 @@ void Server::treat_client_request(std::unique_ptr<handshake_t> hand)
 
     this->log(hand->userid, "Sent a SYN to the client");
 
-    if (hand->req_type == req::login) {
-        this->log(hand->userid, "Client logged in");
-        return;
-    }
-
     // Calls the RequestHandler to handle the client's request
     this->log(hand->userid, "Calling the created RequestHandler...");
     req_handl_ok = client_info.handler.handle_request(hand->req_type);
@@ -97,9 +91,17 @@ bool Server::verify_login(std::string const& user_id, unsigned short int device)
         return false;
     }
 
-    auto& login = this->users.at(user_id).at(device - 1);
+    try{
 
-    return login.initialized;
+        auto& login = this->users.at(user_id).at(device - 1);
+        return login.initialized;
+
+    } catch (std::out_of_range const& e){
+
+        std::cerr << e.what() << '\n';
+        return false;
+    }
+
 }
 
 unsigned short int Server::treat_client_login(std::string const& user_id)
@@ -135,6 +137,7 @@ unsigned short int Server::login(std::string const& user_id)
 {
     unsigned short int device;
 
+    this->m_login.lock();
     device = this->get_device(user_id);
     if (device == 0) {
         throw std::domain_error("Server::login : too many devices logged in");
@@ -167,7 +170,7 @@ unsigned short int Server::get_device(std::string const& user_id) const noexcept
     auto i = 0;
     for (auto const& item : this->users.at(user_id)) {
         if (!item.initialized) {
-            return i;
+            return i + 1;
         }
         i++;
     }
@@ -183,9 +186,16 @@ void Server::log(char const* userid, char const* message) const noexcept
 unsigned int Server::reserve_next_port() noexcept
 {
     auto i = 1;
-    for (auto const& occupied : this->port_counter) {
+    for (auto&& occupied : this->port_counter) {
         if (!occupied) {
+            this->m_port.lock();
+            
+            occupied = true;
+
+            this->m_port.unlock();
+
             return this->port + i;
+            
         }
         i++;
     }

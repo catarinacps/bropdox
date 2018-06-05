@@ -4,8 +4,16 @@
 #include "bropdoxUtil.hpp"
 
 #include <iostream>
+#include <queue>
 
 class SocketHandler {
+    int sockfd;
+    socklen_t peer_len;
+    struct sockaddr_in handler_address;
+    struct sockaddr_in peer_address;
+
+    std::queue<sockaddr_in> peeraddr_queue;
+
 public:
     /**
      * Listens the socket for incoming packets, expecting them with a predetermined size.
@@ -30,11 +38,7 @@ public:
     sockaddr_in get_last_peeraddr() const;
 
 private:
-    int sockfd;
-    socklen_t peer_len;
-    struct sockaddr_in handler_address;
-    mutable struct sockaddr_in peer_address;
-
+    
     void log(char const* message) const;
 
 public:
