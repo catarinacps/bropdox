@@ -1,10 +1,17 @@
 #include "../include/RequestHandler.hpp"
 
-RequestHandler::RequestHandler(sockaddr_in client_sock_address, in_port_t port, std::string address)
-    : sock_handler(port, client_sock_address)
+RequestHandler::RequestHandler(sockaddr_in client_sock_address, in_port_t port_p, unsigned short int dev, std::string const& address)
+    : sock_handler(port_p, client_sock_address)
     , file_handler(address, 0)
     , client_id(address)
+    , device(dev)
+    , port(port_p)
 {
+}
+
+unsigned short int RequestHandler::get_device()
+{
+    return this->device;
 }
 
 bool RequestHandler::handle_request(req req_type)

@@ -20,15 +20,16 @@ public:
 
 private:
     std::string client_id;
-    bf::path const syncDir;
+    bf::path syncDir;
 
     void log(char const* message) const;
 
 public:
     FileHandler(std::string client_id);
-    FileHandler(std::string client_id, int flag);
-    FileHandler() = default;
 
+    FileHandler(std::string client_id, int flag);
+
+    FileHandler() {}
 
     // TODO: some function that gets all modified files
 };

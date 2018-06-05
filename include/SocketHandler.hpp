@@ -53,7 +53,7 @@ public:
      */
     SocketHandler(in_port_t port);
 
-    SocketHandler() = default;
+    SocketHandler() {}
 
     ~SocketHandler();
 };
