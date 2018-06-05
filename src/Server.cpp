@@ -53,12 +53,13 @@ void Server::treat_client_request(std::unique_ptr<handshake_t> hand)
             if (client_device != 0) {
                 this->log(hand->userid, "Client logged in");
             }
-            return;
         } else {
             syn_t syn(false, 0, 0);
             this->sock_handler.send_packet(&syn, sizeof(syn_t));
             this->log(hand->userid, "User not logged in");
         }
+        
+        return;
     } else {
         client_device = hand->device;
     }
