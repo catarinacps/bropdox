@@ -21,9 +21,9 @@ bool Server::listen()
     if (!request_thread.joinable()) {
         printf("Failed to create new thread...");
         return false;
-    } else {
-        request_thread.detach();
     }
+    
+    request_thread.detach();
 
     return true;
 }
@@ -33,7 +33,7 @@ void Server::treat_client_request(std::unique_ptr<handshake_t> hand)
     bool pack_ok;
     bool req_handl_ok;
 
-    unsigned short int client_device = 0;
+    device_t client_device = 0;
 
     std::string file_name;
 
@@ -51,19 +51,23 @@ void Server::treat_client_request(std::unique_ptr<handshake_t> hand)
             client_device = this->treat_client_login(hand->userid);
 
             this->log(hand->userid, "Client logged in");
-            
+
         } else {
             syn_t syn(false, 0, 0);
             this->sock_handler.send_packet(&syn, sizeof(syn_t));
             this->log(hand->userid, "User not logged in");
         }
-        
+
         return;
     } else {
         client_device = hand->device;
     }
 
+    this->m_map.lock();
+
     auto& client_info = this->users.at(hand->userid).at(client_device - 1);
+
+    this->m_map.unlock();
 
     this->log(hand->userid, "Declared a new RequestHandler for the request");
 
@@ -85,28 +89,31 @@ void Server::treat_client_request(std::unique_ptr<handshake_t> hand)
     return;
 }
 
-bool Server::verify_login(std::string const& user_id, unsigned short int device) const noexcept
+bool Server::verify_login(std::string const& user_id, device_t device) const noexcept
 {
     if (device == 0 || device > MAX_CONCURRENT_USERS) {
         return false;
     }
 
-    try{
+    try {
+        this->m_map.lock();
 
         auto& login = this->users.at(user_id).at(device - 1);
+
+        this->m_map.unlock();
+
         return login.initialized;
-
-    } catch (std::out_of_range const& e){
-
+    } catch (std::out_of_range const& e) {
         std::cerr << e.what() << '\n';
+
+        this->m_map.unlock();
         return false;
     }
-
 }
 
-unsigned short int Server::treat_client_login(std::string const& user_id)
+device_t Server::treat_client_login(std::string const& user_id)
 {
-    unsigned short int client_device = 0;
+    device_t client_device = 0;
 
     try {
         client_device = this->login(user_id);
@@ -133,49 +140,53 @@ unsigned short int Server::treat_client_login(std::string const& user_id)
     return client_device;
 }
 
-unsigned short int Server::login(std::string const& user_id)
+device_t Server::login(std::string const& user_id)
 {
-    unsigned short int device;
-
     this->m_login.lock();
-    device = this->get_device(user_id);
-    if (device == 0) {
-        throw std::domain_error("Server::login : too many devices logged in");
-    }
 
-    // Reserves a new port to the new RequestHandler
-    auto const new_port = this->reserve_next_port();
-    auto const client_addr = this->sock_handler.get_last_peeraddr();
+    auto const device = this->reserve_device(user_id);
+    auto const new_port = this->reserve_port();
+    auto const client_addr = this->sock_handler.pop_peer_address();
 
     RequestHandler rh(client_addr, new_port, device, user_id);
 
+    this->m_login.unlock();
+
+    this->m_map.lock();
+
     this->users.at(user_id).at(device - 1) = client_data_t(std::move(rh), new_port);
+
+    this->m_map.unlock();
 
     return device;
 }
 
-bool Server::logout(std::string const& user_id, unsigned short int device)
+bool Server::logout(std::string const& user_id, device_t device)
 {
     if (device > MAX_CONCURRENT_USERS || device == 0) {
         throw std::invalid_argument("Server::login : invalid device argument");
     }
 
+    this->m_map.lock();
+
     this->users.at(user_id).at(device) = client_data_t();
 
+    this->m_map.unlock();
     return true;
 }
 
-unsigned short int Server::get_device(std::string const& user_id) const noexcept
+device_t Server::reserve_device(std::string const& user_id)
 {
     auto i = 0;
-    for (auto const& item : this->users.at(user_id)) {
+    for (auto& item : this->users.at(user_id)) {
         if (!item.initialized) {
+            item.initialized = true;
             return i + 1;
         }
         i++;
     }
 
-    return 0;
+    throw std::domain_error("Server::login : too many devices logged in");
 }
 
 void Server::log(char const* userid, char const* message) const noexcept
@@ -183,19 +194,15 @@ void Server::log(char const* userid, char const* message) const noexcept
     printf("Server [UID: %s]: %s\n", userid, message);
 }
 
-unsigned int Server::reserve_next_port() noexcept
+in_port_t Server::reserve_port() noexcept
 {
     auto i = 1;
+
     for (auto&& occupied : this->port_counter) {
         if (!occupied) {
-            this->m_port.lock();
-            
             occupied = true;
 
-            this->m_port.unlock();
-
             return this->port + i;
-            
         }
         i++;
     }

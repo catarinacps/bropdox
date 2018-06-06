@@ -10,9 +10,9 @@ class SocketHandler {
     int sockfd;
     socklen_t peer_len;
     struct sockaddr_in handler_address;
-    struct sockaddr_in peer_address;
+    struct sockaddr_in peer_address_buffer;
 
-    std::queue<sockaddr_in> peeraddr_queue;
+    std::queue<sockaddr_in> peer_address_queue;
 
 public:
     /**
@@ -35,7 +35,9 @@ public:
      */
     bool send_packet(void* data, size_t size) const;
 
-    sockaddr_in get_last_peeraddr() const;
+    sockaddr_in pop_peer_address() const;
+
+    void flush_address_queue() noexcept;
 
 private:
     
@@ -50,7 +52,7 @@ public:
     /**
      * The one used by the RequestHandler
      */
-    SocketHandler(in_port_t port, sockaddr_in peer_address);
+    SocketHandler(in_port_t port, sockaddr_in peer_address_buffer);
 
     /**
      * The one used by the server

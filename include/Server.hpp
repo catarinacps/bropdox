@@ -10,6 +10,7 @@
 #include <mutex>
 #include <unordered_map>
 
+using device_t = unsigned short int;
 
 struct client_data_t {
     RequestHandler handler;
@@ -38,14 +39,14 @@ struct client_data_t {
 };
 
 class Server {
-    SocketHandler sock_handler;    
+    SocketHandler mutable sock_handler;    
     in_port_t const port;
-    std::vector<bool> port_counter;
 
+    std::vector<bool> port_counter;
     std::unordered_map<std::string, std::array<client_data_t, MAX_CONCURRENT_USERS>> users;
 
-    std::mutex m_login;
-    std::mutex m_port;
+    std::mutex mutable m_login;
+    std::mutex mutable m_map;
 
 public:
     /**
@@ -76,7 +77,7 @@ private:
      * 
      * @return the new user device
      */
-    unsigned short int login(std::string const& user_id);
+    device_t login(std::string const& user_id);
 
     /**
      * Tries to logout the given user_id.
@@ -86,19 +87,19 @@ private:
      * 
      * @return success or failure
      */
-    bool logout(std::string const& user_id, unsigned short int device);
+    bool logout(std::string const& user_id, device_t device);
 
     /***********************************************************************************
      * HELPER
      */
 
-    bool verify_login(std::string const& user_id, unsigned short int device) const noexcept;
+    bool verify_login(std::string const& user_id, device_t device) const noexcept;
 
-    unsigned short int treat_client_login(std::string const& user_id);
+    device_t treat_client_login(std::string const& user_id);
 
-    unsigned int reserve_next_port() noexcept;
+    in_port_t reserve_port() noexcept;
 
-    unsigned short int get_device(std::string const& user_id) const noexcept;
+    device_t reserve_device(std::string const& user_id);
 
     void log(char const* userid, char const* message) const noexcept;
 
