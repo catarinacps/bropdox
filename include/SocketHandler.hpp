@@ -1,5 +1,4 @@
-#ifndef SOCKETHANDLER_HPP
-#define SOCKETHANDLER_HPP
+#pragma once
 
 #include "bropdoxUtil.hpp"
 
@@ -47,21 +46,19 @@ public:
     /**
      * The one used by the client
      */
-    SocketHandler(in_port_t port, hostent* server);
+    SocketHandler(port_t port, hostent* server);
 
     /**
      * The one used by the RequestHandler
      */
-    SocketHandler(in_port_t port, sockaddr_in peer_address_buffer);
+    SocketHandler(port_t port, sockaddr_in peer_address_buffer);
 
     /**
      * The one used by the server
      */
-    SocketHandler(in_port_t port);
+    SocketHandler(port_t port);
 
     SocketHandler() {}
 
     ~SocketHandler();
 };
-
-#endif // SOCKETHANDLER_HPP

@@ -1,5 +1,4 @@
-#ifndef BROPBOXUTIL_HPP
-#define BROPBOXUTIL_HPP
+#pragma once
 
 #ifndef BOOST_ALL_DYN_LINK
 #define BOOST_ALL_DYN_LINK
@@ -54,6 +53,10 @@ enum class req {
 };
 
 using byte_t = unsigned char;
+
+using device_t = unsigned short int;
+
+using port_t = unsigned int;
 
 struct file_info {
     char name[MAXNAME * 2];
@@ -122,10 +125,10 @@ struct ack_t {
 
 struct syn_t {
     bool confirmation;
-    in_port_t port;
+    port_t port;
     unsigned short int device;
 
-    syn_t(bool conf_p, in_port_t port_p, unsigned short int device_p)
+    syn_t(bool conf_p, port_t port_p, unsigned short int device_p)
         : confirmation(conf_p)
         , port(port_p)
         , device(device_p)
@@ -174,8 +177,8 @@ struct convert_helper_t {
  * Headers
  */
 
-int init_unix_socket(struct sockaddr_in& sock, in_port_t port);
-int init_unix_socket(struct sockaddr_in& sock, in_port_t port, hostent* server);
+int init_unix_socket(struct sockaddr_in& sock, port_t port);
+int init_unix_socket(struct sockaddr_in& sock, port_t port, hostent* server);
 
 std::unique_ptr<handshake_t> convert_to_handshake(byte_t* data);
 std::unique_ptr<ack_t> convert_to_ack(byte_t* data);
@@ -183,5 +186,3 @@ std::unique_ptr<syn_t> convert_to_syn(byte_t* data);
 std::unique_ptr<packet_t> convert_to_packet(byte_t* data);
 std::unique_ptr<file_info_list_t> convert_to_file_list(byte_t* data);
 std::unique_ptr<file_data_t> convert_to_file_data(byte_t* data);
-
-#endif // BROPBOXUTIL_HPP

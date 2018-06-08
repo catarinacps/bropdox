@@ -1,18 +1,15 @@
 #pragma once
 
 #include "RequestHandler.hpp"
-#include "SocketHandler.hpp"
 
 #include <array>
-#include <thread>
 #include <mutex>
+#include <string>
 #include <unordered_map>
-
-using device_t = unsigned short int;
 
 struct client_data_t {
     RequestHandler handler;
-    unsigned int port;
+    port_t port;
     bool initialized;
 
     client_data_t()
@@ -34,40 +31,20 @@ struct client_data_t {
 
         return *this;
     }
+
+    bool is_logged_in()
+    {
+        return this->initialized;
+    }
 };
 
-class Server {
-    SocketHandler mutable sock_handler;    
-
-    port_t const port;
-    std::vector<bool> port_counter;
+class LoginManager {
     std::unordered_map<std::string, std::array<client_data_t, MAX_CONCURRENT_USERS>> users;
 
     std::mutex mutable m_login;
     std::mutex mutable m_map;
 
 public:
-    /**
-     * Sets the server to wait the next handshake package from a client.
-     * 
-     * @return success or failure on receiving said handshake
-     */
-    bool listen();
-
-private:
-    /***********************************************************************************
-     * CORE
-     */
-
-    /**
-     * Treats the client handshake.
-     * 
-     * Gets called on the creation of a treater thread 
-     * 
-     * @param package the handshake
-     */
-    void treat_client_request(std::unique_ptr<handshake_t> package);
-
     /**
      * Tries to login the given user_id.
      * 
@@ -87,20 +64,16 @@ private:
      */
     bool logout(std::string const& user_id, device_t device);
 
-    /***********************************************************************************
-     * HELPER
+    /**
+     * Retrieves a reference to the client data.
+     * 
+     * @param user_id the UserID
+     * @param device the current user device
+     * 
+     * @return a reference to the data
      */
+    client_data_t& get_client_data(std::string const& user_id, device_t device) const;
 
-    bool verify_login(std::string const& user_id, device_t device) const noexcept;
-
-    device_t treat_client_login(std::string const& user_id);
-
-    port_t reserve_port() noexcept;
-
+private:
     device_t reserve_device(std::string const& user_id);
-
-    void log(char const* userid, char const* message) const noexcept;
-
-public:
-    Server(port_t port);
 };

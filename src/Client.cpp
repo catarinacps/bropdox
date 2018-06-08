@@ -33,7 +33,7 @@ bool Client::parse_input(std::vector<std::string> tokens)
     if (command == "login") {
         std::string address(tokens[1]);
         std::string port_s(tokens[2]);
-        in_port_t port = atoi(port_s.c_str());
+        port_t port = atoi(port_s.c_str());
 
         return this->login_server(address.c_str(), port);
     } else if (command == "upload") {

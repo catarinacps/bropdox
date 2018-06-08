@@ -1,4 +1,7 @@
+#pragma once
+
 #include "bropdoxUtil.hpp"
+
 #include <cmath>
 #include <fstream>
 #include <iostream>

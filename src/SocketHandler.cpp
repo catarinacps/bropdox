@@ -4,7 +4,7 @@
  * Constructors
  */
 
-SocketHandler::SocketHandler(in_port_t port, hostent* server)
+SocketHandler::SocketHandler(port_t port, hostent* server)
 {
     struct timeval timeout = { 0, TIMEOUT };
 
@@ -18,7 +18,7 @@ SocketHandler::SocketHandler(in_port_t port, hostent* server)
     }
 }
 
-SocketHandler::SocketHandler(in_port_t port, sockaddr_in peer_address_buffer)
+SocketHandler::SocketHandler(port_t port, sockaddr_in peer_address_buffer)
 {
     struct timeval timeout = { 0, TIMEOUT };
 
@@ -38,7 +38,7 @@ SocketHandler::SocketHandler(in_port_t port, sockaddr_in peer_address_buffer)
     }
 }
 
-SocketHandler::SocketHandler(in_port_t port)
+SocketHandler::SocketHandler(port_t port)
 {
     this->peer_len = sizeof(struct sockaddr_in);
 

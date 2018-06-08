@@ -1,6 +1,6 @@
 #include "../include/Server.hpp"
 
-Server::Server(in_port_t port_param)
+Server::Server(port_t port_param)
     : sock_handler(port_param)
     , port(port_param)
     , port_counter(MAXPORT - port)
@@ -194,7 +194,7 @@ void Server::log(char const* userid, char const* message) const noexcept
     printf("Server [UID: %s]: %s\n", userid, message);
 }
 
-in_port_t Server::reserve_port() noexcept
+port_t Server::reserve_port() noexcept
 {
     auto i = 1;
 

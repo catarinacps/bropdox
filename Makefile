@@ -31,11 +31,11 @@ _TARGET = mserver mclient
 TARGET = $(patsubst %, $(BIN_DIR)/%, $(_TARGET))
 
 #	Dependencias, ou seja, arquivos de header
-_DEPS = Server.hpp Client.hpp bropdoxUtil.hpp SocketHandler.hpp RequestHandler.hpp FileHandler.hpp
+_DEPS = Server.hpp Client.hpp bropdoxUtil.hpp SocketHandler.hpp RequestHandler.hpp FileHandler.hpp PortManager.hpp LoginManager.hpp
 DEPS = $(patsubst %, $(INC_DIR)/%, $(_DEPS))
 
 #	Objetos a serem criados
-_OBJ = Server.o Client.o bropdoxUtil.o SocketHandler.o RequestHandler.o FileHandler.o
+_OBJ = Server.o Client.o bropdoxUtil.o SocketHandler.o RequestHandler.o FileHandler.o PortManager.o LoginManager.o
 OBJ = $(patsubst %, $(OBJ_DIR)/%, $(_OBJ))
 
 #	Target da regra test

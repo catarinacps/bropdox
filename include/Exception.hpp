@@ -1,3 +1,5 @@
+#pragma once
+
 #include <exception>
 
 /******************************************************************************
@@ -27,6 +29,14 @@ public:
     const char* what() const noexcept
     {
         return "Bad socket creation\n";
+    }
+};
+
+class not_implemented : public std::exception {
+public:
+    const char* what() const noexcept
+    {
+        return "Method not implemented\n";
     }
 };
 }

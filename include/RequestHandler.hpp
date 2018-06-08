@@ -1,14 +1,13 @@
-#ifndef REQUESTHANDLER_HPP
-#define REQUESTHANDLER_HPP
+#pragma once
+
+#include "FileHandler.hpp"
+#include "SocketHandler.hpp"
+#include "bropdoxUtil.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <ctime>
 #include <vector>
-
-#include "FileHandler.hpp"
-#include "SocketHandler.hpp"
-#include "bropdoxUtil.hpp"
 
 class RequestHandler {
     std::string client_id;
@@ -73,9 +72,7 @@ public:
 
     RequestHandler(
         sockaddr_in client_address,
-        in_port_t port_p,
+        port_t port_p,
         unsigned short int dev,
         std::string const& address);
 };
-
-#endif // REQUESTHANDLER_HPP

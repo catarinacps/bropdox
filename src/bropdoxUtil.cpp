@@ -1,6 +1,6 @@
 #include "../include/bropdoxUtil.hpp"
 
-int init_unix_socket(struct sockaddr_in& sock, in_port_t port)
+int init_unix_socket(struct sockaddr_in& sock, port_t port)
 {
     int socket_id;
     if ((socket_id = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
@@ -16,7 +16,7 @@ int init_unix_socket(struct sockaddr_in& sock, in_port_t port)
     return socket_id;
 }
 
-int init_unix_socket(struct sockaddr_in& sock, in_port_t port, hostent& server)
+int init_unix_socket(struct sockaddr_in& sock, port_t port, hostent& server)
 {
     int socket_id;
     if ((socket_id = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
