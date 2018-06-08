@@ -49,10 +49,11 @@ public:
      * Tries to login the given user_id.
      * 
      * @param user_id the UserID
+     * @param port the port
      * 
      * @return the new user device
      */
-    device_t login(std::string const& user_id);
+    device_t login(std::string const& user_id, port_t port);
 
     /**
      * Tries to logout the given user_id.

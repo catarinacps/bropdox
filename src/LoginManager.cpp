@@ -4,17 +4,55 @@
  * PUBLIC
  */
 
-device_t LoginManager::login(std::string const& user_id)
+device_t LoginManager::login(std::string const& user_id, port_t port)
 {
-    throw bdu::not_implemented();
+    this->m_login.lock();
+
+    auto const device = this->reserve_device(user_id);
+    auto const client_addr = this->sock_handler.pop_peer_address();
+    
+    this->m_login.unlock();
+    
+    RequestHandler rh(client_addr, port, device, user_id);  
+
+    this->m_map.lock();
+
+    this->users.at(user_id).at(device - 1) = client_data_t(std::move(rh), new_port);
+
+    this->m_map.unlock();
+
+    return device;
 }
 
 bool LoginManager::logout(std::string const& user_id, device_t device)
 {
-    throw bdu::not_implemented();
+    if (device > MAX_CONCURRENT_USERS || device == 0) {
+        throw std::invalid_argument("Server::login : invalid device argument");
+    }
+
+    this->m_map.lock();
+
+    this->users.at(user_id).at(device) = client_data_t();
+
+    this->m_map.unlock();
+    return true;
 }
 
 client_data_t& LoginManager::get_client_data(std::string const& user_id, device_t device) const
 {
-    throw bdu::not_implemented();
+    return this->users.at(user_id).at(device - 1);
+}
+
+device_t LoginManager::reserve_device(std::string const& user_id)
+{
+    auto i = 0;
+    for (auto& item : this->users.at(user_id)) {
+        if (!item.initialized) {
+            item.initialized = true;
+            return i + 1;
+        }
+        i++;
+    }
+
+    throw std::domain_error("LoginManager::reserve_device : too many devices logged in");
 }
