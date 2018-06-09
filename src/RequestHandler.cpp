@@ -189,13 +189,25 @@ void RequestHandler::send_file(char const* file)
     struct file_info finfo;
 
     // If get_file returns nullptr, something has gone wrong
-    packet_t** packets = this->file_handler.get_file(file, file_size_in_packets);
-    if (packets == nullptr) {
+
+    std::vector<std::unique_ptr<packet_t>> packets;
+
+    try {
+        packets = this->file_handler.get_file(file, file_size_in_packets);
+    } catch (bdu::file_does_not_exist const& e) {
+        std::cerr << e.what() << '\n';
         file_data_t file_data(finfo, file_size_in_packets);
         this->sock_handler.send_packet(&file_data, sizeof(file_data_t));
         this->log("Requested file doesn't exist");
         return;
+    } catch (std::ios::failure const& e) {
+        std::cerr << e.what() << '\n';
+        file_data_t file_data(finfo, file_size_in_packets);
+        this->sock_handler.send_packet(&file_data, sizeof(file_data_t));
+        this->log("IOS failure");
+        return;
     }
+
     // If all goes well, the server sends the complete file_info to the client
     finfo = this->file_handler.get_file_info(file);
     file_data_t file_data(finfo, file_size_in_packets);
@@ -203,8 +215,8 @@ void RequestHandler::send_file(char const* file)
     this->log("Sent the requested file_info");
 
     // Packet sending loop
-    for (int i = 0; i < file_size_in_packets; i++) {
-        this->sock_handler.send_packet(packets[i], sizeof(packet_t));
+    for (auto const& packet : packets) {
+        this->sock_handler.send_packet(packet.get(), sizeof(packet_t));
         usleep(15);
     }
     this->log("Finished sending the packets");
@@ -259,7 +271,7 @@ void RequestHandler::receive_file(char const* file, unsigned int const packets_t
         ack_t ack(true);
         this->sock_handler.send_packet(&ack, sizeof(ack_t));
 
-        this->file_handler.write_file(file, recv_file);
+        this->file_handler.write_file(file, std::move(recv_file));
     } else {
         this->log("Failure receiving the file");
 

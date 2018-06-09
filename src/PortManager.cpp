@@ -4,7 +4,7 @@
  * PUBLIC
  */
 
-PortManager(port_t port)
+PortManager(port_t const port)
     : server_port(port)
     , port_map(MAXPORT - port, false)
 {

@@ -104,6 +104,7 @@ std::vector<std::unique_ptr<packet_t>> FileHandler::get_file(char const* file_na
     do {
         myFile.read(reinterpret_cast<char*>(packet->data), PACKETSIZE);
         data.push_back(std::move(packet));
+        packet = std::make_unique<packet_t>(i);
     } while (myFile);
     this->log("Finished reading the file");
 

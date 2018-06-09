@@ -13,13 +13,14 @@ public:
     void command_line_interface();
 
 private:
-    int device;
+    device_t device = 0;
     bool logged_in;
     std::string userid;
     hostent* server;
 
-    SocketHandler* sock_handler_server, *sock_handler_req;
-    FileHandler* file_handler;
+    SocketHandler sock_handler_server;
+    SocketHandler sock_handler_req;
+    FileHandler file_handler;
 
     // client-dev
 
@@ -31,7 +32,7 @@ private:
      * 
      * @return O descritor da conexao ou -1 caso tenha falhado a conexao.
      */
-    bool login_server(char const* host, int port);
+    bool connect_to_server(char const* host, int port);
 
     /**
      * Sincroniza o diretorio "sync_dir_<nomeusuario>" com o servidor.
@@ -68,7 +69,7 @@ private:
     /**
      * Fecha a sessao com o servidor.
      * 
-     * @see login_server()
+     * @see connect_to_server()
      */
     bool close_session();
 

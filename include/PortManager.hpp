@@ -8,9 +8,11 @@
 
 #define MAXPORT 65535
 
+using port_t = unsigned int;
+
 class PortManager {
-    port_t const server_port;
     std::vector<bool> port_map;
+    port_t const server_port;
 
     std::mutex mutable m_port;
 
