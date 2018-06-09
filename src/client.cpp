@@ -1,4 +1,4 @@
-#include "../include/Client.hpp"
+#include "client/Client.hpp"
 
 int main(int argc, char* argv[])
 {

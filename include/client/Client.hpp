@@ -1,8 +1,8 @@
 #pragma once
 
-#include "FileHandler.hpp"
-#include "SocketHandler.hpp"
-#include "bropdoxUtil.hpp"
+#include "util/FileHandler.hpp"
+#include "util/SocketHandler.hpp"
+#include "util/bropdoxUtil.hpp"
 
 #include <map>
 #include <algorithm>

@@ -1,10 +1,10 @@
-#include "../include/PortManager.hpp"
+#include "server/PortManager.hpp"
 
 /***************************************************************************************************
  * PUBLIC
  */
 
-PortManager(port_t port)
+PortManager::PortManager(port_t port)
     : server_port(port)
     , port_map(MAXPORT - port, false)
 {
@@ -16,7 +16,7 @@ port_t PortManager::reserve_port()
 
     this->m_port.lock();
 
-    for (auto&& occupied : this->port_counter) {
+    for (auto&& occupied : this->port_map) {
         if (!occupied) {
             occupied = true;
 
@@ -32,12 +32,12 @@ port_t PortManager::reserve_port()
 
 bool PortManager::free_port(port_t port)
 {
-    auto& port = this->port_map.at(this->server_port - port - 1);
+    auto ref = this->port_map.at(this->server_port - port - 1);
 
-    if (port == false) {
+    if (ref == false) {
         return false;
     }
 
-    port = false;
+    ref = false;
     return true;
 }

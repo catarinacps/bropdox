@@ -1,7 +1,7 @@
 #pragma once
 
-#include "bropdoxUtil.hpp"
-#include "Exception.hpp"
+#include "util/bropdoxUtil.hpp"
+#include "util/Exception.hpp"
 
 #include <cmath>
 #include <fstream>

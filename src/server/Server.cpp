@@ -1,8 +1,8 @@
-#include "../include/Server.hpp"
+#include "server/Server.hpp"
 
 Server::Server(port_t port_param)
-    : sock_handler(port_param)
-    , port(port_param)
+    : port(port_param)
+    , sock_handler(port_param)
     , port_manager(port)
 {
 }
@@ -31,15 +31,15 @@ bool Server::listen()
 
 void Server::treat_client_request(std::unique_ptr<handshake_t> hand, sockaddr_in const client_addr)
 {
-    // TODO:
+    //TODO:
     // - check package (checksum) (is it really necessary?)
 
     if (hand->device == 0) {
         if (hand->req_type == req::login) {
-            auto const port = this->port_manager.reserve_port();
-            auto device = this->login_manager.login(hand->userid, client_addr, port);
+            auto const reserved_port = this->port_manager.reserve_port();
+            auto device = this->login_manager.login(hand->userid, client_addr, reserved_port);
 
-            syn_t syn(true, port, device);
+            syn_t syn(true, reserved_port, device);
             this->sock_handler.send_packet(&syn, sizeof(syn_t));
             this->log(hand->userid, "Client now logged in");
 

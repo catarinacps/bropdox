@@ -17,7 +17,7 @@
 
 #define MAXPORT 65535
 
-#include "Exception.hpp"
+#include "util/Exception.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -166,11 +166,6 @@ struct packet_t {
     }
 
     packet_t() = default;
-};
-
-struct convert_helper_t {
-    byte_t* pointer;
-    size_t size;
 };
 
 /******************************************************************************

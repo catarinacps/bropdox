@@ -1,4 +1,4 @@
-#include "../include/LoginManager.hpp"
+#include "server/LoginManager.hpp"
 
 /***************************************************************************************************
  * PUBLIC

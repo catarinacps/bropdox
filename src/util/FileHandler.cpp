@@ -1,4 +1,4 @@
-#include "../include/FileHandler.hpp"
+#include "util/FileHandler.hpp"
 
 FileHandler::FileHandler(std::string client_id_param)
     : syncDir(std::string(getenv("HOME")) + "/sync_dir_" + client_id_param + "/")

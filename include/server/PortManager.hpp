@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Exception.hpp"
-#include "bropdoxUtil.hpp"
+#include "util/Exception.hpp"
+#include "util/bropdoxUtil.hpp"
 
 #include <mutex>
 #include <vector>

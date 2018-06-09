@@ -1,4 +1,4 @@
-#include "../include/RequestHandler.hpp"
+#include "server/RequestHandler.hpp"
 
 RequestHandler::RequestHandler(sockaddr_in client_sock_address, port_t port_p, unsigned short int dev, std::string const& address)
     : sock_handler(port_p, client_sock_address)

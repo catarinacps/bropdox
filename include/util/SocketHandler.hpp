@@ -1,10 +1,21 @@
 #pragma once
 
-#include "bropdoxUtil.hpp"
+#include "util/Definitions.hpp"
+#include "util/Exception.hpp"
 
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <cstring>
+
+#include <memory>
 #include <iostream>
 #include <queue>
-#include <mutex>
+
+#define TIMEOUT 500000
 
 class SocketHandler {
     int sockfd;
@@ -36,10 +47,13 @@ public:
     bool send_packet(void* data, size_t size) const;
 
     sockaddr_in get_last_address() const noexcept;
-    
+
 private:
-    
     void log(char const* message) const;
+
+    static int init_unix_socket(struct sockaddr_in& sock, port_t port);
+
+    static int init_unix_socket(struct sockaddr_in& sock, port_t port, hostent& server);
 
 public:
     /**

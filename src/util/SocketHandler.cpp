@@ -1,4 +1,4 @@
-#include "../include/SocketHandler.hpp"
+#include "util/SocketHandler.hpp"
 
 /******************************************************************************
  * Constructors
@@ -10,7 +10,7 @@ SocketHandler::SocketHandler(port_t port, hostent* server)
 
     this->peer_len = sizeof(struct sockaddr_in);
 
-    this->sockfd = init_unix_socket(this->handler_address, port);
+    this->sockfd = init_unix_socket(this->handler_address, port, *server);
 
     if (setsockopt(this->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(struct timeval)) < 0) {
         this->log("Error while setting the timeout, please try again...");
@@ -91,6 +91,38 @@ sockaddr_in SocketHandler::get_last_address() const noexcept
 void SocketHandler::log(char const* message) const
 {
     printf("SocketHandler [sockfd: %d]: %s\n", this->sockfd, message);
+}
+
+int SocketHandler::init_unix_socket(struct sockaddr_in& sock, port_t port)
+{
+    int socket_id;
+    if ((socket_id = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+        printf("Error while initializing the socket\n");
+        throw bdu::socket_bad_create();
+    }
+
+    sock.sin_family = AF_INET;
+    sock.sin_port = htons(port);
+    sock.sin_addr.s_addr = INADDR_ANY;
+    std::memset(&(sock.sin_zero), 0, sizeof(sock.sin_zero));
+
+    return socket_id;
+}
+
+int SocketHandler::init_unix_socket(struct sockaddr_in& sock, port_t port, hostent& server)
+{
+    int socket_id;
+    if ((socket_id = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+        printf("Error while initializing the socket\n");
+        throw bdu::socket_bad_create();
+    }
+
+    sock.sin_family = AF_INET;
+    sock.sin_port = htons(port);
+    sock.sin_addr = *((struct in_addr*)server.h_addr);
+    std::memset(&(sock.sin_zero), 0, sizeof(sock.sin_zero));
+
+    return socket_id;
 }
 
 SocketHandler::~SocketHandler()

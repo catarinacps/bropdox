@@ -1,16 +1,16 @@
 #pragma once
 
-#include "RequestHandler.hpp"
-#include "SocketHandler.hpp"
-#include "LoginManager.hpp"
-#include "PortManager.hpp"
+#include "server/LoginManager.hpp"
+#include "server/PortManager.hpp"
+#include "server/RequestHandler.hpp"
+#include "util/SocketHandler.hpp"
 
 #include <thread>
 
 class Server {
     port_t const port;
 
-    SocketHandler mutable sock_handler;    
+    SocketHandler mutable sock_handler;
     LoginManager login_manager;
     PortManager port_manager;
 
