@@ -53,7 +53,7 @@ public:
      * 
      * @return the new user device
      */
-    device_t login(std::string const& user_id, port_t port);
+    device_t login(std::string const& user_id, sockaddr_in const& user_address, port_t port);
 
     /**
      * Tries to logout the given user_id.
@@ -73,7 +73,7 @@ public:
      * 
      * @return a reference to the data
      */
-    client_data_t& get_client_data(std::string const& user_id, device_t device) const;
+    client_data_t& get_client_data(std::string const& user_id, device_t device);
 
 private:
     device_t reserve_device(std::string const& user_id);

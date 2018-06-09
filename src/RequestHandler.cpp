@@ -16,8 +16,6 @@ unsigned short int RequestHandler::get_device()
 
 bool RequestHandler::handle_request(req req_type)
 {
-    this->sock_handler.flush_address_queue();
-    
     switch (req_type) {
     case req::sync: {
         this->sync_server();

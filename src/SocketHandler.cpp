@@ -83,22 +83,9 @@ bool SocketHandler::send_packet(void* data, size_t size) const
     return true;
 }
 
-sockaddr_in SocketHandler::pop_peer_address() const
+sockaddr_in SocketHandler::get_last_address() const noexcept
 {
-    auto address = this->peer_address_queue.front();
-
-    this->peer_address_queue.pop();
-
-    return address;
-}
-
-void SocketHandler::flush_address_queue() noexcept
-{
-    std::queue<sockaddr_in> empty;
-    
-    this->peer_address_queue.swap(empty);
-
-    return;
+    return this->peer_address_buffer;
 }
 
 void SocketHandler::log(char const* message) const

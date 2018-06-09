@@ -59,7 +59,8 @@ bool FileHandler::write_file(char const* file_name, std::vector<std::unique_ptr<
             myFile.write(reinterpret_cast<char*>(packet->data), PACKETSIZE);
         }
     } catch (std::ios::failure& e) {
-        std::cerr << "Error while trying to write to the file:\n" << e.what();
+        std::cerr << "Error while trying to write to the file:\n"
+                  << e.what();
         bf::remove(fname_string);
         myFile.close();
         return false;
@@ -72,10 +73,8 @@ bool FileHandler::write_file(char const* file_name, std::vector<std::unique_ptr<
 }
 
 //TODO: Refactor the pointers
-packet_t** FileHandler::get_file(char const* file_name, long int& file_size_in_packets)
+std::vector<std::unique_ptr<packet_t>> FileHandler::get_file(char const* file_name, long int& file_size_in_packets)
 {
-    packet_t* read_bytes;
-    packet_t** file_data;
     unsigned int i = 0;
     std::ifstream myFile;
     std::string fname_string;
@@ -91,32 +90,24 @@ packet_t** FileHandler::get_file(char const* file_name, long int& file_size_in_p
     if (!bf::exists(fname_string)) {
         this->log("File doesn't exist");
         file_size_in_packets = 0;
-        return nullptr;
+        throw bdu::file_does_not_exist();
     }
 
     myFile.open(fname_string, std::ios::binary | std::ios::in);
     this->log("Opened the file");
 
-    try {
-        file_size_in_packets = static_cast<long int>(ceil(static_cast<float>(bf::file_size(fname_string)) / static_cast<float>(PACKETSIZE)));
-        file_data = new packet_t*[file_size_in_packets];
-        read_bytes = new packet_t(i);
+    file_size_in_packets = static_cast<long int>(ceil(static_cast<float>(bf::file_size(fname_string)) / static_cast<float>(PACKETSIZE)));
+    std::vector<std::unique_ptr<packet_t>> data(file_size_in_packets);
 
-        do {
-            myFile.read(reinterpret_cast<char*>(read_bytes->data), PACKETSIZE);
-            file_data[i] = read_bytes;
-            read_bytes = new packet_t(++i);
-        } while (myFile);
-        this->log("Finished reading the file");
+    auto packet = std::make_unique<packet_t>(i);
 
-        delete read_bytes;
+    do {
+        myFile.read(reinterpret_cast<char*>(packet->data), PACKETSIZE);
+        data.push_back(std::move(packet));
+    } while (myFile);
+    this->log("Finished reading the file");
 
-        return file_data;
-    } catch (std::ios::failure const& e) {
-        std::cerr << "Error while trying to read the file:\n    " << e.what() << '\n';
-        myFile.close();
-        return nullptr;
-    }
+    return data;
 }
 
 std::vector<file_info> FileHandler::get_file_info_list() const
@@ -164,6 +155,5 @@ void FileHandler::log(char const* message) const
 {
     printf("FileHandler [UID: %s]: %s\n",
         this->client_id.c_str(),
-        message
-    );
+        message);
 }

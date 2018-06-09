@@ -4,20 +4,19 @@
  * PUBLIC
  */
 
-device_t LoginManager::login(std::string const& user_id, port_t port)
+device_t LoginManager::login(std::string const& user_id, sockaddr_in const& user_address, port_t port)
 {
     this->m_login.lock();
 
     auto const device = this->reserve_device(user_id);
-    auto const client_addr = this->sock_handler.pop_peer_address();
-    
+
     this->m_login.unlock();
-    
-    RequestHandler rh(client_addr, port, device, user_id);  
+
+    RequestHandler rh(user_address, port, device, user_id);
 
     this->m_map.lock();
 
-    this->users.at(user_id).at(device - 1) = client_data_t(std::move(rh), new_port);
+    this->users.at(user_id).at(device - 1) = client_data_t(std::move(rh), port);
 
     this->m_map.unlock();
 
@@ -38,15 +37,15 @@ bool LoginManager::logout(std::string const& user_id, device_t device)
     return true;
 }
 
-client_data_t& LoginManager::get_client_data(std::string const& user_id, device_t device) const
+client_data_t& LoginManager::get_client_data(std::string const& user_id, device_t device)
 {
-    return this->users.at(user_id).at(device - 1);
+    return this->users[user_id].at(device - 1);
 }
 
 device_t LoginManager::reserve_device(std::string const& user_id)
 {
     auto i = 0;
-    for (auto& item : this->users.at(user_id)) {
+    for (auto& item : this->users[user_id]) {
         if (!item.initialized) {
             item.initialized = true;
             return i + 1;

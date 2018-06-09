@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bropdoxUtil.hpp"
+#include "Exception.hpp"
 
 #include <cmath>
 #include <fstream>
@@ -13,7 +14,7 @@ public:
     //eu não sei se é public ou private alguém bota no lugar certo depois
     bool write_file(char const* file_name, std::vector<std::unique_ptr<packet_t>> file_data) const;
 
-    packet_t** get_file(char const* file_name, long int& file_size);
+    std::vector<std::unique_ptr<packet_t>> get_file(char const* file_name, long int& file_size);
 
     bool delete_file(char const* file_name) const;
 

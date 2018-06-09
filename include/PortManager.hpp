@@ -4,7 +4,6 @@
 #include "bropdoxUtil.hpp"
 
 #include <mutex>
-#include <netdb.h>
 #include <vector>
 
 #define MAXPORT 65535
@@ -13,7 +12,7 @@ class PortManager {
     port_t const server_port;
     std::vector<bool> port_map;
 
-    std::mutex m_port;
+    std::mutex mutable m_port;
 
 public:
     /**
@@ -28,7 +27,7 @@ public:
      * 
      * @param port the said port
      */
-    void free_port(port_t port);
+    bool free_port(port_t port);
 
     PortManager(port_t port);
 };

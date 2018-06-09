@@ -12,10 +12,32 @@ PortManager(port_t port)
 
 port_t PortManager::reserve_port()
 {
-    throw bdu::not_implemented();
+    auto i = 1;
+
+    this->m_port.lock();
+
+    for (auto&& occupied : this->port_counter) {
+        if (!occupied) {
+            occupied = true;
+
+            return this->server_port + i;
+        }
+        i++;
+    }
+
+    this->m_port.unlock();
+
+    return 0;
 }
 
-void PortManager::free_port(port_t port)
+bool PortManager::free_port(port_t port)
 {
-    throw bdu::not_implemented();
+    auto& port = this->port_map.at(this->server_port - port - 1);
+
+    if (port == false) {
+        return false;
+    }
+
+    port = false;
+    return true;
 }

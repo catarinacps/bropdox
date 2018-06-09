@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <queue>
+#include <mutex>
 
 class SocketHandler {
     int sockfd;
@@ -34,10 +35,8 @@ public:
      */
     bool send_packet(void* data, size_t size) const;
 
-    sockaddr_in pop_peer_address() const;
-
-    void flush_address_queue() noexcept;
-
+    sockaddr_in get_last_address() const noexcept;
+    
 private:
     
     void log(char const* message) const;

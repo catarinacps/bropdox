@@ -39,4 +39,12 @@ public:
         return "Method not implemented\n";
     }
 };
+
+class file_does_not_exist : public std::exception {
+public:
+    const char* what() const noexcept
+    {
+        return "File does not exist\n";
+    }
+};
 }
