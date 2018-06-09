@@ -1,16 +1,21 @@
-#ifndef REQUESTHANDLER_HPP
-#define REQUESTHANDLER_HPP
+#pragma once
 
-#include <ctime>
-#include <vector>
-#include <algorithm>
-#include <cmath>
-
-#include "SocketHandler.hpp"
 #include "FileHandler.hpp"
+#include "SocketHandler.hpp"
 #include "bropdoxUtil.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <ctime>
+#include <vector>
+
 class RequestHandler {
+    std::string client_id;
+    SocketHandler sock_handler;
+    FileHandler file_handler;
+    unsigned short int device;
+    unsigned int port;
+
 public:
     /**
      * Tells the RequestHandler to wait a confirmation ack and start handling the request.
@@ -22,10 +27,13 @@ public:
      */
     bool handle_request(req req_type);
 
+    /**
+     * Getter
+     */
+    unsigned short int get_device();
+
 private:
-    std::string client_id;
-    SocketHandler* sock_handler;
-    FileHandler* file_handler;
+    //TODO: Make recv, send and delete receive the whole file_info as the parameter?
 
     /**
      * Sincroniza o servidor com o diretorio "sync_dir_<nomeusuario>" do cliente.
@@ -36,7 +44,7 @@ private:
     /**
      * Recebe um arquivo file do cliente.
      * 
-     * @param file Caminho completo do arquivo em questao. 
+     * @param file Caminho completo do arquivo em questao.
      */
     void receive_file(char const* file, unsigned int packets_to_be_received);
 
@@ -60,8 +68,11 @@ private:
     void log(char const* message);
 
 public:
-    RequestHandler(sockaddr_in client_address, in_port_t port, std::string address = "");
-    ~RequestHandler();
-};
+    RequestHandler() {}
 
-#endif // REQUESTHANDLER_HPP
+    RequestHandler(
+        sockaddr_in client_address,
+        port_t port_p,
+        unsigned short int dev,
+        std::string const& address);
+};

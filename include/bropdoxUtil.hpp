@@ -1,5 +1,4 @@
-#ifndef BROPBOXUTIL_HPP
-#define BROPBOXUTIL_HPP
+#pragma once
 
 #ifndef BOOST_ALL_DYN_LINK
 #define BOOST_ALL_DYN_LINK
@@ -11,25 +10,30 @@
 
 #define MAX_FILE_LIST_SIZE 10
 
+#define MAX_CONCURRENT_USERS 2
+
 #define DAEMON_SLEEP 10000000
 #define TIMEOUT 500000
 
-#define ADDR "BropDoxServer"
-
-#define PORT 4000
 #define MAXPORT 65535
 
+#include "Exception.hpp"
+
 #include <boost/filesystem.hpp>
+
 #include <chrono>
+#include <memory>
+#include <string>
+
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+
 #include <netdb.h>
-#include <string>
-#include <sys/time.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -39,23 +43,30 @@ namespace bf = boost::filesystem;
  * Types
  */
 
-enum class req { 
+enum class req {
     sync,
     send,
     receive,
     del,
+    login,
     close
 };
 
-typedef unsigned char data_buffer_t;
+using byte_t = unsigned char;
+
+using device_t = unsigned short int;
+
+using port_t = unsigned int;
 
 struct file_info {
     char name[MAXNAME * 2];
     char last_modified[MAXNAME];
     int size;
 
-    file_info(std::string name_p, std::string sync_dir)
-    : name{ '\0' }, last_modified{ '\0' }, size(0)
+    file_info(std::string const& name_p, std::string const& sync_dir)
+        : name{ '\0' }
+        , last_modified{ '\0' }
+        , size(0)
     {
         time_t last_time;
 
@@ -69,7 +80,9 @@ struct file_info {
     }
 
     file_info()
-    : name{ '\0' }, last_modified{ '\0' }, size(0)
+        : name{ '\0' }
+        , last_modified{ '\0' }
+        , size(0)
     {
     }
 
@@ -79,12 +92,15 @@ struct file_info {
     }
 };
 
-typedef struct handshake {
+struct handshake_t {
     req req_type;
     char userid[MAXNAME];
+    unsigned short int device;
 
-    handshake(req request, char const* id)
-    : req_type(request), userid{ '\0' }
+    handshake_t(req request, char const* id, unsigned short int dev = 0)
+        : req_type(request)
+        , userid{ '\0' }
+        , device(dev)
     {
         std::string aux(id);
 
@@ -93,97 +109,80 @@ typedef struct handshake {
         std::strcpy(userid, aux.substr(0, aux.find_first_of('\0')).c_str());
     }
 
-    handshake()
-    : userid{ '\0' }
-    {
-    }
-} handshake_t;
+    handshake_t() = default;
+};
 
-typedef struct ack {
+struct ack_t {
     bool confirmation;
 
-    ack(bool conf)
-    : confirmation(conf)
+    ack_t(bool conf)
+        : confirmation(conf)
     {
     }
 
-    ack()
-    {
-    }
-} ack_t;
+    ack_t() = default;
+};
 
-typedef struct syn {
+struct syn_t {
     bool confirmation;
-    in_port_t port;
+    port_t port;
+    unsigned short int device;
 
-    syn(bool conf, in_port_t port_p)
-    : confirmation(conf), port(port_p)
+    syn_t(bool conf_p, port_t port_p, unsigned short int device_p)
+        : confirmation(conf_p)
+        , port(port_p)
+        , device(device_p)
     {
     }
 
-    syn()
-    {
-    }
-} syn_t;
+    syn_t() = default;
+};
 
-typedef struct file_data {
+struct file_data_t {
     struct file_info file;
     unsigned int num_packets;
 
-    file_data(file_info file_p, unsigned int packets)
-    : file(file_p), num_packets(packets)
+    file_data_t(file_info const& file_p, unsigned int packets)
+        : file(file_p)
+        , num_packets(packets)
     {
     }
 
-    file_data()
-    {
-    }
-} file_data_t;
+    file_data_t() = default;
+};
 
-typedef struct file_info_list {
+struct file_info_list_t {
     file_data_t file_list[MAX_FILE_LIST_SIZE];
     bool has_next;
-} file_info_list_t;
+};
 
-typedef struct packet {
+struct packet_t {
     unsigned int num;
-    data_buffer_t data[PACKETSIZE];
+    byte_t data[PACKETSIZE];
 
-    packet(unsigned int num_p)
-    : num(num_p)
+    packet_t(unsigned int num_p)
+        : num(num_p)
     {
     }
 
-    packet()
-    {
-    }
-} packet_t;
+    packet_t() = default;
+};
 
-typedef struct {
-    data_buffer_t* pointer;
+struct convert_helper_t {
+    byte_t* pointer;
     size_t size;
-} convert_helper_t;
+};
 
 /******************************************************************************
  * Headers
  */
 
-int init_unix_socket(struct sockaddr_in& sock, in_port_t port);
-int init_unix_socket(struct sockaddr_in& sock, in_port_t port, hostent* server);
+int init_unix_socket(struct sockaddr_in& sock, port_t port);
+int init_unix_socket(struct sockaddr_in& sock, port_t port, hostent* server);
 
-handshake_t* convert_to_handshake(data_buffer_t* data);
-ack_t* convert_to_ack(data_buffer_t* data);
-syn_t* convert_to_syn(data_buffer_t* data);
-packet_t* convert_to_packet(data_buffer_t* data);
-file_info_list_t* convert_to_file_list(data_buffer_t* data);
-file_data_t* convert_to_file_data(data_buffer_t* data);
-convert_helper_t convert_to_data(packet_t& packet);
-convert_helper_t convert_to_data(packet_t const& packet);
-convert_helper_t convert_to_data(handshake_t& hand);
-convert_helper_t convert_to_data(ack_t& ack);
-convert_helper_t convert_to_data(syn_t& syn);
-convert_helper_t convert_to_data(file_info_list_t& list);
-convert_helper_t convert_to_data(file_info_list_t const& list);
-convert_helper_t convert_to_data(std::string string);
-
-#endif // BROPBOXUTIL_HPP
+std::unique_ptr<handshake_t> convert_to_handshake(byte_t* data);
+std::unique_ptr<ack_t> convert_to_ack(byte_t* data);
+std::unique_ptr<syn_t> convert_to_syn(byte_t* data);
+std::unique_ptr<packet_t> convert_to_packet(byte_t* data);
+std::unique_ptr<file_info_list_t> convert_to_file_list(byte_t* data);
+std::unique_ptr<file_data_t> convert_to_file_data(byte_t* data);

@@ -1,12 +1,10 @@
-#ifndef CLIENT_HPP
-#define CLIENT_HPP
+#pragma once
 
 #include "FileHandler.hpp"
 #include "SocketHandler.hpp"
 #include "bropdoxUtil.hpp"
 
 #include <map>
-#include <pthread.h>
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 
@@ -83,5 +81,3 @@ private:
 public:
     Client(char* uid);
 };
-
-#endif // CLIENT_HPP

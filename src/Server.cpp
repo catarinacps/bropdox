@@ -1,135 +1,84 @@
 #include "../include/Server.hpp"
 
-Server::Server(in_port_t port_param)
+Server::Server(port_t port_param)
+    : sock_handler(port_param)
+    , port(port_param)
+    , port_manager(port)
 {
-    this->sock_handler = new SocketHandler(port_param);
-    this->port = port_param;
-    this->port_counter = port_param + 1;
 }
 
-int Server::listen()
+bool Server::listen()
 {
-    data_buffer_t* data;
-    pthread_t new_thread;
-    arg_thread_t* arguments;
-    int ret_pcreate;
-
-    data = this->sock_handler->wait_packet(sizeof(handshake_t));
-    if (data == nullptr) {
-        return -1;
+    auto data = this->sock_handler.wait_packet(sizeof(handshake_t));
+    if (!data) {
+        return false;
     }
-
-    // Allocates the arguments struct to the pthread_create call
-    arguments = new arg_thread_t;
-    arguments->context = this;
-    arguments->hand_package = convert_to_handshake(data);
 
     printf("=> New handshake received, creating receiver thread...\n");
-    if ((ret_pcreate = pthread_create(&new_thread, NULL, &Server::treat_helper, arguments))) {
+    auto hand = convert_to_handshake(data.get());
+    auto address = this->sock_handler.get_last_address();
+    std::thread request_thread(&Server::treat_client_request, this, std::move(hand), address);
+
+    if (!request_thread.joinable()) {
         printf("Failed to create new thread...");
-        return ret_pcreate;
+        return false;
     }
 
-    //TODO: Maybe store the thread descriptor?
+    request_thread.detach();
 
-    delete[] data;
-    return ret_pcreate;
+    return true;
 }
 
-void* Server::treat_client_request(handshake_t* hand)
+void Server::treat_client_request(std::unique_ptr<handshake_t> hand, sockaddr_in const client_addr)
 {
-    bool pack_ok, req_handl_ok;
-    std::string file_name;
-    RequestHandler* rh;
-
     // TODO:
     // - check package (checksum) (is it really necessary?)
-    pack_ok = true;
 
-    if (!pack_ok) {
-        this->log(hand->userid, "Bad request/handshake");
-        pthread_exit((void*)-1);
-    }
+    if (hand->device == 0) {
+        if (hand->req_type == req::login) {
+            auto const port = this->port_manager.reserve_port();
+            auto device = this->login_manager.login(hand->userid, client_addr, port);
 
-    // Reserves a new port to the new RequestHandler
-    in_port_t new_port = this->get_next_port();
+            syn_t syn(true, port, device);
+            this->sock_handler.send_packet(&syn, sizeof(syn_t));
+            this->log(hand->userid, "Client now logged in");
 
-    // Checks if the userid already has a declared RequestHandler
-    rh = new RequestHandler(this->sock_handler->get_last_peeraddr(), new_port, hand->userid);
-    this->log(hand->userid, "Declared a new RequestHandler for the request");
-
-    // Sends to the client a syn packet containing a bool and the new port he is supposed to use
-    syn_t syn(true, new_port);
-    this->sock_handler->send_packet(&syn, sizeof(syn_t));
-    this->log(hand->userid, "Sent a SYN to the client");
-
-    //TODO: Separate the following behaviour to another method
-    if (this->user_list.count(hand->userid) > 0) {
-        // Declares on the heap a new Request Handler for the user's request
-        if (this->user_list[hand->userid]->handlers[0] == nullptr) {
-            this->user_list[hand->userid]->handlers[0] = rh;
-            this->user_list[hand->userid]->ports[0] = new_port;
+            return;
         } else {
-            this->user_list[hand->userid]->handlers[1] = rh;
-            this->user_list[hand->userid]->ports[1] = new_port;
+            syn_t syn(false, 0, 0);
+            this->sock_handler.send_packet(&syn, sizeof(syn_t));
+            this->log(hand->userid, "Client not logged in");
+
+            return;
         }
-    } else {
-        // Declares a new Request Handler for the new user's device
-        this->user_list[hand->userid] = new client_data_t;
-        this->user_list[hand->userid]->handlers[0] = rh;
-        this->user_list[hand->userid]->ports[0] = new_port;
     }
+
+    auto& user = this->login_manager.get_client_data(hand->userid, hand->device);
+
+    if (!user.initialized) {
+        syn_t syn(false, 0, 0);
+        this->sock_handler.send_packet(&syn, sizeof(syn_t));
+        this->log(hand->userid, "Client not logged in");
+
+        return;
+    }
+
+    syn_t syn(true, user.port, user.handler.get_device());
+    this->sock_handler.send_packet(&syn, sizeof(syn_t));
+    this->log(hand->userid, "Sent to the client a syn with the port and device");
 
     // Calls the RequestHandler to handle the client's request
     this->log(hand->userid, "Calling the created RequestHandler...");
-    req_handl_ok = rh->handle_request(hand->req_type);
 
-    if (!req_handl_ok) {
+    if (!user.handler.handle_request(hand->req_type)) {
         this->log(hand->userid, "Communication with RequestHandler failed");
-        pthread_exit((void*)-1);
+        return;
     }
 
-    delete hand;
-    pthread_exit((void*)0);
+    return;
 }
 
-int Server::get_next_port()
-{
-    if (this->port_counter == MAXPORT) {
-        this->port_counter = this->port + 1;
-        return this->port_counter;
-    }
-    this->port_counter++;
-    return this->port_counter;
-}
-
-bool Server::logout_client(int device, std::string user_id)
-{
-    if (device <= 2 && this->user_list[user_id]->handlers[device] != nullptr) {
-        delete this->user_list[user_id]->handlers[device];
-        this->user_list[user_id]->ports[device] = 0;
-
-        return true;
-    }
-
-    return false;
-}
-
-void Server::log(char const* userid, char const* message)
+void Server::log(char const* userid, char const* message) const noexcept
 {
     printf("Server [UID: %s]: %s\n", userid, message);
-}
-
-void* Server::treat_helper(void* arg)
-{
-    // This static class method helps the initialization of the helper thread
-    // by calling the treat_client_request method using the parameter arg,
-    // that is, essentially, thread_helper_t, which contains the object context
-    // and the package argument to the function.
-    return (((arg_thread_t*)arg)->context)->treat_client_request(((arg_thread_t*)arg)->hand_package);
-}
-
-Server::~Server()
-{
-    delete this->sock_handler;
 }

@@ -33,7 +33,7 @@ bool Client::parse_input(std::vector<std::string> tokens)
     if (command == "login") {
         std::string address(tokens[1]);
         std::string port_s(tokens[2]);
-        in_port_t port = atoi(port_s.c_str());
+        port_t port = atoi(port_s.c_str());
 
         return this->login_server(address.c_str(), port);
     } else if (command == "upload") {
@@ -112,7 +112,7 @@ bool Client::send_file(char const* file)
     ack_t* ack;
     packet_t** packets;
     long int file_size_in_packets;
-    data_buffer_t *returned_ack;
+    byte_t *returned_ack;
 
     // Get the file data and file size in packets
     packets = this->file_handler->get_file(file, file_size_in_packets);
@@ -167,7 +167,7 @@ bool Client::send_file(char const* file)
 bool Client::get_file(char const* file)
 {
     packet_t* received = NULL;
-    data_buffer_t* received_packet;
+    byte_t* received_packet;
     unsigned int received_packet_number = 0, packets_to_be_received;
     file_data_t* received_finfo;
 
@@ -185,9 +185,9 @@ bool Client::get_file(char const* file)
 
     packets_to_be_received = received_finfo->num_packets;
 
-    // Uses said number of packets to declare an array of data_buffer_t pointers
+    // Uses said number of packets to declare an array of byte_t pointers
     // pointing to the received data
-    data_buffer_t* recv_file[packets_to_be_received];
+    byte_t* recv_file[packets_to_be_received];
 
     // Packet receiving loop
     for (unsigned int i = 0; i < packets_to_be_received; i++) {
@@ -228,7 +228,7 @@ bool Client::get_file(char const* file)
 
 bool Client::delete_file(char const* file)
 {
-    data_buffer_t* returned_ack;
+    byte_t* returned_ack;
     ack_t* ack;
     
     if (!this->file_handler->delete_file(file)) {
@@ -259,7 +259,7 @@ bool Client::close_session()
 
 bool Client::send_handshake(req request)
 {
-    data_buffer_t* syn_data;
+    byte_t* syn_data;
     syn_t* syn;
 
     // Sends a handshake to the server containing the request type

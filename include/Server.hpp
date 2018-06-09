@@ -1,54 +1,42 @@
-#ifndef SERVER_HPP
-#define SERVER_HPP
+#pragma once
 
 #include "RequestHandler.hpp"
 #include "SocketHandler.hpp"
-#include "bropdoxUtil.hpp"
+#include "LoginManager.hpp"
+#include "PortManager.hpp"
 
-#include <map>
-#include <pthread.h>
-
-typedef struct {
-    RequestHandler* handlers[2];
-    in_port_t ports[2];
-} client_data_t;
+#include <thread>
 
 class Server {
+    port_t const port;
+
+    SocketHandler mutable sock_handler;    
+    LoginManager login_manager;
+    PortManager port_manager;
+
 public:
-    int listen();
+    /**
+     * Sets the server to wait the next handshake package from a client.
+     * 
+     * @return success or failure on receiving said handshake
+     */
+    bool listen();
 
 private:
-    in_port_t port;
-    int port_counter;
-    SocketHandler* sock_handler;
-    std::map<std::string, client_data_t*> user_list;
+    /**
+     * Treats the client handshake.
+     * 
+     * Gets called on the creation of a treater thread 
+     * 
+     * @param package the handshake
+     */
+    void treat_client_request(std::unique_ptr<handshake_t> hand, sockaddr_in const client_addr);
 
     /**
-     * Trata o handshake do cliente.
-     * 
-     * Esse metodo somente sera chamado na thread criada para tratar a 
-     * requisicao do cliente.
-     * 
-     * @param package pacote de dados (handshake)
+     * Logs a message to the console.
      */
-    void* treat_client_request(handshake_t* package);
-
-    bool logout_client(int device, std::string user_id);
-
-    void log(char const* userid, char const* message);
-
-    int get_next_port();
-
-    static void* treat_helper(void* arg);
+    void log(char const* userid, char const* message) const noexcept;
 
 public:
-    Server(in_port_t port);
-    ~Server();
+    Server(port_t port);
 };
-
-typedef struct {
-    Server* context;
-    handshake_t* hand_package;
-} arg_thread_t;
-
-#endif // SERVER_HPP

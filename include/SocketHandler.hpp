@@ -1,18 +1,28 @@
-#ifndef SOCKETHANDLER_HPP
-#define SOCKETHANDLER_HPP
+#pragma once
 
 #include "bropdoxUtil.hpp"
 
+#include <iostream>
+#include <queue>
+#include <mutex>
+
 class SocketHandler {
+    int sockfd;
+    socklen_t peer_len;
+    struct sockaddr_in handler_address;
+    struct sockaddr_in peer_address_buffer;
+
+    std::queue<sockaddr_in> peer_address_queue;
+
 public:
     /**
      * Listens the socket for incoming packets, expecting them with a predetermined size.
      * 
      * @param size the size of the expected packet.
      * 
-     * @return a pointer to the data buffer.
+     * @return a unique_ptr to the byte array.
      */
-    data_buffer_t* wait_packet(size_t size);
+    std::unique_ptr<byte_t[]> wait_packet(size_t size);
 
     /**
      * Sends a data packet to the last known client (aka the last client that the socket
@@ -23,34 +33,31 @@ public:
      * 
      * @return a boolean representing success (true) or failure (false).
      */
-    bool send_packet(void* data, size_t size);
+    bool send_packet(void* data, size_t size) const;
 
-    sockaddr_in get_last_peeraddr();
-
+    sockaddr_in get_last_address() const noexcept;
+    
 private:
-    int sockfd;
-    socklen_t peer_len;
-    struct sockaddr_in handler_address, peer_address;
-
-    void log(char const* message);
+    
+    void log(char const* message) const;
 
 public:
     /**
      * The one used by the client
      */
-    SocketHandler(in_port_t port, hostent* server);
+    SocketHandler(port_t port, hostent* server);
 
     /**
      * The one used by the RequestHandler
      */
-    SocketHandler(in_port_t port, sockaddr_in peer_address);
+    SocketHandler(port_t port, sockaddr_in peer_address_buffer);
 
     /**
      * The one used by the server
      */
-    SocketHandler(in_port_t port);
+    SocketHandler(port_t port);
+
+    SocketHandler() {}
 
     ~SocketHandler();
 };
-
-#endif // SOCKETHANDLER_HPP

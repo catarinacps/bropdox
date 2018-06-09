@@ -48,11 +48,11 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    Server server = Server((in_port_t)atoi(argv[1]));
+    Server server = Server((port_t)atoi(argv[1]));
     printf("Server: Server is live\n");
 
     while (true) {
-        if (server.listen() >= 0) {
+        if (server.listen()) {
             printf("Server: Treating a request in a new thread...\n");
         } else {
             printf("Server: Failed handshake attempt received...\n");
