@@ -1,4 +1,4 @@
-#include "util/FileHandler.hpp"
+#include "helpers/FileHandler.hpp"
 
 FileHandler::FileHandler(std::string client_id_param)
     : syncDir(std::string(getenv("HOME")) + "/sync_dir_" + client_id_param + "/")
@@ -10,8 +10,8 @@ FileHandler::FileHandler(std::string client_id_param)
     this->client_id = client_id_param;
 
     try {
-        if (!bf::exists(this->syncDir)) {
-            bf::create_directory(this->syncDir);
+        if (!bdu::bf::exists(this->syncDir)) {
+            bdu::bf::create_directory(this->syncDir);
         }
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
@@ -29,9 +29,9 @@ FileHandler::FileHandler(std::string client_id_param, int flag)
     this->client_id = client_id_param;
 
     try {
-        if (!bf::exists(this->syncDir)) {
+        if (!bdu::bf::exists(this->syncDir)) {
             this->log("Creating a sync_dir folder");
-            bf::create_directory(this->syncDir);
+            bdu::bf::create_directory(this->syncDir);
         }
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
@@ -40,13 +40,13 @@ FileHandler::FileHandler(std::string client_id_param, int flag)
 }
 
 //Function that receives an *databuffer and a filename and writes on disk
-bool FileHandler::write_file(char const* file_name, std::vector<std::unique_ptr<packet_t>> file_data) const
+bool FileHandler::write_file(char const* file_name, std::vector<std::unique_ptr<bdu::packet_t>> file_data) const
 {
     std::ofstream myFile;
     std::string fname_string;
 
     if (std::string(file_name).find("/") == 0) {
-        fname_string = this->syncDir.string() + bf::path(file_name).filename().string();
+        fname_string = this->syncDir.string() + bdu::bf::path(file_name).filename().string();
     } else {
         fname_string = this->syncDir.string() + file_name;
     }
@@ -61,7 +61,7 @@ bool FileHandler::write_file(char const* file_name, std::vector<std::unique_ptr<
     } catch (std::ios::failure& e) {
         std::cerr << "Error while trying to write to the file:\n"
                   << e.what();
-        bf::remove(fname_string);
+        bdu::bf::remove(fname_string);
         myFile.close();
         return false;
     }
@@ -73,21 +73,21 @@ bool FileHandler::write_file(char const* file_name, std::vector<std::unique_ptr<
 }
 
 //TODO: Refactor the pointers
-std::vector<std::unique_ptr<packet_t>> FileHandler::get_file(char const* file_name, long int& file_size_in_packets)
+std::vector<std::unique_ptr<bdu::packet_t>> FileHandler::read_file(char const* file_name, long int& file_size_in_packets)
 {
     unsigned int i = 0;
     std::ifstream myFile;
     std::string fname_string;
 
     if (std::string(file_name).find("/") == 0) {
-        bf::copy_file(std::string(file_name), this->syncDir.string() + bf::path(file_name).filename().string(), bf::copy_option::overwrite_if_exists);
+        bdu::bf::copy_file(std::string(file_name), this->syncDir.string() + bdu::bf::path(file_name).filename().string(), bdu::bf::copy_option::overwrite_if_exists);
 
-        fname_string = this->syncDir.string() + bf::path(file_name).filename().string();
+        fname_string = this->syncDir.string() + bdu::bf::path(file_name).filename().string();
     } else {
         fname_string = this->syncDir.string() + file_name;
     }
 
-    if (!bf::exists(fname_string)) {
+    if (!bdu::bf::exists(fname_string)) {
         this->log("File doesn't exist");
         file_size_in_packets = 0;
         throw bdu::file_does_not_exist();
@@ -96,10 +96,10 @@ std::vector<std::unique_ptr<packet_t>> FileHandler::get_file(char const* file_na
     myFile.open(fname_string, std::ios::binary | std::ios::in);
     this->log("Opened the file");
 
-    file_size_in_packets = static_cast<long int>(ceil(static_cast<float>(bf::file_size(fname_string)) / static_cast<float>(PACKETSIZE)));
-    std::vector<std::unique_ptr<packet_t>> data(file_size_in_packets);
+    file_size_in_packets = static_cast<long int>(ceil(static_cast<float>(bdu::bf::file_size(fname_string)) / static_cast<float>(PACKETSIZE)));
+    std::vector<std::unique_ptr<bdu::packet_t>> data(file_size_in_packets);
 
-    auto packet = std::make_unique<packet_t>(i);
+    auto packet = std::make_unique<bdu::packet_t>(i);
 
     do {
         myFile.read(reinterpret_cast<char*>(packet->data), PACKETSIZE);
@@ -110,14 +110,14 @@ std::vector<std::unique_ptr<packet_t>> FileHandler::get_file(char const* file_na
     return data;
 }
 
-std::vector<file_info> FileHandler::get_file_info_list() const
+std::vector<bdu::file_info> FileHandler::get_file_info_list() const
 {
     char const* file_name;
     struct stat attrib;
-    struct file_info info;
-    std::vector<struct file_info> file_info_vector;
+    bdu::file_info info;
+    std::vector<bdu::file_info> file_info_vector;
 
-    for (auto const& p : bf::recursive_directory_iterator(this->syncDir)) {
+    for (auto const& p : bdu::bf::recursive_directory_iterator(this->syncDir)) {
         auto accessed_file = p.path();
         file_name = accessed_file.filename().c_str();
         stat(file_name, &attrib);
@@ -135,20 +135,20 @@ std::vector<file_info> FileHandler::get_file_info_list() const
 
 bool FileHandler::delete_file(char const* file_name) const
 {
-    if (bf::exists(this->syncDir.string() + file_name)) {
-        bf::remove(this->syncDir.string() + file_name);
+    if (bdu::bf::exists(this->syncDir.string() + file_name)) {
+        bdu::bf::remove(this->syncDir.string() + file_name);
         return true;
     }
 
     return false;
 }
 
-file_info FileHandler::get_file_info(char const* file_name) const
+bdu::file_info FileHandler::get_file_info(char const* file_name) const
 {
     if (std::string(file_name).find("/") == 0) {
-        return file_info(bf::path(file_name).filename().string(), this->syncDir.string());
+        return bdu::file_info(bdu::bf::path(file_name).filename().string(), this->syncDir.string());
     }
-    return file_info(file_name, this->syncDir.string());
+    return bdu::file_info(file_name, this->syncDir.string());
 }
 
 void FileHandler::log(char const* message) const

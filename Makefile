@@ -49,6 +49,7 @@ TARGET = $(patsubst src/%.cpp, $(BIN_DIR)/%, $(wildcard src/*.cpp))
 SRC =\
 	$(wildcard src/client/*.cpp)\
 	$(wildcard src/server/*.cpp)\
+	$(wildcard src/helpers/*.cpp)\
 	$(wildcard src/util/*.cpp)
 
 #	Objetos a serem criados

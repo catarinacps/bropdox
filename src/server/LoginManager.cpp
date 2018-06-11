@@ -25,7 +25,7 @@ device_t LoginManager::login(std::string const& user_id, sockaddr_in const& user
 
 bool LoginManager::logout(std::string const& user_id, device_t device)
 {
-    if (device > MAX_CONCURRENT_USERS || device == 0) {
+    if (device > MAX_CONCURRENT_DEV || device == 0) {
         throw std::invalid_argument("Server::login : invalid device argument");
     }
 

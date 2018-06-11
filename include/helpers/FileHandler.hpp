@@ -1,6 +1,8 @@
 #pragma once
 
-#include "util/bropdoxUtil.hpp"
+#include "util/Definitions.hpp"
+#include "util/Messages.hpp"
+#include "util/FileData.hpp"
 #include "util/Exception.hpp"
 
 #include <cmath>
@@ -10,22 +12,22 @@
 #include <time.h>
 
 class FileHandler {
+    std::string client_id;
+    bdu::bf::path syncDir;
+
 public:
     //eu não sei se é public ou private alguém bota no lugar certo depois
-    bool write_file(char const* file_name, std::vector<std::unique_ptr<packet_t>> file_data) const;
+    bool write_file(char const* file_name, std::vector<std::unique_ptr<bdu::packet_t>> file_data) const;
 
-    std::vector<std::unique_ptr<packet_t>> get_file(char const* file_name, long int& file_size);
+    std::vector<std::unique_ptr<bdu::packet_t>> read_file(char const* file_name, long int& file_size);
 
     bool delete_file(char const* file_name) const;
 
-    std::vector<file_info> get_file_info_list() const;
+    std::vector<bdu::file_info> get_file_info_list() const;
 
-    file_info get_file_info(char const* file_name) const;
+    bdu::file_info get_file_info(char const* file_name) const;
 
 private:
-    std::string client_id;
-    bf::path syncDir;
-
     void log(char const* message) const;
 
 public:

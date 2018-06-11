@@ -115,7 +115,7 @@ bool Client::send_file(char const* file)
     byte_t *returned_ack;
 
     // Get the file data and file size in packets
-    packets = this->file_handler->get_file(file, file_size_in_packets);
+    packets = this->file_handler->read_file(file, file_size_in_packets);
 
     // We then send the file data to the server
     file_data_t file_data(this->file_handler->get_file_info(file), file_size_in_packets);

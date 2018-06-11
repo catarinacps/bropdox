@@ -2,10 +2,14 @@
 
 #include "server/RequestHandler.hpp"
 
+#include "util/Definitions.hpp"
+
 #include <array>
 #include <mutex>
 #include <string>
 #include <unordered_map>
+
+#define MAX_CONCURRENT_DEV 2
 
 struct client_data_t {
     RequestHandler handler;
@@ -17,7 +21,7 @@ struct client_data_t {
     {
     }
 
-    client_data_t(RequestHandler&& rh, unsigned int port_p)
+    client_data_t(RequestHandler&& rh, port_t port_p)
         : handler(std::move(rh))
         , port(port_p)
     {
@@ -39,7 +43,7 @@ struct client_data_t {
 };
 
 class LoginManager {
-    std::unordered_map<std::string, std::array<client_data_t, MAX_CONCURRENT_USERS>> users;
+    std::unordered_map<std::string, std::array<client_data_t, MAX_CONCURRENT_DEV>> users;
 
     std::mutex mutable m_login;
     std::mutex mutable m_map;

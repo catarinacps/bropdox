@@ -1,12 +1,19 @@
 #pragma once
 
-#include "util/FileHandler.hpp"
-#include "util/SocketHandler.hpp"
-#include "util/bropdoxUtil.hpp"
+#include "helpers/FileHandler.hpp"
+#include "helpers/SocketHandler.hpp"
+
+#include "util/Definitions.hpp"
+#include "util/Exception.hpp"
+#include "util/Messages.hpp"
+#include "util/FileData.hpp"
+#include "util/Convert.hpp"
 
 #include <map>
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
+
+#define DAEMON_SLEEP 10000000
 
 class Client {
 public:

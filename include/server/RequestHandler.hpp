@@ -1,9 +1,13 @@
 #pragma once
 
-#include "util/FileHandler.hpp"
-#include "util/SocketHandler.hpp"
-#include "util/bropdoxUtil.hpp"
+#include "helpers/FileHandler.hpp"
+#include "helpers/SocketHandler.hpp"
 
+#include "util/Definitions.hpp"
+#include "util/FileData.hpp"
+#include "util/Convert.hpp"
+
+#include <memory>
 #include <algorithm>
 #include <cmath>
 #include <ctime>
@@ -13,8 +17,8 @@ class RequestHandler {
     std::string client_id;
     SocketHandler sock_handler;
     FileHandler file_handler;
-    unsigned short int device;
-    unsigned int port;
+    device_t device;
+    port_t port;
 
 public:
     /**
@@ -25,12 +29,12 @@ public:
      * 
      * @param a boolean representing success (true) or failure (false).
      */
-    bool handle_request(req req_type);
+    bool handle_request(bdu::req req_type);
 
     /**
      * Getter
      */
-    unsigned short int get_device();
+    device_t get_device();
 
 private:
     //TODO: Make recv, send and delete receive the whole file_info as the parameter?
@@ -73,6 +77,6 @@ public:
     RequestHandler(
         sockaddr_in client_address,
         port_t port_p,
-        unsigned short int dev,
+        device_t dev,
         std::string const& address);
 };

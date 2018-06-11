@@ -8,9 +8,9 @@
 #define MAXNAME 255
 #endif
 
-#ifndef MAX_FILE_LIST_SIZE
 #define MAX_FILE_LIST_SIZE 10
-#endif
+
+#define MAXFILES 65536
 
 /******************************************************************************
  * File data structures

@@ -3,9 +3,13 @@
 #include "server/LoginManager.hpp"
 #include "server/PortManager.hpp"
 #include "server/RequestHandler.hpp"
-#include "util/SocketHandler.hpp"
+
+#include "helpers/SocketHandler.hpp"
+
+#include "util/Definitions.hpp"
 
 #include <thread>
+#include <memory>
 
 class Server {
     port_t const port;
@@ -30,7 +34,7 @@ private:
      * 
      * @param package the handshake
      */
-    void treat_client_request(std::unique_ptr<handshake_t> hand, sockaddr_in const client_addr);
+    void treat_client_request(std::unique_ptr<bdu::handshake_t> hand, sockaddr_in const client_addr);
 
     /**
      * Logs a message to the console.

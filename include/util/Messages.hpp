@@ -5,13 +5,11 @@
 #include <cstring>
 #include <string>
 
-#ifndef PACKETSIZE
-#define PACKETSIZE 16384
-#endif
-
 #ifndef MAXNAME
 #define MAXNAME 255
 #endif
+
+#define PACKETSIZE 16384
 
 /******************************************************************************
  * Message structs
