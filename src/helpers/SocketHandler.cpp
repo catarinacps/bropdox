@@ -83,6 +83,18 @@ bool SocketHandler::send_packet(void* data, size_t size) const
     return true;
 }
 
+bool SocketHandler::send_packet(void* data, size_t size, sockaddr_in const& address) const
+{
+    int desc = sendto(this->sockfd, data, size, 0, (struct sockaddr*)&address, sizeof(struct sockaddr_in));
+    if (desc < 0) {
+        this->log("Error while sending packet...");
+        return false;
+    }
+
+    this->log("Sent a packet");
+    return true;
+}
+
 sockaddr_in SocketHandler::get_last_address() const noexcept
 {
     return this->peer_address_buffer;

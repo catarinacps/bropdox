@@ -41,13 +41,13 @@ void Server::treat_client_request(std::unique_ptr<bdu::handshake_t> hand, sockad
             auto device = this->login_manager.login(hand->userid, client_addr, reserved_port);
 
             bdu::syn_t syn(true, reserved_port, device);
-            this->sock_handler.send_packet(&syn, sizeof(bdu::syn_t));
+            this->sock_handler.send_packet(&syn, sizeof(bdu::syn_t), client_addr);
             this->log(hand->userid, "Client now logged in");
 
             return;
         } else {
             bdu::syn_t syn(false, 0, 0);
-            this->sock_handler.send_packet(&syn, sizeof(bdu::syn_t));
+            this->sock_handler.send_packet(&syn, sizeof(bdu::syn_t), client_addr);
             this->log(hand->userid, "Client not logged in");
 
             return;
@@ -58,14 +58,14 @@ void Server::treat_client_request(std::unique_ptr<bdu::handshake_t> hand, sockad
 
     if (!user.initialized) {
         bdu::syn_t syn(false, 0, 0);
-        this->sock_handler.send_packet(&syn, sizeof(bdu::syn_t));
+        this->sock_handler.send_packet(&syn, sizeof(bdu::syn_t), client_addr);
         this->log(hand->userid, "Client not logged in");
 
         return;
     }
 
     bdu::syn_t syn(true, user.port, user.handler.get_device());
-    this->sock_handler.send_packet(&syn, sizeof(bdu::syn_t));
+    this->sock_handler.send_packet(&syn, sizeof(bdu::syn_t), client_addr);
     this->log(hand->userid, "Sent to the client a syn with the port and device");
 
     // Calls the RequestHandler to handle the client's request

@@ -46,6 +46,18 @@ public:
      */
     bool send_packet(void* data, size_t size) const;
 
+    /**
+     * Sends a data packet to the last known client (aka the last client that the socket
+     * heard from).
+     * 
+     * @param data a reference to the data pointer.
+     * @param size the size of the said packet.
+     * @param address the target address.
+     * 
+     * @return a boolean representing success (true) or failure (false).
+     */
+    bool send_packet(void* data, size_t size, sockaddr_in const& address) const;
+
     sockaddr_in get_last_address() const noexcept;
 
 private:

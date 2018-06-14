@@ -256,10 +256,10 @@ void RequestHandler::receive_file(char const* file, unsigned int const packets_t
     if (received_packet_number == packets_to_be_received) {
         this->log("Success receiving the file");
 
-        bdu::ack_t ack(true);
-        this->sock_handler.send_packet(&ack, sizeof(bdu::ack_t));
+        auto write = this->file_handler.write_file(file, recv_file);
 
-        this->file_handler.write_file(file, recv_file);
+        bdu::ack_t ack(write);
+        this->sock_handler.send_packet(&ack, sizeof(bdu::ack_t));
     } else {
         this->log("Failure receiving the file");
 
