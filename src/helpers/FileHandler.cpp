@@ -104,6 +104,7 @@ std::vector<std::unique_ptr<bdu::packet_t>> FileHandler::read_file(char const* f
     do {
         myFile.read(reinterpret_cast<char*>(packet->data), PACKETSIZE);
         data.push_back(std::move(packet));
+        packet = std::make_unique<bdu::packet_t>(i);
     } while (myFile);
     this->log("Finished reading the file");
 

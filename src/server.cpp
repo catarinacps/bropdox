@@ -58,4 +58,6 @@ int main(int argc, char* argv[])
             printf("Server: Failed handshake attempt received...\n");
         }
     }
+
+    return 0;
 }

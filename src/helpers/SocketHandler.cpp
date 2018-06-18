@@ -18,11 +18,11 @@ SocketHandler::SocketHandler(port_t port, hostent* server)
     }
 }
 
-SocketHandler::SocketHandler(port_t port, sockaddr_in peer_address_buffer)
+SocketHandler::SocketHandler(port_t port, sockaddr_in peer_address_buffer_p)
 {
     struct timeval timeout = { 0, TIMEOUT };
 
-    this->peer_address_buffer = peer_address_buffer;
+    this->peer_address_buffer = peer_address_buffer_p;
     this->peer_len = sizeof(struct sockaddr_in);
 
     this->sockfd = init_unix_socket(this->handler_address, port);

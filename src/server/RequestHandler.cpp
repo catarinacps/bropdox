@@ -68,15 +68,14 @@ void RequestHandler::sync_server()
     byte_t* received_data;
     convert_helper_t helper;
     file_info_list_t* received_list;
-    std::vector<file_data_t> modified_files, diff_files, to_be_sent_files;
+    std::vector<bdu::file_data_t> modified_files, diff_files, to_be_sent_files;
     std::string name;
-    std::vector<file_data_t>::iterator it1, it2;
+    std::vector<bdu::file_data_t>::iterator it1, it2;
 
     // !
     //FIXME: Fix this whole method
     // !
 
-    /************************************************************************
     // Receive the modified files and overwrite them
     do {
         // Receives the file_info_list
@@ -101,7 +100,6 @@ void RequestHandler::sync_server()
         this->receive_file(file_d.file.name, file_d.num_packets);
     }
 
-    /************************************************************************
     // Send the complete file list minus the just received modified files
     
     std::vector<file_info> server_files = this->file_handler.get_file_info_list();
@@ -123,7 +121,7 @@ void RequestHandler::sync_server()
     dummy_file_info_num = num_file_lists * MAX_FILE_LIST_SIZE - diff_files.size();
     // Fills out the 'padding' part
     if (dummy_file_info_num > 0) {
-        file_data_t dummy;
+        bdu::file_data_t dummy;
         for (i = 0; i < dummy_file_info_num; i++) diff_files.push_back(dummy);
     }
 
@@ -156,7 +154,6 @@ void RequestHandler::sync_server()
         usleep(15);
     }
 
-    /************************************************************************
     // Receive the actual file list that the client does not yet have
     // It's basically the same as above
 
@@ -173,7 +170,6 @@ void RequestHandler::sync_server()
         }
     } while (has_next_file_list);
 
-    /************************************************************************
     // Send to the client all files new to him
 
     for (auto const& file_d : to_be_sent_files) {
@@ -188,14 +184,26 @@ void RequestHandler::send_file(char const* file)
     long int file_size_in_packets;
     bdu::file_info finfo;
 
-    // If read_file returns nullptr, something has gone wrong
-    bdu::packet_t** packets = this->file_handler.read_file(file, file_size_in_packets);
-    if (packets == nullptr) {
+    // If get_file returns nullptr, something has gone wrong
+
+    std::vector<std::unique_ptr<bdu::packet_t>> packets;
+
+    try {
+        packets = this->file_handler.read_file(file, file_size_in_packets);
+    } catch (bdu::file_does_not_exist const& e) {
+        std::cerr << e.what() << '\n';
         bdu::file_data_t file_data(finfo, file_size_in_packets);
         this->sock_handler.send_packet(&file_data, sizeof(bdu::file_data_t));
         this->log("Requested file doesn't exist");
         return;
+    } catch (std::ios::failure const& e) {
+        std::cerr << e.what() << '\n';
+        bdu::file_data_t file_data(finfo, file_size_in_packets);
+        this->sock_handler.send_packet(&file_data, sizeof(bdu::file_data_t));
+        this->log("IOS failure");
+        return;
     }
+
     // If all goes well, the server sends the complete file_info to the client
     finfo = this->file_handler.get_file_info(file);
     bdu::file_data_t file_data(finfo, file_size_in_packets);
@@ -203,8 +211,8 @@ void RequestHandler::send_file(char const* file)
     this->log("Sent the requested file_info");
 
     // Packet sending loop
-    for (int i = 0; i < file_size_in_packets; i++) {
-        this->sock_handler.send_packet(packets[i], sizeof(bdu::packet_t));
+    for (auto const& packet : packets) {
+        this->sock_handler.send_packet(packet.get(), sizeof(bdu::packet_t));
         usleep(15);
     }
     this->log("Finished sending the packets");
@@ -256,7 +264,7 @@ void RequestHandler::receive_file(char const* file, unsigned int const packets_t
     if (received_packet_number == packets_to_be_received) {
         this->log("Success receiving the file");
 
-        auto write = this->file_handler.write_file(file, recv_file);
+        auto write = this->file_handler.write_file(file, std::move(recv_file));
 
         bdu::ack_t ack(write);
         this->sock_handler.send_packet(&ack, sizeof(bdu::ack_t));

@@ -76,7 +76,7 @@ public:
     /**
      * The one used by the RequestHandler
      */
-    SocketHandler(port_t port, sockaddr_in peer_address_buffer);
+    SocketHandler(port_t port, sockaddr_in peer_address_buffer_p);
 
     /**
      * The one used by the server

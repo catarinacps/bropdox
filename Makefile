@@ -35,6 +35,7 @@ CFLAGS =\
 	-Wunreachable-code \
 	-lboost_system \
 	-lboost_filesystem \
+	-pthread \
 	$(if $(DFLAG), $(DEBUG), -O3)
 TFLAGS = --error-printer
 INC = -I$(INC_DIR)
@@ -42,10 +43,13 @@ INC = -I$(INC_DIR)
 ####################################################################################################
 #	Arquivos:
 
-#	Caminho do arquivo estático final
-TARGET = $(patsubst src/%.cpp, $(OUT_DIR)/%, $(wildcard src/*.cpp))
+#	Fonte da main
+MAIN = $(wildcard src/*.cpp)
 
-#	Arquivos fonte
+#	Caminho do arquivo estático final
+TARGET = $(patsubst %.cpp, $(OUT_DIR)/%, $(notdir $(MAIN)))
+
+#	Outros arquivos fonte
 SRC =\
 	$(wildcard src/client/*.cpp)\
 	$(wildcard src/server/*.cpp)\
@@ -71,8 +75,8 @@ T_SRC = $(T_TG).cpp
 
 #	Binarios
 
-$(TARGET): $(OUT_DIR)/%: $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS)
+$(TARGET): $(OUT_DIR)/%: $(SRC_DIR)/%.cpp $(OBJ)
+	$(CC) -o $@ $^ $(INC) $(CFLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/*/%.cpp
 	$(CC) -c -o $@ $< $(INC) $(CFLAGS)

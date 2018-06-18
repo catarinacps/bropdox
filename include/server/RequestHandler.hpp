@@ -14,9 +14,9 @@
 #include <vector>
 
 class RequestHandler {
-    std::string client_id;
     SocketHandler sock_handler;
     FileHandler file_handler;
+    std::string client_id;
     device_t device;
     port_t port;
 

@@ -42,6 +42,8 @@ struct handshake_t {
         // Proof is left as an exercise to the reader
         std::strcpy(userid, aux.substr(0, aux.find_first_of('\0')).c_str());
     }
+
+    handshake_t() = default;
 };
 
 struct ack_t {
@@ -51,6 +53,8 @@ struct ack_t {
         : confirmation(conf)
     {
     }
+
+    ack_t() = default;
 };
 
 struct syn_t {
@@ -64,6 +68,8 @@ struct syn_t {
         , device(device_p)
     {
     }
+
+    syn_t() = default;
 };
 
 struct packet_t {
@@ -74,5 +80,7 @@ struct packet_t {
         : num(num_p)
     {
     }
+
+    packet_t() = default;
 };
 }
