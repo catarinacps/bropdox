@@ -1,14 +1,19 @@
-#ifndef CLIENT_HPP
-#define CLIENT_HPP
+#pragma once
 
-#include "FileHandler.hpp"
-#include "SocketHandler.hpp"
-#include "bropdoxUtil.hpp"
+#include "helpers/FileHandler.hpp"
+#include "helpers/SocketHandler.hpp"
+
+#include "util/Definitions.hpp"
+#include "util/Exception.hpp"
+#include "util/Messages.hpp"
+#include "util/FileData.hpp"
+#include "util/Convert.hpp"
 
 #include <map>
-#include <pthread.h>
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
+
+#define DAEMON_SLEEP 10000000
 
 class Client {
 public:
@@ -83,5 +88,3 @@ private:
 public:
     Client(char* uid);
 };
-
-#endif // CLIENT_HPP

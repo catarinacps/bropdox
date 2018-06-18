@@ -1,7 +1,7 @@
 #include <cxxtest/TestSuite.h>
 
-#include "../include/Client.hpp"
-#include "../include/Server.hpp"
+#include "client/Client.hpp"
+#include "server/Server.hpp"
 
 class AppTest : public CxxTest::TestSuite {
     Server testServer;
@@ -9,7 +9,7 @@ class AppTest : public CxxTest::TestSuite {
 public:
     void setUp()
     {
-        testServer = Server::Server();
+        //testServer = Server();
     }
 
     void tearDown()
