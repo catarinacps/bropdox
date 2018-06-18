@@ -13,7 +13,7 @@
 
 class FileHandler {
     std::string client_id;
-    bdu::bf::path syncDir;
+    bf::path syncDir;
 
 public:
     //eu não sei se é public ou private alguém bota no lugar certo depois

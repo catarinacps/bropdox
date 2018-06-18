@@ -12,13 +12,13 @@
 
 #define MAXFILES 65536
 
+namespace bf = boost::filesystem;
+
 /******************************************************************************
  * File data structures
  */
 
 namespace bdu {
-
-namespace bf = boost::filesystem;
 
 struct file_info {
     char name[MAXNAME * 2];
