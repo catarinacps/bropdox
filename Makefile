@@ -15,8 +15,8 @@
 
 #	Diretorios do projeto
 INC_DIR = include
-OBJ_DIR = build
-BIN_DIR = bin
+OBJ_DIR = bin
+OUT_DIR = build
 SRC_DIR = src
 TST_DIR = tests
 
@@ -43,7 +43,7 @@ INC = -I$(INC_DIR)
 #	Arquivos:
 
 #	Caminho do arquivo estático final
-TARGET = $(patsubst src/%.cpp, $(BIN_DIR)/%, $(wildcard src/*.cpp))
+TARGET = $(patsubst src/%.cpp, $(OUT_DIR)/%, $(wildcard src/*.cpp))
 
 #	Arquivos fonte
 SRC =\
@@ -71,7 +71,7 @@ T_SRC = $(T_TG).cpp
 
 #	Binarios
 
-$(TARGET): $(BIN_DIR)/%: $(OBJ)
+$(TARGET): $(OUT_DIR)/%: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/*/%.cpp
