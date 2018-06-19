@@ -2,6 +2,7 @@
 
 #include <boost/filesystem.hpp>
 
+#include <cstring>
 #include <string>
 
 #ifndef MAXNAME
@@ -21,8 +22,8 @@ namespace bdu {
 struct file_info {
     char name[MAXNAME * 2];
     char last_modified[MAXNAME];
-    time_t modified_time;
     int size;
+    time_t modified_time;
 
     file_info()
         : name{ '\0' }
@@ -48,9 +49,13 @@ struct file_info {
         std::strcpy(name, name_p.c_str());
     }
 
-    bool operator<(file_info const& a) const
+    friend bool operator==(file_info const& a, file_info const& b)
     {
-        return name < a.name;
+        return 
+            (std::strcmp(a.name, b.name) == 0) &&
+            (std::strcmp(a.last_modified, b.last_modified)) &&
+            (a.size == b.size) &&
+            (a.modified_time == b.modified_time);
     }
 };
 
@@ -64,6 +69,15 @@ struct file_data_t {
     {
     }
 
-    file_data_t() = default;
+    file_data_t()
+        : file()
+        , num_packets(0)
+    {
+    }
+
+    friend bool operator==(file_data_t const& a, file_data_t const& b)
+    {
+        return a.file == b.file;
+    }
 };
 }

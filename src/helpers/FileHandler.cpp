@@ -162,6 +162,11 @@ bdu::file_info FileHandler::get_file_info(char const* file_name) const
     return bdu::file_info(file_name, this->syncDir.string());
 }
 
+bf::path FileHandler::get_path() const
+{
+    return this->syncDir;
+}
+
 void FileHandler::log(char const* message) const
 {
     printf("FileHandler [UID: %s]: %s\n",

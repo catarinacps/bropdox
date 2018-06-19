@@ -1,9 +1,3 @@
-.directory
-.vscode
-build/*
-bin/*
-!*.gitkeep
-
 # Prerequisites
 *.d
 
@@ -51,6 +45,13 @@ bin/*
 # Kernel Module Compile Results
 *.mod*
 *.cmd
+
+.directory
+.vscode
+build/*
+bin/*
+!*.gitkeep
+
 .tmp_versions/
 modules.order
 Module.symvers

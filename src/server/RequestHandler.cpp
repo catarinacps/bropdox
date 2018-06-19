@@ -65,6 +65,7 @@ void RequestHandler::sync_server()
     auto has_next_file = false;
 
     auto to_be_sent_files = this->file_handler.get_file_info_list();
+    to_be_sent_files.emplace_back();
     
     // Receive the modified files and overwrite them
     do {
@@ -77,7 +78,7 @@ void RequestHandler::sync_server()
         } else {
             bdu::ack_t ack(this->file_handler.check_freshness(file_data->file));
 
-            auto it = std::find(to_be_sent_files.begin(), to_be_sent_files.end(), file_data);
+            auto it = std::find(to_be_sent_files.begin(), to_be_sent_files.end(), *file_data);
             if (it != to_be_sent_files.end()) {
                 to_be_sent_files.erase(it);
             }
@@ -99,11 +100,9 @@ void RequestHandler::sync_server()
         auto ack_bytes = this->sock_handler.wait_packet(sizeof(bdu::ack_t));
         auto ack = bdu::convert_to_ack(ack_bytes.get());
 
-        if (!ack->confirmation) {
-            continue;
+        if (ack->confirmation) {
+            this->send_file(file_info.file.name);
         }
-
-        this->send_file(file_info.file.name);
     }
 
     return;

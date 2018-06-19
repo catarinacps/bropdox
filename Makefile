@@ -18,6 +18,7 @@ INC_DIR = include
 OBJ_DIR = bin
 OUT_DIR = build
 SRC_DIR = src
+LIB_DIR = lib
 TST_DIR = tests
 
 #	Flags de compilaçao. Debug para uso no GDB
@@ -33,11 +34,13 @@ CFLAGS =\
 	-Wextra \
 	-Wshadow \
 	-Wunreachable-code \
-	-lboost_system \
-	-lboost_filesystem \
-	-pthread \
 	$(if $(DFLAG), $(DEBUG), -O3)
 TFLAGS = --error-printer
+LIB = -L$(LIB_DIR)\
+	-linotify-cpp \
+	-lboost_system \
+	-lboost_filesystem \
+	-lpthread
 INC = -I$(INC_DIR)
 
 ####################################################################################################
@@ -76,7 +79,7 @@ T_SRC = $(T_TG).cpp
 #	Binarios
 
 $(TARGET): $(OUT_DIR)/%: $(SRC_DIR)/%.cpp $(OBJ)
-	$(CC) -o $@ $^ $(INC) $(CFLAGS)
+	$(CC) -o $@ $^ $(INC) $(LIB) $(CFLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/*/%.cpp
 	$(CC) -c -o $@ $< $(INC) $(CFLAGS)

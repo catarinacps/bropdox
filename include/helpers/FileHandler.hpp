@@ -29,6 +29,8 @@ public:
 
     bdu::file_info get_file_info(char const* file_name) const;
 
+    bf::path get_path() const;
+
 private:
     void log(char const* message) const;
 

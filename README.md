@@ -12,6 +12,10 @@ between the *Server* and the *Client* threads.
 ---
 
 ## **Building the project**
+
+We are using the [inotify-cpp](https://github.com/erikzenker/inotify-cpp) lib/wrapper to watch any file modification on the\
+client's directory.
+
 ### **Make**
 The Makefile has the following interface:
 - **all**\
