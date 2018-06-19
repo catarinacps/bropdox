@@ -111,24 +111,25 @@ std::vector<std::unique_ptr<bdu::packet_t>> FileHandler::read_file(char const* f
     return data;
 }
 
-std::vector<bdu::file_info> FileHandler::get_file_info_list() const
+std::vector<bdu::file_data_t> FileHandler::get_file_info_list() const
 {
     char const* file_name;
     struct stat attrib;
-    bdu::file_info info;
-    std::vector<bdu::file_info> file_info_vector;
+    bdu::file_data_t file_data;
+    std::vector<bdu::file_data_t> file_info_vector;
 
     for (auto const& p : bf::recursive_directory_iterator(this->syncDir)) {
         auto accessed_file = p.path();
         file_name = accessed_file.filename().c_str();
         stat(file_name, &attrib);
 
-        strncpy(info.name, file_name, MAXNAME * 2);
-        info.name[MAXNAME * 2 - 1] = '\0';
-        info.size = attrib.st_size;
-        strftime(info.last_modified, MAXNAME, "%T - %d/%m/%Y", gmtime(&(attrib.st_ctime)));
+        strncpy(file_data.file.name, file_name, MAXNAME * 2);
+        file_data.file.name[MAXNAME * 2 - 1] = '\0';
+        file_data.file.size = attrib.st_size;
+        strftime(file_data.file.last_modified, MAXNAME, "%T - %d/%m/%Y", gmtime(&(attrib.st_ctime)));
+        file_data.num_packets = static_cast<unsigned int>(ceil(static_cast<float>(attrib.st_size) / static_cast<float>(PACKETSIZE)));
 
-        file_info_vector.push_back(info);
+        file_info_vector.push_back(file_data);
     }
 
     return file_info_vector;
@@ -143,6 +144,15 @@ bool FileHandler::delete_file(char const* file_name) const
 
     return false;
 }
+
+bool FileHandler::check_freshness(bdu::file_info const& file) const
+{
+    //FIXME: Handle conflicts? 
+
+    auto my_file = this->get_file_info(file.name);
+
+    return file.modified_time > my_file.modified_time;
+} 
 
 bdu::file_info FileHandler::get_file_info(char const* file_name) const
 {

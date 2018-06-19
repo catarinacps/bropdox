@@ -23,7 +23,9 @@ public:
 
     bool delete_file(char const* file_name) const;
 
-    std::vector<bdu::file_info> get_file_info_list() const;
+    bool check_freshness(bdu::file_info const& file) const;
+
+    std::vector<bdu::file_data_t> get_file_info_list() const;
 
     bdu::file_info get_file_info(char const* file_name) const;
 

@@ -30,6 +30,8 @@ bool Client::parse_input(std::vector<std::string> tokens)
 {
     std::string command(tokens[0]);
 
+    //TODO: list_server and list_client
+
     if (command == "connect") {
         std::string address(tokens[1]);
         std::string port_s(tokens[2]);
@@ -110,7 +112,7 @@ bool Client::sync_client()
 
 bool Client::send_file(char const* file)
 {
-    long int file_size_in_packets;
+    long int file_size_in_packets = 0;
 
     // Get the file data and file size in packets
     auto packets = this->file_handler.read_file(file, file_size_in_packets);
@@ -161,7 +163,7 @@ bool Client::get_file(char const* file)
 {
     unsigned int received_packet_number = 0, packets_to_be_received;
 
-    bdu::file_data_t request_dummy(this->file_handler.get_file_info(file), 0);
+    bdu::file_data_t request_dummy(this->file_handler.get_file_info(file));
     this->sock_handler_req.send_packet(&request_dummy, sizeof(bdu::file_data_t));
 
     auto file_data_bytes = this->sock_handler_req.wait_packet(sizeof(bdu::file_data_t));
@@ -219,7 +221,7 @@ bool Client::delete_file(char const* file)
         return false;
     }
 
-    bdu::file_data_t file_data(this->file_handler.get_file_info(file), 0);
+    bdu::file_data_t file_data(this->file_handler.get_file_info(file));
     this->sock_handler_req.send_packet(&file_data, sizeof(bdu::file_data_t));
 
     auto returned_ack = this->sock_handler_req.wait_packet(sizeof(bdu::ack_t));

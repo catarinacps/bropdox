@@ -30,13 +30,6 @@ std::unique_ptr<packet_t> convert_to_packet(byte_t* data)
     return packet;
 }
 
-std::unique_ptr<file_info_list_t> convert_to_file_list(byte_t* data)
-{
-    auto list = std::make_unique<file_info_list_t>();
-    std::memcpy(list.get(), data, sizeof(file_info_list_t));
-    return list;
-}
-
 std::unique_ptr<file_data_t> convert_to_file_data(byte_t* data)
 {
     auto file = std::make_unique<file_data_t>();

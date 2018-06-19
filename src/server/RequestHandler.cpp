@@ -62,121 +62,51 @@ bool RequestHandler::handle_request(bdu::req req_type)
 
 void RequestHandler::sync_server()
 {
-    /* int i = 0, dummy_file_info_num;
-    bool has_next_file_list = false;
-    double num_file_lists;
-    byte_t* received_data;
-    convert_helper_t helper;
-    file_info_list_t* received_list;
-    std::vector<bdu::file_data_t> modified_files, diff_files, to_be_sent_files;
-    std::string name;
-    std::vector<bdu::file_data_t>::iterator it1, it2;
+    auto has_next_file = false;
 
-    // !
-    //FIXME: Fix this whole method
-    // !
-
+    auto to_be_sent_files = this->file_handler.get_file_info_list();
+    
     // Receive the modified files and overwrite them
     do {
-        // Receives the file_info_list
-        received_data = this->sock_handler.wait_packet(sizeof(file_info_list_t));
-        received_list = convert_to_file_list(received_data);
-        delete[] received_data;
+        // Receives the file_data_t
+        auto file_data_bytes = this->sock_handler.wait_packet(sizeof(bdu::file_data_t));
+        auto file_data = bdu::convert_to_file_data(file_data_bytes.get());
 
-        // Pushes every received file_info to the modified_files array
-        while (i < MAX_FILE_LIST_SIZE && received_list->file_list[i].num_packets > 0) {
-            modified_files.push_back(received_list->file_list[i]);
-            i++;
+        if (file_data->num_packets == 0) {
+            has_next_file = false;
+        } else {
+            bdu::ack_t ack(this->file_handler.check_freshness(file_data->file));
+
+            auto it = std::find(to_be_sent_files.begin(), to_be_sent_files.end(), file_data);
+            if (it != to_be_sent_files.end()) {
+                to_be_sent_files.erase(it);
+            }
+
+            this->sock_handler.send_packet(&ack, sizeof(bdu::ack_t));
+
+            this->receive_file(file_data->file.name, file_data->num_packets);
+            has_next_file = true;
         }
 
-        // If the received file_info_list has another incoming list, this field will be 'true'
-        has_next_file_list = received_list->has_next;
-        delete received_list;
-    } while (has_next_file_list);
-    // Iterates while there is an incoming list
-
-    // Then we proceed to receive every file that the client has sent us
-    for (auto const& file_d : modified_files) {
-        this->receive_file(file_d.file.name, file_d.num_packets);
-    }
-
-    // Send the complete file list minus the just received modified files
-    
-    std::vector<file_info> server_files = this->file_handler.get_file_info_list();
-
-    // Sorts the modified_files and server_files vectors so that the set_difference method works.
-    std::sort(server_files.begin(), server_files.end());
-    std::sort(modified_files.begin(), modified_files.end());
-
-    // Calculates the difference between said vector and store it in diff_files.
-    std::set_difference(
-        server_files.begin(), server_files.end(),
-        modified_files.begin(), modified_files.end(),
-        back_inserter(diff_files));
-    
-    // Calculates the ceiling between the mod division of diff_files with 10.
-    num_file_lists = ceil(diff_files.size() % MAX_FILE_LIST_SIZE);
-    // Calculates the number of file_info fields that we'll have to fill as part of 'padding' the 
-    // last file_info_list.
-    dummy_file_info_num = num_file_lists * MAX_FILE_LIST_SIZE - diff_files.size();
-    // Fills out the 'padding' part
-    if (dummy_file_info_num > 0) {
-        bdu::file_data_t dummy;
-        for (i = 0; i < dummy_file_info_num; i++) diff_files.push_back(dummy);
-    }
-
-    // Declares the file_info_list array using the previously ceil'd value
-    file_info_list_t file_list_array[(int)num_file_lists];
-
-    // Initializes two diff_files iterators so we can copy its contents to file_list_array
-    it1 = diff_files.begin();
-    it2 = diff_files.begin();
-    // And we advance the second iterator so there's 10 elements between the two iteratos
-    std::advance(it2, MAX_FILE_LIST_SIZE - 1);
-    // For each item in the array...
-    for (i = 0; i < num_file_lists; i++) {
-        // Copies 10 elements to the current item array
-        std::copy(it1, it2, file_list_array[i].file_list);
-        // Sets the has_next flag to true
-        file_list_array[i].has_next = true;
-        // And advances both iterators to the next 10 elements
-        std::advance(it1, MAX_FILE_LIST_SIZE - 1);
-        std::advance(it2, MAX_FILE_LIST_SIZE - 1);
-    }
-    // Sets the last has_next as false
-    file_list_array[((int)num_file_lists) - 1].has_next = false;
-
-    // Then iterates over the array and sends every item to the client
-    for (auto const& list : file_list_array) {
-        helper = convert_to_data(list);
-        this->sock_handler.send_packet(helper.pointer, helper.size);
-        delete[] helper.pointer;
-        usleep(15);
-    }
-
-    // Receive the actual file list that the client does not yet have
-    // It's basically the same as above
-
-    do {
-        received_data = this->sock_handler.wait_packet(sizeof(file_info_list_t));
-        received_list = convert_to_file_list(received_data);
-        delete[] received_data;
-
-        has_next_file_list = received_list->has_next;
-
-        while (i < MAX_FILE_LIST_SIZE && received_list->file_list[i].num_packets > 0) {
-            to_be_sent_files.push_back(received_list->file_list[i]);
-            i++;
-        }
-    } while (has_next_file_list);
+        // If the received file_data isn't empty, this field will be 'true'
+    } while (has_next_file);
+    // Iterates while there is an incoming file_data
 
     // Send to the client all files new to him
+    for (auto& file_info : to_be_sent_files) {
+        this->sock_handler.send_packet(&file_info, sizeof(bdu::file_data_t));
 
-    for (auto const& file_d : to_be_sent_files) {
-        this->send_file(file_d.file.name);
+        auto ack_bytes = this->sock_handler.wait_packet(sizeof(bdu::ack_t));
+        auto ack = bdu::convert_to_ack(ack_bytes.get());
+
+        if (!ack->confirmation) {
+            continue;
+        }
+
+        this->send_file(file_info.file.name);
     }
 
-    return; */
+    return;
 }
 
 void RequestHandler::send_file(char const* file)
@@ -184,7 +114,6 @@ void RequestHandler::send_file(char const* file)
     long int file_size_in_packets;
     bdu::file_info finfo;
 
-    // If get_file returns nullptr, something has gone wrong
 
     std::vector<std::unique_ptr<bdu::packet_t>> packets;
 
@@ -192,14 +121,18 @@ void RequestHandler::send_file(char const* file)
         packets = this->file_handler.read_file(file, file_size_in_packets);
     } catch (bdu::file_does_not_exist const& e) {
         std::cerr << e.what() << '\n';
+
         bdu::file_data_t file_data(finfo, file_size_in_packets);
         this->sock_handler.send_packet(&file_data, sizeof(bdu::file_data_t));
+
         this->log("Requested file doesn't exist");
         return;
     } catch (std::ios::failure const& e) {
         std::cerr << e.what() << '\n';
+
         bdu::file_data_t file_data(finfo, file_size_in_packets);
         this->sock_handler.send_packet(&file_data, sizeof(bdu::file_data_t));
+        
         this->log("IOS failure");
         return;
     }
