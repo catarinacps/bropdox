@@ -30,7 +30,7 @@ void Watcher::run()
     std::thread runner([&]() { this->notifier.run(); });
 
     while (this->running) {
-        std::this_thread::sleep_for(std::chrono::seconds(10));
+        std::this_thread::sleep_for(std::chrono::seconds(DAEMON_SLEEP_SECONDS));
 
         // Do a sync using the modified files queue?
     }
@@ -47,5 +47,6 @@ void Watcher::stop()
 void Watcher::handle_file_modification(Notification event)
 {
     // Perhaps use a modified files queue?
-    throw bdu::not_implemented();
+    std::cout << "event!!\n";
+    // throw bdu::not_implemented();
 }

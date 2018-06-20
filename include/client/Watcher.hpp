@@ -12,6 +12,8 @@
 #include <thread>
 #include <vector>
 
+#define DAEMON_SLEEP_SECONDS 10
+
 using namespace inotify;
 
 class Watcher {

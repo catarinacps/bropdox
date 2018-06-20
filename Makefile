@@ -21,12 +21,11 @@ SRC_DIR = src
 LIB_DIR = lib
 TST_DIR = tests
 
+DFLAG = 
+
 #	Flags de compilaçao. Debug para uso no GDB
 CC = g++ -std=c++14
-DFLAG = 
-DEBUG =\
-	-g \
-	-fsanitize=address
+DEBUG = $(if $(DFLAG), -g -fsanitize=address)
 CFLAGS =\
 	-Wall \
 	-Wextra \
@@ -75,10 +74,10 @@ T_SRC = $(T_TG).cpp
 
 #	Binarios
 $(TARGET): $(OUT_DIR)/%: $(SRC_DIR)/%.cpp $(OBJ)
-	$(CC) -o $@ $^ $(INC) $(LIB) $(if $(DFLAG), $(DEBUG)) $(OPT)
+	$(CC) -o $@ $^ $(INC) $(LIB) $(DEBUG) $(OPT)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/*/%.cpp
-	$(CC) -c -o $@ $< $(INC) $(CFLAGS) $(if $(DFLAG), $(DEBUG)) $(OPT)
+	$(CC) -c -o $@ $< $(INC) $(CFLAGS) $(DEBUG) $(OPT)
 
 #	Testes
 $(T_TG): $(T_TG).o $(wildcard $(OBJ_DIR)/*.o)

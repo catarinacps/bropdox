@@ -3,6 +3,7 @@
 Client::Client(char* uid)
     : userid(uid)
     , file_handler(userid)
+    , watcher(userid)
 {
 }
 
@@ -67,7 +68,12 @@ bool Client::parse_input(std::vector<std::string> tokens)
     } else if (command == "exit") {
         return this->close_session();
     } else if (command == "login") {
-        return this->send_handshake(bdu::req::login);
+        if (this->send_handshake(bdu::req::login)) {
+            this->watcher.run();
+            return true;
+        } else {
+            return false;
+        }
     } else {
         std::cout << "usage:\n"
                   << "login <hostname> <port>\n"
@@ -97,7 +103,7 @@ bool Client::connect_to_server(char const* host, int port)
         return false;
     }
 
-    this->log("Logged to server");
+    this->log("Connected to server");
 
     //TODO: Sync the client with all the server's files
     //TODO: Start sync daemon
@@ -142,7 +148,7 @@ bool Client::send_file(char const* file)
     // number of packets that he received.
     // This number of received packets will indicate a possible missing packet in the transmission,
     // calling for a repeat of the send_file() operation.
-    
+
     returned_ack = this->sock_handler_req.wait_packet(sizeof(bdu::ack_t));
     ack = bdu::convert_to_ack(returned_ack.get());
 

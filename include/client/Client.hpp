@@ -1,5 +1,7 @@
 #pragma once
 
+#include "client/Watcher.hpp"
+
 #include "helpers/FileHandler.hpp"
 #include "helpers/SocketHandler.hpp"
 
@@ -12,8 +14,6 @@
 #include <map>
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
-
-#define DAEMON_SLEEP 10000000
 
 class Client {
 public:
@@ -28,6 +28,8 @@ private:
     SocketHandler sock_handler_server;
     SocketHandler sock_handler_req;
     FileHandler file_handler;
+
+    Watcher watcher;
 
     // client-dev
 

@@ -21,9 +21,7 @@ class SocketHandler {
     int sockfd;
     socklen_t peer_len;
     struct sockaddr_in handler_address;
-    struct sockaddr_in peer_address_buffer;
-
-    std::queue<sockaddr_in> peer_address_queue;
+    struct sockaddr_in peer_address;
 
 public:
     /**
@@ -63,9 +61,9 @@ public:
 private:
     void log(char const* message) const;
 
-    static int init_unix_socket(struct sockaddr_in& sock, port_t port);
+    static int init_server_socket(struct sockaddr_in& sock, port_t port);
 
-    static int init_unix_socket(struct sockaddr_in& sock, port_t port, hostent& server);
+    static int init_client_socket(struct sockaddr_in& sock, port_t port, hostent* server);
 
 public:
     /**
@@ -76,7 +74,7 @@ public:
     /**
      * The one used by the RequestHandler
      */
-    SocketHandler(port_t port, sockaddr_in peer_address_buffer_p);
+    SocketHandler(port_t port, sockaddr_in peer_address_p);
 
     /**
      * The one used by the server
