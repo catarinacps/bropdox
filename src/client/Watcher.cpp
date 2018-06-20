@@ -25,14 +25,23 @@ Watcher::Watcher(std::string user_id)
 
 void Watcher::run()
 {
-    std::thread runner([&]() { this->notifier.run(); });
-    runner.detach();
+    this->running = true;
 
-    while (true) {
+    std::thread runner([&]() { this->notifier.run(); });
+
+    while (this->running) {
         std::this_thread::sleep_for(std::chrono::seconds(10));
 
         // Do a sync using the modified files queue?
     }
+
+    this->notifier.stop();
+    runner.join();
+}
+
+void Watcher::stop()
+{
+    this->running = false;
 }
 
 void Watcher::handle_file_modification(Notification event)

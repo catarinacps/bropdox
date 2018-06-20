@@ -2,20 +2,24 @@
 
 #include "helpers/FileHandler.hpp"
 
-#include "util/FileData.hpp"
 #include "util/Exception.hpp"
+#include "util/FileData.hpp"
 
 #include "inotify-cpp/NotifierBuilder.h"
 
+#include <chrono>
 #include <string>
 #include <thread>
-#include <chrono>
+#include <vector>
 
 using namespace inotify;
 
 class Watcher {
     FileHandler file_handler;
     NotifierBuilder notifier;
+
+    bool running = false;
+    std::vector<bdu::file_data_t> modified_files;
 
 public:
     /**
@@ -24,6 +28,11 @@ public:
      * @throws exception_here
      */
     void run();
+
+    /**
+     * Stops the service.
+     */
+    void stop();
 
 private:
     /**

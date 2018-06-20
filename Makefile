@@ -22,26 +22,25 @@ LIB_DIR = lib
 TST_DIR = tests
 
 #	Flags de compilaçao. Debug para uso no GDB
-CC = g++
+CC = g++ -std=c++14
 DFLAG = 
 DEBUG =\
 	-g \
-	-fsanitize=address \
-	-O0
+	-fsanitize=address
 CFLAGS =\
-	-std=c++14 \
 	-Wall \
 	-Wextra \
 	-Wshadow \
-	-Wunreachable-code \
-	$(if $(DFLAG), $(DEBUG), -O3)
-TFLAGS = --error-printer
+	-Wunreachable-code
+OPT = $(if $(DFLAG), -O0, -O3)
 LIB = -L$(LIB_DIR)\
 	-linotify-cpp \
 	-lboost_system \
 	-lboost_filesystem \
 	-lpthread
 INC = -I$(INC_DIR)
+
+TFLAGS = --error-printer
 
 ####################################################################################################
 #	Arquivos:
@@ -74,18 +73,14 @@ T_SRC = $(T_TG).cpp
 ####################################################################################################
 #	Regras:
 
-.DEFAULT_GOAL = all
-
 #	Binarios
-
 $(TARGET): $(OUT_DIR)/%: $(SRC_DIR)/%.cpp $(OBJ)
-	$(CC) -o $@ $^ $(INC) $(LIB) $(CFLAGS)
+	$(CC) -o $@ $^ $(INC) $(LIB) $(if $(DFLAG), $(DEBUG)) $(OPT)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/*/%.cpp
-	$(CC) -c -o $@ $< $(INC) $(CFLAGS)
+	$(CC) -c -o $@ $< $(INC) $(CFLAGS) $(if $(DFLAG), $(DEBUG)) $(OPT)
 
 #	Testes
-
 $(T_TG): $(T_TG).o $(wildcard $(OBJ_DIR)/*.o)
 	$(CC) -o $@ $^ $(CFLAGS)
 
@@ -97,6 +92,8 @@ $(T_SRC): $(T_DEP)
 
 ####################################################################################################
 #	Alvos:
+
+.DEFAULT_GOAL = all
 
 all: $(TARGET)
 
