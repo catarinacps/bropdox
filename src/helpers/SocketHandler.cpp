@@ -143,3 +143,19 @@ SocketHandler::~SocketHandler()
 {
     close(this->sockfd);
 }
+
+SocketHandler& SocketHandler::operator=(SocketHandler&& move)
+{
+    if (this != &move) {
+        this->sockfd = move.sockfd;
+        this->peer_len = move.peer_len;
+        this->peer_address = move.peer_address;
+        this->handler_address = move.handler_address;
+        move.sockfd = -1;
+        move.peer_len = 0;
+        std::memset(&(move.peer_address), '\0', sizeof(struct sockaddr_in));
+        std::memset(&(move.handler_address), '\0', sizeof(struct sockaddr_in));
+    }
+
+    return *this;
+}

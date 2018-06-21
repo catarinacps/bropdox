@@ -69,7 +69,8 @@ bool Client::parse_input(std::vector<std::string> tokens)
         return this->close_session();
     } else if (command == "login") {
         if (this->send_handshake(bdu::req::login)) {
-            this->watcher.run();
+            std::thread daemon([&]() { this->watcher.run(); });
+            daemon.detach();
             return true;
         } else {
             return false;
@@ -96,7 +97,7 @@ bool Client::connect_to_server(char const* host, int port)
     }
 
     try {
-        this->sock_handler_server = SocketHandler(port, this->server);
+        this->sock_handler_server = std::move(SocketHandler(port, this->server));
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
         this->log("Failed to connect with the server");

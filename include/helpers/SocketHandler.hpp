@@ -83,5 +83,9 @@ public:
 
     SocketHandler() {}
 
+    SocketHandler(SocketHandler const& copy) = default; 
+
     ~SocketHandler();
+
+    SocketHandler& operator=(SocketHandler&& move);
 };
