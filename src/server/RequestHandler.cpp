@@ -52,6 +52,9 @@ bool RequestHandler::handle_request(bdu::req req_type)
 
         this->delete_file(finfo->file.name);
     } break;
+    case bdu::req::list: {
+        this->list_files();
+    } break;
     default:
         this->log("Something went wrong...");
         return false;
@@ -230,4 +233,8 @@ void RequestHandler::delete_file(char const* file)
 void RequestHandler::log(char const* message)
 {
     printf("RequestHandler [UID: %s]: %s\n", this->client_id.c_str(), message);
+}
+
+void RequestHandler::list_files(){
+    std::cout << "~list files~" << std::endl;
 }

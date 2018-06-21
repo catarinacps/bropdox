@@ -87,7 +87,8 @@ private:
     bool send_handshake(bdu::req request);
 
     void log(char const* message);
-
+    
+    bool list_server_files();
 public:
     Client(char* uid);
 };

@@ -75,11 +75,18 @@ bool Client::parse_input(std::vector<std::string> tokens)
         } else {
             return false;
         }
+    } else if (command == "ls") {
+        if (!this->send_handshake(bdu::req::list)) {
+            return false;
+        }
+
+        return this->list_server_files();
     } else {
         std::cout << "usage:\n"
                   << "login <hostname> <port>\n"
                   << "upload <file path>\n"
                   << "download <file>\n"
+                  << "ls\n"
                   << "exit\n";
         return false;
     }
@@ -255,10 +262,15 @@ bool Client::send_handshake(bdu::req request)
     bdu::handshake_t hand(request, this->userid.c_str(), this->device);
     this->sock_handler_server.send_packet(&hand, sizeof(bdu::handshake_t));
     this->log("Sent handshake to server");
-
+   
     // Waits the SYN data containing the port
     auto syn_data = this->sock_handler_server.wait_packet(sizeof(bdu::syn_t));
     auto syn = bdu::convert_to_syn(syn_data.get());
+
+    // std::cout << syn->device << std::endl;
+    // std::cout << this->device << std::endl;
+    this->device = std::move(syn->device);
+    // std::cout << this->device << std::endl;
 
     // If the SYN is bad, we abort the process
     if (!syn->confirmation) {
@@ -280,4 +292,8 @@ bool Client::send_handshake(bdu::req request)
 void Client::log(char const* message)
 {
     printf("Client [UID: %s]: %s\n", this->userid.c_str(), message);
+}
+
+bool Client::list_server_files(){
+    std::cout << "~list server files~" << std::endl;
 }

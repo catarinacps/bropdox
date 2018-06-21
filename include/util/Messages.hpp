@@ -23,6 +23,7 @@ enum class req {
     receive,
     del,
     login,
+    list,
     close
 };
 

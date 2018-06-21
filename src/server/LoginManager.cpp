@@ -46,7 +46,9 @@ device_t LoginManager::reserve_device(std::string const& user_id)
 {
     auto i = 0;
     for (auto& item : this->users[user_id]) {
+        std::cout << "~init user ?~" << std::endl;
         if (!item.initialized) {
+            std::cout << "~init user = yes!!~" << std::endl;
             item.initialized = true;
             return i + 1;
         }

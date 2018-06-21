@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
     }
 
     Server server((port_t)atoi(argv[1]));
-    printf("Server: Server is live\n");
+    printf("Server: Server is alive\n");
 
     while (true) {
         if (server.listen()) {
