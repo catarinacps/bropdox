@@ -161,7 +161,7 @@ bool Client::send_file(char const* file)
         this->log("Success uploading the file");
     }
 
-    this->sock_handler_req = SocketHandler();
+    this->sock_handler_req = std::move(SocketHandler());
 
     return true;
 }
@@ -217,7 +217,7 @@ bool Client::get_file(char const* file)
         this->sock_handler_req.send_packet(&ack, sizeof(bdu::ack_t));
     }
 
-    this->sock_handler_req = SocketHandler();
+    this->sock_handler_req = std::move(SocketHandler());
     return true;
 }
 

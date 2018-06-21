@@ -7,9 +7,7 @@ Watcher::Watcher(std::string user_id)
         this->handle_file_modification(notification);
     };
 
-    auto handle_unexpected_notification = [](Notification notification) {
-        std::cout << "oops\n";
-    };
+    auto do_nothing = [](Notification notification) {};
 
     auto events = {
         Event::create,
@@ -20,7 +18,7 @@ Watcher::Watcher(std::string user_id)
     this->notifier = BuildNotifier()
                          .watchPathRecursively(this->file_handler.get_path())
                          .onEvents(events, handle_notification)
-                         .onUnexpectedEvent(handle_unexpected_notification);
+                         .onUnexpectedEvent(do_nothing);
 }
 
 void Watcher::run()
@@ -30,9 +28,9 @@ void Watcher::run()
     std::thread runner([&]() { this->notifier.run(); });
 
     while (this->running) {
-        std::this_thread::sleep_for(std::chrono::seconds(DAEMON_SLEEP_SECONDS));
-
         // Do a sync using the modified files queue?
+
+        std::this_thread::sleep_for(std::chrono::seconds(DAEMON_SLEEP_SECONDS));
     }
 
     this->notifier.stop();
@@ -47,6 +45,6 @@ void Watcher::stop()
 void Watcher::handle_file_modification(Notification event)
 {
     // Perhaps use a modified files queue?
-    std::cout << "event!!\n";
+    printf("!!\n");
     // throw bdu::not_implemented();
 }
