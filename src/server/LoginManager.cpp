@@ -10,6 +10,7 @@ device_t LoginManager::login(std::string const& user_id, sockaddr_in const& user
 
     auto const device = this->reserve_device(user_id);
 
+    bool logged = this->get_client_data(user_id, device).initialized;
     this->m_login.unlock();
 
     RequestHandler rh(user_address, port, device, user_id);
@@ -19,6 +20,9 @@ device_t LoginManager::login(std::string const& user_id, sockaddr_in const& user
     this->users.at(user_id).at(device - 1) = client_data_t(std::move(rh), port);
 
     this->m_map.unlock();
+
+    logged = this->get_client_data(user_id, device).initialized;
+    this->get_client_data(user_id, device).initialized = true;
 
     return device;
 }
@@ -46,9 +50,7 @@ device_t LoginManager::reserve_device(std::string const& user_id)
 {
     auto i = 0;
     for (auto& item : this->users[user_id]) {
-        std::cout << "~init user ?~" << std::endl;
         if (!item.initialized) {
-            std::cout << "~init user = yes!!~" << std::endl;
             item.initialized = true;
             return i + 1;
         }

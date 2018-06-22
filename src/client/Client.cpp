@@ -267,10 +267,7 @@ bool Client::send_handshake(bdu::req request)
     auto syn_data = this->sock_handler_server.wait_packet(sizeof(bdu::syn_t));
     auto syn = bdu::convert_to_syn(syn_data.get());
 
-    // std::cout << syn->device << std::endl;
-    // std::cout << this->device << std::endl;
-    this->device = std::move(syn->device);
-    // std::cout << this->device << std::endl;
+    this->device = syn->device;
 
     // If the SYN is bad, we abort the process
     if (!syn->confirmation) {
