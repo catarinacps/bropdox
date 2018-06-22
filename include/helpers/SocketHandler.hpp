@@ -18,12 +18,13 @@
 #define TIMEOUT 500000
 
 class SocketHandler {
-    int sockfd;
+    
     socklen_t peer_len;
     struct sockaddr_in handler_address;
     struct sockaddr_in peer_address;
 
 public:
+    int sockfd;
     /**
      * Listens the socket for incoming packets, expecting them with a predetermined size.
      * 

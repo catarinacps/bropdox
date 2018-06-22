@@ -22,6 +22,9 @@ bool RequestHandler::handle_request(bdu::req req_type)
     } break;
     case bdu::req::send: {
         auto data = this->sock_handler.wait_packet(sizeof(bdu::file_data_t));
+        if(data == NULL){
+            std::cout << "Empty inside and outside"  << std::endl;
+        }
         auto finfo = bdu::convert_to_file_data(data.get());
         this->log("Received the requested file name");
 
@@ -53,6 +56,8 @@ bool RequestHandler::handle_request(bdu::req req_type)
         this->delete_file(finfo->file.name);
     } break;
     case bdu::req::list: {
+         auto data = this->sock_handler.wait_packet(sizeof(bdu::file_data_t));
+        auto finfo = bdu::convert_to_file_data(data.get());
         this->list_files();
     } break;
     default:
@@ -235,12 +240,18 @@ void RequestHandler::log(char const* message)
     printf("RequestHandler [UID: %s]: %s\n", this->client_id.c_str(), message);
 }
 
-void RequestHandler::list_files(){    
-    auto to_be_sent_files = this->file_handler.get_file_info_list();
-
-    std::cout << "~List of files~" << std::endl;
-
-    for (auto& file_info : to_be_sent_files) {
+void RequestHandler::list_files(){ 
+    std::cout << "~List of files~" << std::endl;   
+    
+    auto file_info_list = this->file_handler.get_file_info_list();
+    
+    for (auto& file_info :file_info_list) {
         std::cout << file_info.file.name << std::endl;
     }
+
+    int number_of_files = file_info_list.size();
+    std::cout << number_of_files << std::endl;
+    this->sock_handler.send_packet(&number_of_files, sizeof(long int)); //???
+    this->log("Sent the number of files in the directory");
+
 }

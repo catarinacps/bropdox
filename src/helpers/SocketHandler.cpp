@@ -141,7 +141,9 @@ int SocketHandler::init_client_socket(struct sockaddr_in& sock, port_t port, hos
 
 SocketHandler::~SocketHandler()
 {
-    close(this->sockfd);
+    if (this->sockfd > 0) {
+        close(this->sockfd);
+    }
 }
 
 SocketHandler& SocketHandler::operator=(SocketHandler&& move)

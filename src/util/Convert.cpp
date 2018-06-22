@@ -1,5 +1,5 @@
 #include "util/Convert.hpp"
-
+#include <iostream> 
 namespace bdu {
 
 std::unique_ptr<handshake_t> convert_to_handshake(byte_t* data)
@@ -31,9 +31,12 @@ std::unique_ptr<packet_t> convert_to_packet(byte_t* data)
 }
 
 std::unique_ptr<file_data_t> convert_to_file_data(byte_t* data)
-{
+{   
+    std::cout << "A" << std::endl;
     auto file = std::make_unique<file_data_t>();
+    std::cout << "B" << std::endl;
     std::memcpy(file.get(), data, sizeof(file_data_t));
+    std::cout << "C" << std::endl;
     return file;
 }
 }

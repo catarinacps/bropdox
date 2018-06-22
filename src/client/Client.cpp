@@ -168,7 +168,7 @@ bool Client::send_file(char const* file)
         this->log("Success uploading the file");
     }
 
-    this->sock_handler_req = SocketHandler();
+    this->sock_handler_req = std::move(SocketHandler());
 
     return true;
 }
@@ -176,10 +176,13 @@ bool Client::send_file(char const* file)
 bool Client::get_file(char const* file)
 {
     unsigned int received_packet_number = 0, packets_to_be_received;
-
+    std::cout << file << std::endl;
+    
     bdu::file_data_t request_dummy(this->file_handler.get_file_info(file));
+    std::cout << request_dummy.file.name  << std::endl;//not empty!
     this->sock_handler_req.send_packet(&request_dummy, sizeof(bdu::file_data_t));
-
+    
+    std::cout << "Socket: " << this->sock_handler_req.sockfd << std::endl;
     auto file_data_bytes = this->sock_handler_req.wait_packet(sizeof(bdu::file_data_t));
     auto file_data = bdu::convert_to_file_data(file_data_bytes.get());
 
@@ -224,7 +227,7 @@ bool Client::get_file(char const* file)
         this->sock_handler_req.send_packet(&ack, sizeof(bdu::ack_t));
     }
 
-    this->sock_handler_req = SocketHandler();
+    this->sock_handler_req = std::move(SocketHandler());
     return true;
 }
 
@@ -266,7 +269,6 @@ bool Client::send_handshake(bdu::req request)
     // Waits the SYN data containing the port
     auto syn_data = this->sock_handler_server.wait_packet(sizeof(bdu::syn_t));
     auto syn = bdu::convert_to_syn(syn_data.get());
-
     this->device = syn->device;
 
     // If the SYN is bad, we abort the process
@@ -274,6 +276,7 @@ bool Client::send_handshake(bdu::req request)
         this->log("Received a bad SYN");
         return false;
     }
+    
 
     try {
         this->sock_handler_req = SocketHandler(syn->port, this->server);
@@ -282,6 +285,8 @@ bool Client::send_handshake(bdu::req request)
         this->log("Failed establishing communications with the new socket");
         return false;
     }
+
+    
 
     return true;
 }
