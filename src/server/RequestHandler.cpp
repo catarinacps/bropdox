@@ -237,4 +237,67 @@ void RequestHandler::log(char const* message)
 
 void RequestHandler::list_files(){
     std::cout << "~list files~" << std::endl;
+    // long int file_size_in_packets;
+    // bdu::file_info finfo;
+
+
+    std::vector<std::unique_ptr<bdu::packet_t>> packets;
+    std::cout << "A" << std::endl;
+    std::vector<bdu::file_data_t> file_list = this->file_handler.get_file_info_list();
+    for (auto const& element : file_list) {
+        std::cout << element.file.name << std::endl;
+    }
+    std::cout << "C" << std::endl;
+    std::cout << file_list.size() << std::endl;
+    // try {
+    //     //packets = this->file_handler.read_file(file, file_size_in_packets);
+    //     //packets = 
+    // } catch (bdu::file_does_not_exist const& e) {
+    //     std::cerr << e.what() << '\n';
+
+    //     bdu::file_data_t file_data(finfo, file_size_in_packets);
+    //     this->sock_handler.send_packet(&file_data, sizeof(bdu::file_data_t));
+
+    //     this->log("Requested file doesn't exist");
+    //     return;
+    // } catch (std::ios::failure const& e) {
+    //     std::cerr << e.what() << '\n';
+
+    //     bdu::file_data_t file_data(finfo, file_size_in_packets);
+    //     this->sock_handler.send_packet(&file_data, sizeof(bdu::file_data_t));
+        
+    //     this->log("IOS failure");
+    //     return;
+    // }
+
+    // If all goes well, the server sends the complete file_info to the client
+    //finfo = this->file_handler.get_file_info(file);
+    //bdu::file_data_t file_data(finfo, file_size_in_packets);
+    int number_of_files = file_list.size();
+    this->sock_handler.send_packet(&number_of_files, sizeof(long int)); //???
+    this->log("Sent the number of files in the directory");
+
+    // // Packet sending loop
+    // for (auto const& packet : packets) {
+    //     this->sock_handler.send_packet(packet.get(), sizeof(bdu::packet_t));
+    //     usleep(15);
+    // }
+    // this->log("Finished sending the packets");
+
+    // // The RequestHandler then procedes to wait for the Client's ack, which will contain the
+    // // number of packets that the client received.
+    // // This number of receveid packets will indicate a possible missing packet in the transmission,
+    // // calling for a repeat of the send_file() operation.
+    // auto returned_ack = this->sock_handler.wait_packet(sizeof(bdu::ack_t));
+    // auto ack = bdu::convert_to_ack(returned_ack.get());
+
+    // if (!ack->confirmation) {
+    //     this->log("Failure sending the file, trying again...");
+    //     this->send_file(file);
+    // } else {
+    //     this->log("Success sending the file");
+    // }
+
+    return;
+
 }

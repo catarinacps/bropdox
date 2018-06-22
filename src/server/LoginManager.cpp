@@ -10,7 +10,6 @@ device_t LoginManager::login(std::string const& user_id, sockaddr_in const& user
 
     auto const device = this->reserve_device(user_id);
 
-    bool logged = this->get_client_data(user_id, device).initialized;
     this->m_login.unlock();
 
     RequestHandler rh(user_address, port, device, user_id);
@@ -21,7 +20,6 @@ device_t LoginManager::login(std::string const& user_id, sockaddr_in const& user
 
     this->m_map.unlock();
 
-    logged = this->get_client_data(user_id, device).initialized;
     this->get_client_data(user_id, device).initialized = true;
 
     return device;

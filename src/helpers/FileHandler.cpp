@@ -118,11 +118,15 @@ std::vector<bdu::file_data_t> FileHandler::get_file_info_list() const
     bdu::file_data_t file_data;
     std::vector<bdu::file_data_t> file_info_vector;
 
+    std::cout << "B" << std::endl;
+    std::cout << this->syncDir << std::endl;
+
     for (auto const& p : bf::recursive_directory_iterator(this->syncDir)) {
         auto accessed_file = p.path();
         file_name = accessed_file.filename().c_str();
+        std::cout << file_name<< std::endl;
         stat(file_name, &attrib);
-
+        std::cout << "Rumo ao hexa" << std::endl;
         strncpy(file_data.file.name, file_name, MAXNAME * 2);
         file_data.file.name[MAXNAME * 2 - 1] = '\0';
         file_data.file.size = attrib.st_size;
@@ -131,7 +135,7 @@ std::vector<bdu::file_data_t> FileHandler::get_file_info_list() const
 
         file_info_vector.push_back(file_data);
     }
-
+    std::cout << file_info_vector.size()<< std::endl;
     return file_info_vector;
 }
 
