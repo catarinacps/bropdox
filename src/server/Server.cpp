@@ -55,10 +55,7 @@ void Server::treat_client_request(std::unique_ptr<bdu::handshake_t> hand, sockad
     }
 
     auto& user = this->login_manager.get_client_data(hand->userid, hand->device);
-    std::cout << user.initialized << std::endl;
     if (!user.initialized) {
-        std::cout << "I am a stupid program" << std::endl;
-        std::cout << !user.initialized << std::endl;
         bdu::syn_t syn(false, 0, 0);
         this->sock_handler.send_packet(&syn, sizeof(bdu::syn_t), client_addr);
         this->log(hand->userid, "Client not logged in2");

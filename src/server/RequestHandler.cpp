@@ -235,6 +235,7 @@ void RequestHandler::log(char const* message)
     printf("RequestHandler [UID: %s]: %s\n", this->client_id.c_str(), message);
 }
 
+<<<<<<< HEAD
 void RequestHandler::list_files(){    
     auto to_be_sent_files = this->file_handler.get_file_info_list();
 
@@ -243,7 +244,4 @@ void RequestHandler::list_files(){
     for (auto& file_info : to_be_sent_files) {
         std::cout << file_info.file.name << std::endl;
     }
-
-
-    
 }
