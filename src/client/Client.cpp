@@ -133,10 +133,10 @@ bool Client::send_file(char const* file)
 
     // We then send the file data to the server
     bdu::file_data_t file_data(this->file_handler.get_file_info(file), file_size_in_packets);
-    this->sock_handler_req.send_packet(&file_data, sizeof(bdu::file_data_t));
+    this->sock_handler_req->send_packet(&file_data, sizeof(bdu::file_data_t));
 
     // And wait for the server's ACK
-    auto returned_ack = this->sock_handler_req.wait_packet(sizeof(bdu::ack_t));
+    auto returned_ack = this->sock_handler_req->wait_packet(sizeof(bdu::ack_t));
     auto ack = bdu::convert_to_ack(returned_ack.get());
 
     // If it's 'false' we abort
@@ -147,7 +147,7 @@ bool Client::send_file(char const* file)
 
     // Packet sending loop
     for (auto const& packet : packets) {
-        this->sock_handler_req.send_packet(packet.get(), sizeof(bdu::packet_t));
+        this->sock_handler_req->send_packet(packet.get(), sizeof(bdu::packet_t));
         usleep(15);
     }
     this->log("Finished sending the file");
@@ -157,7 +157,7 @@ bool Client::send_file(char const* file)
     // This number of received packets will indicate a possible missing packet in the transmission,
     // calling for a repeat of the send_file() operation.
 
-    returned_ack = this->sock_handler_req.wait_packet(sizeof(bdu::ack_t));
+    returned_ack = this->sock_handler_req->wait_packet(sizeof(bdu::ack_t));
     ack = bdu::convert_to_ack(returned_ack.get());
 
     // If it's 'false' we try again
@@ -168,7 +168,7 @@ bool Client::send_file(char const* file)
         this->log("Success uploading the file");
     }
 
-    this->sock_handler_req = std::move(SocketHandler());
+    this->sock_handler_req.reset();
 
     return true;
 }
@@ -177,13 +177,13 @@ bool Client::get_file(char const* file)
 {
     unsigned int received_packet_number = 0, packets_to_be_received;
     std::cout << file << std::endl;
-    
+
     bdu::file_data_t request_dummy(this->file_handler.get_file_info(file));
-    std::cout << request_dummy.file.name  << std::endl;//not empty!
-    this->sock_handler_req.send_packet(&request_dummy, sizeof(bdu::file_data_t));
-    
-    std::cout << "Socket: " << this->sock_handler_req.sockfd << std::endl;
-    auto file_data_bytes = this->sock_handler_req.wait_packet(sizeof(bdu::file_data_t));
+    std::cout << request_dummy.file.name << std::endl; //not empty!
+    this->sock_handler_req->send_packet(&request_dummy, sizeof(bdu::file_data_t));
+
+    this->sock_handler_req->log("Sending a file_data_t");
+    auto file_data_bytes = this->sock_handler_req->wait_packet(sizeof(bdu::file_data_t));
     auto file_data = bdu::convert_to_file_data(file_data_bytes.get());
 
     if (file_data->num_packets == 0) {
@@ -198,7 +198,7 @@ bool Client::get_file(char const* file)
     std::vector<std::unique_ptr<bdu::packet_t>> recv_file(packets_to_be_received);
     // Packet receiving loop
     for (auto& data : recv_file) {
-        auto received_packet = this->sock_handler_req.wait_packet(sizeof(bdu::packet_t));
+        auto received_packet = this->sock_handler_req->wait_packet(sizeof(bdu::packet_t));
 
         // If the received packet is NULL, we do nothing
         if (received_packet != nullptr) {
@@ -217,17 +217,17 @@ bool Client::get_file(char const* file)
         this->log("Success receiving the file");
 
         bdu::ack_t ack(true);
-        this->sock_handler_req.send_packet(&ack, sizeof(bdu::ack_t));
+        this->sock_handler_req->send_packet(&ack, sizeof(bdu::ack_t));
 
         this->file_handler.write_file(file, std::move(recv_file));
     } else {
         this->log("Failure receiving the file");
 
         bdu::ack_t ack(false);
-        this->sock_handler_req.send_packet(&ack, sizeof(bdu::ack_t));
+        this->sock_handler_req->send_packet(&ack, sizeof(bdu::ack_t));
     }
 
-    this->sock_handler_req = std::move(SocketHandler());
+    this->sock_handler_req.reset();
     return true;
 }
 
@@ -239,10 +239,12 @@ bool Client::delete_file(char const* file)
     }
 
     bdu::file_data_t file_data(this->file_handler.get_file_info(file));
-    this->sock_handler_req.send_packet(&file_data, sizeof(bdu::file_data_t));
+    this->sock_handler_req->send_packet(&file_data, sizeof(bdu::file_data_t));
 
-    auto returned_ack = this->sock_handler_req.wait_packet(sizeof(bdu::ack_t));
+    auto returned_ack = this->sock_handler_req->wait_packet(sizeof(bdu::ack_t));
     auto ack = bdu::convert_to_ack(returned_ack.get());
+
+    this->sock_handler_req.reset();
 
     // If it's 'false' we try again
     if (!ack->confirmation) {
@@ -265,7 +267,7 @@ bool Client::send_handshake(bdu::req request)
     bdu::handshake_t hand(request, this->userid.c_str(), this->device);
     this->sock_handler_server.send_packet(&hand, sizeof(bdu::handshake_t));
     this->log("Sent handshake to server");
-   
+
     // Waits the SYN data containing the port
     auto syn_data = this->sock_handler_server.wait_packet(sizeof(bdu::syn_t));
     auto syn = bdu::convert_to_syn(syn_data.get());
@@ -276,26 +278,86 @@ bool Client::send_handshake(bdu::req request)
         this->log("Received a bad SYN");
         return false;
     }
-    
 
     try {
-        this->sock_handler_req = SocketHandler(syn->port, this->server);
+        if (!this->sock_handler_req) {
+            this->sock_handler_req = std::make_unique<SocketHandler>(syn->port, this->server); 
+        }
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
         this->log("Failed establishing communications with the new socket");
         return false;
     }
 
-    
+    this->sock_handler_req->log("Hello world!");
 
+    return true;
+}
+
+bool Client::list_server_files()
+{
+    unsigned int received_packet_number = 0, packets_to_be_received;
+
+    this->sock_handler_req->log("Sending ack!");
+
+    bdu::ack_t hello(true);
+    this->sock_handler_req->send_packet(&hello, sizeof(bdu::ack_t));
+
+    this->sock_handler_req->log("Going to wait a packet!");
+
+    auto file_data_bytes = this->sock_handler_req->wait_packet(sizeof(bdu::file_data_t));
+    auto file_data = bdu::convert_to_file_data(file_data_bytes.get());
+
+    if (file_data->num_packets == 0) {
+        this->log("No files on server");
+
+        bdu::ack_t ack(true);
+        this->sock_handler_req->send_packet(&ack, sizeof(bdu::ack_t));
+        
+        return true;
+    }
+
+    packets_to_be_received = file_data->num_packets;
+
+    // Uses said number of packets to declare an array of byte_t pointers
+    // pointing to the received data
+    std::vector<std::unique_ptr<bdu::file_data_t>> received_file_data(packets_to_be_received);
+    // Packet receiving loop
+    for (auto& data : received_file_data) {
+        auto received_packet = this->sock_handler_req->wait_packet(sizeof(bdu::file_data_t));
+
+        // If the received packet is NULL, we do nothing
+        if (received_packet) {
+            data = bdu::convert_to_file_data(received_packet.get());
+            received_packet_number++;
+        }
+    }
+
+    // After receiving all packets, we send an ack with true if we received all the packets or
+    // false if we didn't.
+    // If the number doesnt match the expected number, the server should do something about it.
+    // Also, we do nothing if the number doesnt match.
+    if (received_packet_number == packets_to_be_received) {
+        this->log("Success receiving all file data");
+
+        bdu::ack_t ack(true);
+        this->sock_handler_req->send_packet(&ack, sizeof(bdu::ack_t));
+
+        for (auto const& data : received_file_data) {
+            std::cout << *data << std::endl;
+        }
+    } else {
+        this->log("Failure receiving all file data");
+
+        bdu::ack_t ack(false);
+        this->sock_handler_req->send_packet(&ack, sizeof(bdu::ack_t));
+    }
+
+    this->sock_handler_req.reset();
     return true;
 }
 
 void Client::log(char const* message)
 {
     printf("Client [UID: %s]: %s\n", this->userid.c_str(), message);
-}
-
-bool Client::list_server_files(){
-    std::cout << "~list server files~" << std::endl;
 }

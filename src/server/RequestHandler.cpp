@@ -1,6 +1,10 @@
 #include "server/RequestHandler.hpp"
 
-RequestHandler::RequestHandler(sockaddr_in client_sock_address, port_t port_p, device_t dev, std::string const& address)
+RequestHandler::RequestHandler(
+    sockaddr_in client_sock_address, 
+    port_t port_p, 
+    device_t dev, 
+    std::string const& address)
     : sock_handler(port_p, client_sock_address)
     , file_handler(address, 0)
     , client_id(address)
@@ -22,8 +26,8 @@ bool RequestHandler::handle_request(bdu::req req_type)
     } break;
     case bdu::req::send: {
         auto data = this->sock_handler.wait_packet(sizeof(bdu::file_data_t));
-        if(data == NULL){
-            std::cout << "Empty inside and outside"  << std::endl;
+        if (data == NULL) {
+            std::cout << "Empty inside and outside" << std::endl;
         }
         auto finfo = bdu::convert_to_file_data(data.get());
         this->log("Received the requested file name");
@@ -56,8 +60,10 @@ bool RequestHandler::handle_request(bdu::req req_type)
         this->delete_file(finfo->file.name);
     } break;
     case bdu::req::list: {
-         auto data = this->sock_handler.wait_packet(sizeof(bdu::file_data_t));
-        auto finfo = bdu::convert_to_file_data(data.get());
+        this->log("Initiating list server process");
+
+        auto ack = this->sock_handler.wait_packet(sizeof(bdu::ack_t));
+
         this->list_files();
     } break;
     default:
@@ -74,7 +80,7 @@ void RequestHandler::sync_server()
 
     auto to_be_sent_files = this->file_handler.get_file_info_list();
     to_be_sent_files.emplace_back();
-    
+
     // Receive the modified files and overwrite them
     do {
         // Receives the file_data_t
@@ -121,7 +127,6 @@ void RequestHandler::send_file(char const* file)
     long int file_size_in_packets;
     bdu::file_info finfo;
 
-
     std::vector<std::unique_ptr<bdu::packet_t>> packets;
 
     try {
@@ -139,7 +144,7 @@ void RequestHandler::send_file(char const* file)
 
         bdu::file_data_t file_data(finfo, file_size_in_packets);
         this->sock_handler.send_packet(&file_data, sizeof(bdu::file_data_t));
-        
+
         this->log("IOS failure");
         return;
     }
@@ -235,23 +240,35 @@ void RequestHandler::delete_file(char const* file)
     return;
 }
 
+void RequestHandler::list_files()
+{
+    auto file_info_list = this->file_handler.get_file_info_list();
+
+    bdu::file_data_t dummy_data(bdu::file_info(), file_info_list.size());
+    this->sock_handler.send_packet(&dummy_data, sizeof(bdu::file_data_t));
+    this->log("Sent the number of files in the directory");
+
+    // File_data sending loop
+    for (auto& data : file_info_list) {
+        this->sock_handler.send_packet(&data, sizeof(bdu::file_data_t));
+        usleep(15);
+    }
+    this->log("Finished sending the packets");
+
+    auto returned_ack = this->sock_handler.wait_packet(sizeof(bdu::ack_t));
+    auto ack = bdu::convert_to_ack(returned_ack.get());
+
+    if (!ack->confirmation) {
+        this->log("Failure sending the file data, trying again...");
+        this->list_files();
+    } else {
+        this->log("Success sending the file data");
+    }
+
+    return;
+}
+
 void RequestHandler::log(char const* message)
 {
     printf("RequestHandler [UID: %s]: %s\n", this->client_id.c_str(), message);
-}
-
-void RequestHandler::list_files(){ 
-    std::cout << "~List of files~" << std::endl;   
-    
-    auto file_info_list = this->file_handler.get_file_info_list();
-    
-    for (auto& file_info :file_info_list) {
-        std::cout << file_info.file.name << std::endl;
-    }
-
-    int number_of_files = file_info_list.size();
-    std::cout << number_of_files << std::endl;
-    this->sock_handler.send_packet(&number_of_files, sizeof(long int)); //???
-    this->log("Sent the number of files in the directory");
-
 }

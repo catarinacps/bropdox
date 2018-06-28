@@ -22,6 +22,8 @@ device_t LoginManager::login(std::string const& user_id, sockaddr_in const& user
 
     this->get_client_data(user_id, device).initialized = true;
 
+    std::cout << "End of login\n";
+
     return device;
 }
 

@@ -44,11 +44,20 @@ SocketHandler::SocketHandler(port_t port)
     , peer_len(sizeof(struct sockaddr_in))
 {
     this->sockfd = SocketHandler::init_server_socket(this->handler_address, port);
-    
+
     if (bind(sockfd, (struct sockaddr*)&(this->handler_address), sizeof(struct sockaddr)) < 0) {
         this->log("Error while binding the socket, please try again...");
         throw bdu::socket_bad_bind();
     }
+}
+
+SocketHandler::SocketHandler(SocketHandler&& move)
+    : sockfd(move.sockfd)
+    , peer_len(std::move(move.peer_len))
+    , handler_address(std::move(move.handler_address))
+    , peer_address(std::move(move.peer_address))
+{
+    move.sockfd = -1;
 }
 
 /******************************************************************************
@@ -139,16 +148,12 @@ int SocketHandler::init_client_socket(struct sockaddr_in& sock, port_t port, hos
     return socket_id;
 }
 
-SocketHandler::~SocketHandler()
-{
-    if (this->sockfd > 0) {
-        close(this->sockfd);
-    }
-}
-
 SocketHandler& SocketHandler::operator=(SocketHandler&& move)
 {
     if (this != &move) {
+        if (this->sockfd > 0) {
+            close(this->sockfd);
+        }
         this->sockfd = move.sockfd;
         this->peer_len = move.peer_len;
         this->peer_address = move.peer_address;
@@ -160,4 +165,12 @@ SocketHandler& SocketHandler::operator=(SocketHandler&& move)
     }
 
     return *this;
+}
+
+SocketHandler::~SocketHandler()
+{
+    if (this->sockfd > 0) {
+        this->log("Goodbye cruel world!");
+        close(this->sockfd);
+    }
 }

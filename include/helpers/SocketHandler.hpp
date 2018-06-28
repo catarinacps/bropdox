@@ -11,20 +11,19 @@
 
 #include <cstring>
 
-#include <memory>
 #include <iostream>
+#include <memory>
 #include <queue>
 
 #define TIMEOUT 500000
 
 class SocketHandler {
-    
+    int sockfd;
     socklen_t peer_len;
     struct sockaddr_in handler_address;
     struct sockaddr_in peer_address;
 
 public:
-    int sockfd;
     /**
      * Listens the socket for incoming packets, expecting them with a predetermined size.
      * 
@@ -59,9 +58,9 @@ public:
 
     sockaddr_in get_last_address() const noexcept;
 
-private:
     void log(char const* message) const;
 
+private:
     static int init_server_socket(struct sockaddr_in& sock, port_t port);
 
     static int init_client_socket(struct sockaddr_in& sock, port_t port, hostent* server);
@@ -84,7 +83,9 @@ public:
 
     SocketHandler() {}
 
-    SocketHandler(SocketHandler const& copy) = default; 
+    SocketHandler(SocketHandler const& copy) = default;
+
+    SocketHandler(SocketHandler&& move);
 
     ~SocketHandler();
 
