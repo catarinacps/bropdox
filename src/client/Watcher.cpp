@@ -27,24 +27,34 @@ void Watcher::run()
 
     std::thread runner([&]() { this->notifier.run(); });
 
-    while (this->running) {
-        // Do a sync using the modified files queue?
-
-        std::this_thread::sleep_for(std::chrono::seconds(DAEMON_SLEEP_SECONDS));
-    }
-
-    this->notifier.stop();
-    runner.join();
+    runner.detach();
 }
 
 void Watcher::stop()
 {
     this->running = false;
+    this->notifier.stop();
+}
+
+bool Watcher::is_running()
+{
+    return this->running;
+}
+
+std::vector<bdu::file_event_t> Watcher::get_events()
+{
+    auto copy = this->modified_files;
+
+    this->modified_files.clear();
+
+    return copy;
 }
 
 void Watcher::handle_file_modification(Notification event)
 {
-    // Perhaps use a modified files queue?
-    printf("!!\n");
+    std::cout << "event!\n";
+    printf("teste\n");
+    this->modified_files.emplace_back(bdu::file_info(event.path.string(), ""), event.event);
+    std::cout << this->modified_files.back().file.name << " wew!\n";
     // throw bdu::not_implemented();
 }

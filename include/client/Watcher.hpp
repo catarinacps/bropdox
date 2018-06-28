@@ -11,8 +11,9 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <iostream>
 
-#define DAEMON_SLEEP_SECONDS 10
+#define DAEMON_SLEEP_SECONDS 1
 
 using namespace inotify;
 
@@ -21,7 +22,7 @@ class Watcher {
     NotifierBuilder notifier;
 
     bool running = false;
-    std::vector<bdu::file_data_t> modified_files;
+    std::vector<bdu::file_event_t> modified_files;
 
 public:
     /**
@@ -35,6 +36,20 @@ public:
      * Stops the service.
      */
     void stop();
+
+    /**
+     * Checks if the watcher is running.
+     * 
+     * @return the is_running bool
+     */
+    bool is_running();
+
+    /**
+     * Gets and cleans the modifications vector.
+     * 
+     * @return the modifications vector
+     */
+    std::vector<bdu::file_event_t> get_events();
 
 private:
     /**

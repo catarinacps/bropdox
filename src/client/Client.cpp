@@ -69,7 +69,19 @@ bool Client::parse_input(std::vector<std::string> tokens)
         return this->close_session();
     } else if (command == "login") {
         if (this->send_handshake(bdu::req::login)) {
-            std::thread daemon([&]() { this->watcher.run(); });
+            std::thread daemon([&]() {
+                this->watcher.run();
+                
+                while (this->watcher.is_running()) {
+                    // Do a sync using the modified files queue?
+                    this->log("Im awake!");
+                    auto modified_files = this->watcher.get_events();
+
+                    std::cout << modified_files.front().file.name << " is the file!";
+
+                    std::this_thread::sleep_for(std::chrono::seconds(DAEMON_SLEEP_SECONDS));
+                } 
+            });
             daemon.detach();
             return true;
         } else {

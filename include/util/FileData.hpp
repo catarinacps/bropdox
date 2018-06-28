@@ -2,6 +2,8 @@
 
 #include <boost/filesystem.hpp>
 
+#include "inotify-cpp/Event.h"
+
 #include <cstring>
 #include <string>
 
@@ -12,6 +14,7 @@
 #define MAXFILES 65536
 
 namespace bf = boost::filesystem;
+using namespace inotify;
 
 /******************************************************************************
  * File data structures
@@ -86,5 +89,18 @@ struct file_data_t {
         
         return os;
     }
+};
+
+struct file_event_t {
+    struct file_info file;
+    Event event;
+
+    file_event_t(file_info const& finfo, Event event_p)
+        : file(finfo)
+        , event(event_p)
+    {
+    }
+
+    file_event_t() = default;
 };
 }
