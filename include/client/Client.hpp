@@ -13,6 +13,7 @@
 
 #include <map>
 #include <algorithm>
+#include <memory>
 #include <boost/algorithm/string.hpp>
 
 class Client {
@@ -26,7 +27,8 @@ private:
     hostent* server;
 
     SocketHandler sock_handler_server;
-    SocketHandler sock_handler_req;
+    std::unique_ptr<SocketHandler> sock_handler_req;
+    // SocketHandler sock_handler_req;
     FileHandler file_handler;
 
     Watcher watcher;
@@ -87,7 +89,8 @@ private:
     bool send_handshake(bdu::req request);
 
     void log(char const* message);
-
+    
+    bool list_server_files();
 public:
     Client(char* uid);
 };

@@ -71,6 +71,8 @@ private:
      */
     void log(char const* message);
 
+    void list_files();
+
 public:
     RequestHandler() {}
 

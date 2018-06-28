@@ -79,5 +79,12 @@ struct file_data_t {
     {
         return a.file == b.file;
     }
+
+    friend std::ostream& operator<<(std::ostream& os, file_data_t const& data)
+    {
+        os << data.file.name << "\t\t" << "last modified: " << data.file.modified_time;
+        
+        return os;
+    }
 };
 }

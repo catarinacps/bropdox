@@ -51,6 +51,15 @@ SocketHandler::SocketHandler(port_t port)
     }
 }
 
+SocketHandler::SocketHandler(SocketHandler&& move)
+    : sockfd(move.sockfd)
+    , peer_len(std::move(move.peer_len))
+    , handler_address(std::move(move.handler_address))
+    , peer_address(std::move(move.peer_address))
+{
+    move.sockfd = -1;
+}
+
 /******************************************************************************
  * Member Functions
  */
@@ -139,13 +148,6 @@ int SocketHandler::init_client_socket(struct sockaddr_in& sock, port_t port, hos
     return socket_id;
 }
 
-SocketHandler::~SocketHandler()
-{
-    if (this->sockfd > 0) {
-        close(this->sockfd);
-    }
-}
-
 SocketHandler& SocketHandler::operator=(SocketHandler&& move)
 {
     if (this != &move) {
@@ -163,4 +165,12 @@ SocketHandler& SocketHandler::operator=(SocketHandler&& move)
     }
 
     return *this;
+}
+
+SocketHandler::~SocketHandler()
+{
+    if (this->sockfd > 0) {
+        this->log("Goodbye cruel world!");
+        close(this->sockfd);
+    }
 }
