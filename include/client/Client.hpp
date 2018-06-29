@@ -22,7 +22,6 @@ public:
 
 private:
     device_t device = 0;
-    bool logged_in;
     std::string userid;
     hostent* server;
 
@@ -32,6 +31,9 @@ private:
     FileHandler file_handler;
 
     Watcher watcher;
+
+    bool logged_in;
+    bool syncing = false;
 
     // client-dev
 
@@ -48,9 +50,11 @@ private:
     /**
      * Sincroniza o diretorio "sync_dir_<nomeusuario>" com o servidor.
      * 
+     * @param events O vetor de eventos para cada arquivo
+     * 
      * @see Daemon de sincronizacao
      */
-    bool sync_client();
+    bool sync_client(std::vector<bdu::file_event_t> events);
 
     /**
      * Envia o arquivo file para o servidor

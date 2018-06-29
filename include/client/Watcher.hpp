@@ -13,7 +13,7 @@
 #include <vector>
 #include <iostream>
 
-#define DAEMON_SLEEP_SECONDS 1
+#define DAEMON_SLEEP_SECONDS 5
 
 using namespace inotify;
 

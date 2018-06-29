@@ -2,6 +2,7 @@
 
 #include "util/Definitions.hpp"
 #include "util/Exception.hpp"
+#include "util/Convert.hpp"
 
 #include <netdb.h>
 #include <netinet/in.h>
@@ -32,7 +33,7 @@ public:
     template <typename T>
     std::unique_ptr<T> wait_packet()
     {
-        auto buffer = std::make_unique<T>();
+        auto buffer = std::make_unique<byte_t[]>(sizeof(T));
 
         int desc = recvfrom(this->sockfd, (void*)buffer.get(), sizeof(T), 0, (struct sockaddr*)&(this->peer_address), &(this->peer_len));
         if (desc < 0) {
@@ -43,7 +44,7 @@ public:
 
         //! Caller will now own the buffer
         this->log("Received a packet");
-        return buffer;
+        return bdu::convert_bytes<T>(buffer.get());
     }
 
     /**
@@ -57,7 +58,8 @@ public:
     template <typename T>
     bool send_packet(T const* data) const
     {
-        int desc = sendto(this->sockfd, data, sizeof(T), 0, (struct sockaddr*)&(this->peer_address), sizeof(struct sockaddr_in));
+        auto addr_size = sizeof(struct sockaddr_in);
+        int desc = sendto(this->sockfd, data, sizeof(T), 0, (struct sockaddr*)&(this->peer_address), addr_size);
         if (desc < 0) {
             this->log("Error while sending packet...");
             perror("send_packet error");
@@ -126,7 +128,7 @@ public:
 
     SocketHandler() {}
 
-    SocketHandler(SocketHandler const& copy) = default;
+    SocketHandler(SocketHandler const& copy) = delete;
 
     SocketHandler(SocketHandler&& move);
 

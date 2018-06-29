@@ -70,37 +70,66 @@ bool RequestHandler::handle_request(bdu::req req_type)
 
 void RequestHandler::sync_server()
 {
-    auto has_next_file = false;
-
-    auto to_be_sent_files = this->file_handler.get_file_info_list();
-    to_be_sent_files.emplace_back();
+    auto has_next_file = true;
 
     // Receive the modified files and overwrite them
     do {
         // Receives the file_data_t
-        auto file_data = this->sock_handler.wait_packet<bdu::file_data_t>();
+        this->log("Receiving events...");
+        auto file_event = this->sock_handler.wait_packet<bdu::file_event_t>();
 
-        if (file_data->num_packets == 0) {
+        if (file_event->event == Event::close) {
             has_next_file = false;
         } else {
-            bdu::ack_t ack(this->file_handler.check_freshness(file_data->file));
+            switch (file_event->event) {
+            case Event::create:
+            case Event::modify: {
+                bdu::ack_t ack(this->file_handler.check_freshness(file_event->file));
+                this->sock_handler.send_packet(&ack);
+                if (!ack.confirmation) {
+                    this->log("I dont need old files lol");
+                    continue;
+                }
 
-            auto it = std::find(to_be_sent_files.begin(), to_be_sent_files.end(), *file_data);
-            if (it != to_be_sent_files.end()) {
-                to_be_sent_files.erase(it);
+                auto file_data = this->sock_handler.wait_packet<bdu::file_data_t>();
+                this->log("Received the to-be-received file_data");
+
+                if (!(file_data->num_packets > 0)) {
+                    bdu::ack_t ack_packt(false);
+                    this->sock_handler.send_packet(&ack);
+                    this->log("Bad number of packets, sending false ack back...");
+                } else {
+                    bdu::ack_t ack_packt(true);
+                    this->sock_handler.send_packet(&ack);
+                    this->receive_file(file_data->file.name, file_data->num_packets);
+                }
+                break;
+            }
+            case Event::remove: {
+                bdu::ack_t ack(true);
+                this->sock_handler.send_packet(&ack);
+
+                auto file_data = this->sock_handler.wait_packet<bdu::file_data_t>();
+                this->log("Received the to-be-deleted file name");
+                this->log(file_data->file.name);
+                this->delete_file(file_data->file.name);
+                break;
+            }
+            default:
+                this->log("Unexpected event");
             }
 
+            auto ack = bdu::ack_t(true);
             this->sock_handler.send_packet(&ack);
-
-            this->receive_file(file_data->file.name, file_data->num_packets);
-            has_next_file = true;
         }
 
         // If the received file_data isn't empty, this field will be 'true'
     } while (has_next_file);
     // Iterates while there is an incoming file_data
 
-    // Send to the client all files new to him
+    this->log("Yay!");
+
+    /* // Send to the client all files new to him
     for (auto& file_info : to_be_sent_files) {
         this->sock_handler.send_packet(&file_info);
 
@@ -109,7 +138,7 @@ void RequestHandler::sync_server()
         if (ack->confirmation) {
             this->send_file(file_info.file.name);
         }
-    }
+    } */
 
     return;
 }

@@ -79,6 +79,7 @@ struct packet_t {
 
     packet_t(unsigned int num_p)
         : num(num_p)
+        , data{ '\0' }
     {
     }
 

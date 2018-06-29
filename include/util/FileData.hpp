@@ -93,11 +93,13 @@ struct file_data_t {
 
 struct file_event_t {
     struct file_info file;
-    Event event;
+    Event event = Event::close;
+    unsigned int num_packets = 0;
 
-    file_event_t(file_info const& finfo, Event event_p)
+    file_event_t(file_info const& finfo, Event event_p, unsigned int num_p = 0)
         : file(finfo)
         , event(event_p)
+        , num_packets(num_p)
     {
     }
 

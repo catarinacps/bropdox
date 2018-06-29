@@ -71,16 +71,21 @@ bool Client::parse_input(std::vector<std::string> tokens)
         if (this->send_handshake(bdu::req::login)) {
             std::thread daemon([&]() {
                 this->watcher.run();
-                
+
                 while (this->watcher.is_running()) {
                     // Do a sync using the modified files queue?
-                    this->log("Im awake!");
                     auto modified_files = this->watcher.get_events();
 
-                    std::cout << modified_files.front().file.name << " is the file!";
+                    if (!modified_files.empty()) {
+                        std::cout << modified_files.front().file.name << std::endl;
+
+                        if (this->send_handshake(bdu::req::sync)) {
+                            this->sync_client(std::move(modified_files));
+                        }
+                    }
 
                     std::this_thread::sleep_for(std::chrono::seconds(DAEMON_SLEEP_SECONDS));
-                } 
+                }
             });
             daemon.detach();
             return true;
@@ -131,9 +136,50 @@ bool Client::connect_to_server(char const* host, int port)
     return true;
 }
 
-bool Client::sync_client()
+bool Client::sync_client(std::vector<bdu::file_event_t> events)
 {
-    return false;
+    this->syncing = true;
+
+    for (auto const& event : events) {
+        this->sock_handler_req->send_packet(&event);
+
+        auto ack = this->sock_handler_req->wait_packet<bdu::ack_t>();
+
+        if (!ack->confirmation) {
+            this->log("Server has an up to date version");
+            continue;
+        }
+
+        switch (event.event) {
+        case Event::create:
+        case Event::modify: {
+            this->send_file(event.file.name);
+            break;
+        }
+        case Event::remove: {
+            this->delete_file(event.file.name);
+            break;
+        }
+        default:
+            this->log("Unexpected event");
+        }
+
+        ack = this->sock_handler_req->wait_packet<bdu::ack_t>();
+        if (!ack->confirmation) {
+            this->log("Failed sending the event to the server");
+        } else {
+            this->log("Success sending the event to the server");
+        }
+    }
+
+    bdu::file_event_t empty_event;
+    this->sock_handler_req->send_packet(&empty_event);
+
+    this->log("Yay!");
+
+    this->syncing = false;
+
+    return true;
 }
 
 bool Client::send_file(char const* file)
@@ -179,7 +225,9 @@ bool Client::send_file(char const* file)
         this->log("Success uploading the file");
     }
 
-    this->sock_handler_req.reset();
+    if (!this->syncing) {
+        this->sock_handler_req.reset();
+    }
 
     return true;
 }
@@ -232,24 +280,28 @@ bool Client::get_file(char const* file)
         this->sock_handler_req->send_packet(&ack);
     }
 
-    this->sock_handler_req.reset();
+    if (!this->syncing) {
+        this->sock_handler_req.reset();
+    }
     return true;
 }
 
 bool Client::delete_file(char const* file)
 {
-    if (!this->file_handler.delete_file(file)) {
-        this->log("File does not exist");
-        return false;
-    }
-
     bdu::file_data_t file_data(this->file_handler.get_file_info(file));
+    this->log(file_data.file.name);
     this->sock_handler_req->send_packet(&file_data);
 
+    if (!this->syncing) {
+        if (!this->file_handler.delete_file(file)) {
+            this->log("File does not exist");
+            return false;
+        }
+
+        this->sock_handler_req.reset();
+    }
+
     auto ack = this->sock_handler_req->wait_packet<bdu::ack_t>();
-
-    this->sock_handler_req.reset();
-
     // If it's 'false' we try again
     if (!ack->confirmation) {
         this->log("Failed deleting the file");
@@ -284,7 +336,7 @@ bool Client::send_handshake(bdu::req request)
 
     try {
         if (!this->sock_handler_req) {
-            this->sock_handler_req = std::make_unique<SocketHandler>(syn->port, this->server); 
+            this->sock_handler_req = std::make_unique<SocketHandler>(syn->port, this->server);
         }
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
@@ -315,7 +367,7 @@ bool Client::list_server_files()
 
         bdu::ack_t ack(true);
         this->sock_handler_req->send_packet(&ack);
-        
+
         return true;
     }
 
@@ -355,7 +407,9 @@ bool Client::list_server_files()
         this->sock_handler_req->send_packet(&ack);
     }
 
-    this->sock_handler_req.reset();
+    if (!this->syncing) {
+        this->sock_handler_req.reset();
+    }
     return true;
 }
 

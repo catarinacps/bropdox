@@ -25,7 +25,11 @@ void Watcher::run()
 {
     this->running = true;
 
-    std::thread runner([&]() { this->notifier.run(); });
+    std::cout << "notifier running!\n";
+    
+    std::thread runner([&]() {
+        this->notifier.run();
+    });
 
     runner.detach();
 }
@@ -53,7 +57,8 @@ std::vector<bdu::file_event_t> Watcher::get_events()
 void Watcher::handle_file_modification(Notification event)
 {
     std::cout << "event!\n";
+
     this->modified_files.emplace_back(bdu::file_info(event.path.string(), ""), event.event);
-    std::cout << this->modified_files.back().file.name << " wew!\n";
-    // throw bdu::not_implemented();
+
+    std::cout << this->modified_files.back().file.name << ' ' << event.event << std::endl;
 }

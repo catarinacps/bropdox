@@ -48,7 +48,7 @@ void Server::treat_client_request(std::unique_ptr<bdu::handshake_t> hand, sockad
         } else {
             bdu::syn_t syn(false, 0, 0);
             this->sock_handler.send_packet(&syn, client_addr);
-            this->log(hand->userid, "Client not logged in1");
+            this->log(hand->userid, "Client not logged in");
 
             return;
         }
@@ -58,7 +58,7 @@ void Server::treat_client_request(std::unique_ptr<bdu::handshake_t> hand, sockad
     if (!user.initialized) {
         bdu::syn_t syn(false, 0, 0);
         this->sock_handler.send_packet(&syn, client_addr);
-        this->log(hand->userid, "Client not logged in2");
+        this->log(hand->userid, "Fake device, client not logged in");
 
         return;
     }
