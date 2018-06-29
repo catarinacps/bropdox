@@ -25,13 +25,13 @@ DFLAG =
 
 #	Flags de compilaçao. Debug para uso no GDB
 CC = g++ -std=c++14
-DEBUG = $(if $(DFLAG), -g -fsanitize=address)
+DEBUG = $(if $(DFLAG),-g -fsanitize=address)
 CFLAGS =\
 	-Wall \
 	-Wextra \
 	-Wshadow \
 	-Wunreachable-code
-OPT = $(if $(DFLAG), -O0, -O3)
+OPT = $(if $(DFLAG),-O0,-O3)
 LIB = -L$(LIB_DIR)\
 	-linotify-cpp \
 	-lboost_system \
@@ -54,8 +54,7 @@ TARGET = $(patsubst %.cpp, $(OUT_DIR)/%, $(notdir $(MAIN)))
 SRC =\
 	$(wildcard src/client/*.cpp)\
 	$(wildcard src/server/*.cpp)\
-	$(wildcard src/helpers/*.cpp)\
-	$(wildcard src/util/*.cpp)
+	$(wildcard src/helpers/*.cpp)
 
 #	Objetos a serem criados
 OBJ = $(patsubst %.cpp, $(OBJ_DIR)/%.o, $(notdir $(SRC)))

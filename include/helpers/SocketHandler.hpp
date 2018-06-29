@@ -38,26 +38,56 @@ public:
      * heard from).
      * 
      * @param data a reference to the data pointer.
-     * @param size the size of the said packet.
      * 
      * @return a boolean representing success (true) or failure (false).
      */
-    bool send_packet(void* data, size_t size) const;
+    template <typename T>
+    bool send_packet(T* data) const
+    {
+        int desc = sendto(this->sockfd, data, sizeof(T), 0, (struct sockaddr*)&(this->peer_address), sizeof(struct sockaddr_in));
+        if (desc < 0) {
+            this->log("Error while sending packet...");
+            perror("send_packet error");
+            return false;
+        }
+
+        this->log("Sent a packet");
+        return true;
+    }
 
     /**
      * Sends a data packet to the last known client (aka the last client that the socket
      * heard from).
      * 
      * @param data a reference to the data pointer.
-     * @param size the size of the said packet.
      * @param address the target address.
      * 
      * @return a boolean representing success (true) or failure (false).
      */
-    bool send_packet(void* data, size_t size, sockaddr_in const& address) const;
+    template <typename T>
+    bool send_packet(T* data, sockaddr_in const& address) const
+    {
+        int desc = sendto(this->sockfd, data, sizeof(T), 0, (struct sockaddr*)&address, sizeof(struct sockaddr_in));
+        if (desc < 0) {
+            this->log("Error while sending packet...");
+            perror("send_packet error");
+            return false;
+        }
 
+        this->log("Sent a packet");
+        return true;
+    }
+
+    /**
+     * Gets the last address in the peer address buffer.
+     * 
+     * @return the peer address
+     */
     sockaddr_in get_last_address() const noexcept;
 
+    /**
+     * Logs a message to stdout using the context of the object.
+     */
     void log(char const* message) const;
 
 private:

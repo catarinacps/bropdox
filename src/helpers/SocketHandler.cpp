@@ -80,32 +80,6 @@ std::unique_ptr<byte_t[]> SocketHandler::wait_packet(size_t size)
     return buffer;
 }
 
-bool SocketHandler::send_packet(void* data, size_t size) const
-{
-    int desc = sendto(this->sockfd, data, size, 0, (struct sockaddr*)&(this->peer_address), sizeof(struct sockaddr_in));
-    if (desc < 0) {
-        this->log("Error while sending packet...");
-        perror("send_packet error");
-        return false;
-    }
-
-    this->log("Sent a packet");
-    return true;
-}
-
-bool SocketHandler::send_packet(void* data, size_t size, sockaddr_in const& address) const
-{
-    int desc = sendto(this->sockfd, data, size, 0, (struct sockaddr*)&address, sizeof(struct sockaddr_in));
-    if (desc < 0) {
-        this->log("Error while sending packet...");
-        perror("send_packet error");
-        return false;
-    }
-
-    this->log("Sent a packet");
-    return true;
-}
-
 sockaddr_in SocketHandler::get_last_address() const noexcept
 {
     return this->peer_address;

@@ -14,7 +14,7 @@ bool Server::listen()
         return false;
     }
 
-    auto hand = bdu::convert_to_handshake(data.get());
+    auto hand = bdu::convert_from_bytes<bdu::handshake_t>(data.get());
     auto address = this->sock_handler.get_last_address();
 
     this->log(hand->userid, "New handshake received, creating receiver thread...");
@@ -42,13 +42,13 @@ void Server::treat_client_request(std::unique_ptr<bdu::handshake_t> hand, sockad
             this->log(hand->userid, "Created a RH");
 
             bdu::syn_t syn(true, reserved_port, device);
-            this->sock_handler.send_packet(&syn, sizeof(bdu::syn_t), client_addr);
+            this->sock_handler.send_packet(&syn, client_addr);
             this->log(hand->userid, "Client now logged in");
 
             return;
         } else {
             bdu::syn_t syn(false, 0, 0);
-            this->sock_handler.send_packet(&syn, sizeof(bdu::syn_t), client_addr);
+            this->sock_handler.send_packet(&syn, client_addr);
             this->log(hand->userid, "Client not logged in1");
 
             return;
@@ -58,14 +58,14 @@ void Server::treat_client_request(std::unique_ptr<bdu::handshake_t> hand, sockad
     auto& user = this->login_manager.get_client_data(hand->userid, hand->device);
     if (!user.initialized) {
         bdu::syn_t syn(false, 0, 0);
-        this->sock_handler.send_packet(&syn, sizeof(bdu::syn_t), client_addr);
+        this->sock_handler.send_packet(&syn, client_addr);
         this->log(hand->userid, "Client not logged in2");
 
         return;
     }
 
     bdu::syn_t syn(true, user.port, user.handler.get_device());
-    this->sock_handler.send_packet(&syn, sizeof(bdu::syn_t), client_addr);
+    this->sock_handler.send_packet(&syn, client_addr);
     this->log(hand->userid, "Sent to the client a syn with the port and device");
 
     // Calls the RequestHandler to handle the client's request
