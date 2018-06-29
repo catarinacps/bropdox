@@ -53,7 +53,6 @@ std::vector<bdu::file_event_t> Watcher::get_events()
 void Watcher::handle_file_modification(Notification event)
 {
     std::cout << "event!\n";
-    printf("teste\n");
     this->modified_files.emplace_back(bdu::file_info(event.path.string(), ""), event.event);
     std::cout << this->modified_files.back().file.name << " wew!\n";
     // throw bdu::not_implemented();

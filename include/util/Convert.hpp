@@ -12,7 +12,7 @@
 namespace bdu {
 
 template <typename T>
-std::unique_ptr<T> convert_from_bytes(byte_t* data)
+std::unique_ptr<T> convert_bytes(byte_t const* data)
 {
     auto convert = std::make_unique<T>();
     std::memcpy(convert.get(), data, sizeof(T));

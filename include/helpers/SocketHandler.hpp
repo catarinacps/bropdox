@@ -25,13 +25,26 @@ class SocketHandler {
 
 public:
     /**
-     * Listens the socket for incoming packets, expecting them with a predetermined size.
+     * Listens the socket for a incoming packet, expecting it to be of type T.
      * 
-     * @param size the size of the expected packet.
-     * 
-     * @return a unique_ptr to the byte array.
+     * @return a unique_ptr of T.
      */
-    std::unique_ptr<byte_t[]> wait_packet(size_t size);
+    template <typename T>
+    std::unique_ptr<T> wait_packet()
+    {
+        auto buffer = std::make_unique<T>();
+
+        int desc = recvfrom(this->sockfd, (void*)buffer.get(), sizeof(T), 0, (struct sockaddr*)&(this->peer_address), &(this->peer_len));
+        if (desc < 0) {
+            this->log("Error while receiving packet...");
+            perror("wait_packet error");
+            return nullptr;
+        }
+
+        //! Caller will now own the buffer
+        this->log("Received a packet");
+        return buffer;
+    }
 
     /**
      * Sends a data packet to the last known client (aka the last client that the socket
@@ -42,7 +55,7 @@ public:
      * @return a boolean representing success (true) or failure (false).
      */
     template <typename T>
-    bool send_packet(T* data) const
+    bool send_packet(T const* data) const
     {
         int desc = sendto(this->sockfd, data, sizeof(T), 0, (struct sockaddr*)&(this->peer_address), sizeof(struct sockaddr_in));
         if (desc < 0) {
@@ -65,7 +78,7 @@ public:
      * @return a boolean representing success (true) or failure (false).
      */
     template <typename T>
-    bool send_packet(T* data, sockaddr_in const& address) const
+    bool send_packet(T const* data, sockaddr_in const& address) const
     {
         int desc = sendto(this->sockfd, data, sizeof(T), 0, (struct sockaddr*)&address, sizeof(struct sockaddr_in));
         if (desc < 0) {

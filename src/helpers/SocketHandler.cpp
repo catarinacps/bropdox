@@ -64,22 +64,6 @@ SocketHandler::SocketHandler(SocketHandler&& move)
  * Member Functions
  */
 
-std::unique_ptr<byte_t[]> SocketHandler::wait_packet(size_t size)
-{
-    auto buffer = std::make_unique<byte_t[]>(size);
-
-    int desc = recvfrom(this->sockfd, (void*)buffer.get(), size, 0, (struct sockaddr*)&(this->peer_address), &(this->peer_len));
-    if (desc < 0) {
-        this->log("Error while receiving packet...");
-        perror("wait_packet error");
-        return nullptr;
-    }
-
-    //! Caller will now own the buffer
-    this->log("Received a packet");
-    return buffer;
-}
-
 sockaddr_in SocketHandler::get_last_address() const noexcept
 {
     return this->peer_address;

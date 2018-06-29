@@ -9,12 +9,11 @@ Server::Server(port_t port_param)
 
 bool Server::listen()
 {
-    auto data = this->sock_handler.wait_packet(sizeof(bdu::handshake_t));
-    if (!data) {
+    auto hand = this->sock_handler.wait_packet<bdu::handshake_t>();
+    if (!hand) {
         return false;
     }
 
-    auto hand = bdu::convert_from_bytes<bdu::handshake_t>(data.get());
     auto address = this->sock_handler.get_last_address();
 
     this->log(hand->userid, "New handshake received, creating receiver thread...");

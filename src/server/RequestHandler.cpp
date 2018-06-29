@@ -25,21 +25,16 @@ bool RequestHandler::handle_request(bdu::req req_type)
         this->sync_server();
     } break;
     case bdu::req::send: {
-        auto data = this->sock_handler.wait_packet(sizeof(bdu::file_data_t));
-        if (data == NULL) {
-            std::cout << "Empty inside and outside" << std::endl;
-        }
-        auto finfo = bdu::convert_from_bytes<bdu::file_data_t>(data.get());
+        auto file_data = this->sock_handler.wait_packet<bdu::file_data_t>();
         this->log("Received the requested file name");
 
-        this->send_file(finfo->file.name);
+        this->send_file(file_data->file.name);
     } break;
     case bdu::req::receive: {
-        auto data = this->sock_handler.wait_packet(sizeof(bdu::file_data_t));
-        auto finfo = bdu::convert_from_bytes<bdu::file_data_t>(data.get());
-        this->log("Received the to-be-received file_info");
+        auto file_data = this->sock_handler.wait_packet<bdu::file_data_t>();
+        this->log("Received the to-be-received file_data");
 
-        if (!(finfo->num_packets > 0)) {
+        if (!(file_data->num_packets > 0)) {
             bdu::ack_t ack(false);
             this->sock_handler.send_packet(&ack);
             this->log("Bad number of packets, sending false ack back...");
@@ -50,19 +45,18 @@ bool RequestHandler::handle_request(bdu::req req_type)
             this->sock_handler.send_packet(&ack);
         }
 
-        this->receive_file(finfo->file.name, finfo->num_packets);
+        this->receive_file(file_data->file.name, file_data->num_packets);
     } break;
     case bdu::req::del: {
-        auto data = this->sock_handler.wait_packet(sizeof(bdu::file_data_t));
-        auto finfo = bdu::convert_from_bytes<bdu::file_data_t>(data.get());
+        auto file_data = this->sock_handler.wait_packet<bdu::file_data_t>();
         this->log("Received the to-be-deleted file name");
 
-        this->delete_file(finfo->file.name);
+        this->delete_file(file_data->file.name);
     } break;
     case bdu::req::list: {
         this->log("Initiating list server process");
 
-        auto ack = this->sock_handler.wait_packet(sizeof(bdu::ack_t));
+        auto ack = this->sock_handler.wait_packet<bdu::ack_t>();
 
         this->list_files();
     } break;
@@ -84,8 +78,7 @@ void RequestHandler::sync_server()
     // Receive the modified files and overwrite them
     do {
         // Receives the file_data_t
-        auto file_data_bytes = this->sock_handler.wait_packet(sizeof(bdu::file_data_t));
-        auto file_data = bdu::convert_from_bytes<bdu::file_data_t>(file_data_bytes.get());
+        auto file_data = this->sock_handler.wait_packet<bdu::file_data_t>();
 
         if (file_data->num_packets == 0) {
             has_next_file = false;
@@ -111,8 +104,7 @@ void RequestHandler::sync_server()
     for (auto& file_info : to_be_sent_files) {
         this->sock_handler.send_packet(&file_info);
 
-        auto ack_bytes = this->sock_handler.wait_packet(sizeof(bdu::ack_t));
-        auto ack = bdu::convert_from_bytes<bdu::ack_t>(ack_bytes.get());
+        auto ack = this->sock_handler.wait_packet<bdu::ack_t>();
 
         if (ack->confirmation) {
             this->send_file(file_info.file.name);
@@ -166,8 +158,7 @@ void RequestHandler::send_file(char const* file)
     // number of packets that the client received.
     // This number of receveid packets will indicate a possible missing packet in the transmission,
     // calling for a repeat of the send_file() operation.
-    auto returned_ack = this->sock_handler.wait_packet(sizeof(bdu::ack_t));
-    auto ack = bdu::convert_from_bytes<bdu::ack_t>(returned_ack.get());
+    auto ack = this->sock_handler.wait_packet<bdu::ack_t>();
 
     if (!ack->confirmation) {
         this->log("Failure sending the file, trying again...");
@@ -190,14 +181,12 @@ void RequestHandler::receive_file(char const* file, unsigned int const packets_t
 
     // Packet receiving loop
     for (auto& packet : recv_file) {
-        auto received_packet = this->sock_handler.wait_packet(sizeof(bdu::packet_t));
+        auto received_packet = this->sock_handler.wait_packet<bdu::packet_t>();
 
         // If the received packet is NULL, we do nothing
-        if (received_packet != nullptr) {
-            auto received = bdu::convert_from_bytes<bdu::packet_t>(received_packet.get());
-
+        if (received_packet) {
             // Can the packets arrive in another order?
-            packet = std::move(received);
+            packet = std::move(received_packet);
             received_packet_number++;
         }
     }
@@ -255,8 +244,7 @@ void RequestHandler::list_files()
     }
     this->log("Finished sending the packets");
 
-    auto returned_ack = this->sock_handler.wait_packet(sizeof(bdu::ack_t));
-    auto ack = bdu::convert_from_bytes<bdu::ack_t>(returned_ack.get());
+    auto ack = this->sock_handler.wait_packet<bdu::ack_t>();
 
     if (!ack->confirmation) {
         this->log("Failure sending the file data, trying again...");
