@@ -81,7 +81,7 @@ bool Client::parse_input(std::vector<std::string> tokens)
 
                         if (this->send_handshake(bdu::req::sync)) {
                             this->sync_client(std::move(modified_files));
-                        } 
+                        }
                     }
 
                     std::this_thread::sleep_for(std::chrono::seconds(DAEMON_SLEEP_SECONDS));
@@ -171,10 +171,10 @@ bool Client::sync_client(std::vector<bdu::file_event_t> events)
     this->log("Yay!");
 
     bool get_out = true;
-    do{
+    do {
         auto finfo = this->sock_handler_req->wait_packet<bdu::file_data_t>();
 
-        if(finfo && finfo->num_packets != 0){
+        if (finfo && finfo->num_packets != 0) {
             this->log(finfo->file.name);
             bdu::ack_t ack(this->file_handler.check_freshness(finfo->file));
             this->sock_handler_req->send_packet(&ack);
@@ -183,13 +183,13 @@ bool Client::sync_client(std::vector<bdu::file_event_t> events)
                 continue;
             }
 
-            this->get_file(finfo->file.name);          
+            this->get_file(finfo->file.name);
 
-        }else{
+        } else {
             get_out = false;
         }
 
-    }while(get_out);
+    } while (get_out);
 
     bdu::ack_t ack(true);
     this->sock_handler_req->send_packet(&ack);

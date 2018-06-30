@@ -1,9 +1,9 @@
 #include "server/RequestHandler.hpp"
 
 RequestHandler::RequestHandler(
-    sockaddr_in client_sock_address, 
-    port_t port_p, 
-    device_t dev, 
+    sockaddr_in client_sock_address,
+    port_t port_p,
+    device_t dev,
     std::string const& address)
     : sock_handler(port_p, client_sock_address)
     , file_handler(address, 0)
@@ -127,7 +127,7 @@ void RequestHandler::sync_server()
     this->log("Yay!");
 
     auto all_files = this->file_handler.get_file_info_list();
-   
+
     // Send to the client all files new to him
     for (auto& file_info : all_files) {
         this->log(file_info.file.name);
@@ -139,14 +139,14 @@ void RequestHandler::sync_server()
         }
         this->send_file(file_info.file.name);
         this->log("Sent file");
-    } 
+    }
 
     bdu::file_data_t last_file;
     this->sock_handler.send_packet(&last_file);
     this->log("Sent last file");
 
     auto ack = this->sock_handler.wait_packet<bdu::ack_t>();
-    if(!ack || !ack->confirmation ){
+    if (!ack || !ack->confirmation) {
         this->log("Syncing failure");
         return;
     }
