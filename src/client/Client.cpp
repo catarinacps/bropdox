@@ -79,9 +79,9 @@ bool Client::parse_input(std::vector<std::string> tokens)
                     if (!modified_files.empty()) {
                         std::cout << modified_files.front().file.name << std::endl;
 
-                        if (this->send_handshake(bdu::req::sync)) {
+                        /* if (this->send_handshake(bdu::req::sync)) {
                             this->sync_client(std::move(modified_files));
-                        }
+                        } */
                     }
 
                     std::this_thread::sleep_for(std::chrono::seconds(DAEMON_SLEEP_SECONDS));
@@ -188,6 +188,7 @@ bool Client::send_file(char const* file)
 
     // Get the file data and file size in packets
     auto packets = this->file_handler.read_file(file, file_size_in_packets);
+    std::cout << packets.size() << std::endl;
 
     // We then send the file data to the server
     bdu::file_data_t file_data(this->file_handler.get_file_info(file), file_size_in_packets);
@@ -195,8 +196,6 @@ bool Client::send_file(char const* file)
 
     // And wait for the server's ACK
     auto ack = this->sock_handler_req->wait_packet<bdu::ack_t>();
-
-    // If it's 'false' we abort
     if (!ack->confirmation) {
         this->log("Bad ACK received");
         return false;
@@ -205,6 +204,7 @@ bool Client::send_file(char const* file)
     // Packet sending loop
     for (auto const& packet : packets) {
         this->sock_handler_req->send_packet(packet.get());
+        this->log("I've sent a packet");
         usleep(15);
     }
     this->log("Finished sending the file");
@@ -226,6 +226,7 @@ bool Client::send_file(char const* file)
     }
 
     if (!this->syncing) {
+        this->file_handler.copy_file_to_sync_dir(file);
         this->sock_handler_req.reset();
     }
 
@@ -256,7 +257,7 @@ bool Client::get_file(char const* file)
         auto packet = this->sock_handler_req->wait_packet<bdu::packet_t>();
 
         // If the received packet is NULL, we do nothing
-        if (packet != nullptr) {
+        if (packet) {
             data = std::move(packet);
             received_packet_number++;
         }

@@ -56,7 +56,7 @@ bool FileHandler::write_file(char const* file_name, std::vector<std::unique_ptr<
 
     try {
         for (auto const& packet : file_data) {
-            myFile.write(reinterpret_cast<char*>(packet->data), PACKETSIZE);
+            myFile.write(reinterpret_cast<char*>(packet->data), packet->data_size);
         }
     } catch (std::ios::failure& e) {
         std::cerr << "Error while trying to write to the file:\n"
@@ -72,16 +72,12 @@ bool FileHandler::write_file(char const* file_name, std::vector<std::unique_ptr<
     return true;
 }
 
-//TODO: Refactor the pointers
 std::vector<std::unique_ptr<bdu::packet_t>> FileHandler::read_file(char const* file_name, long int& file_size_in_packets)
 {
-    unsigned int i = 0;
     std::ifstream myFile;
     std::string fname_string;
 
     if (std::string(file_name).find("/") == 0) {
-        bf::copy_file(std::string(file_name), this->syncDir.string() + bf::path(file_name).filename().string(), bf::copy_option::overwrite_if_exists);
-
         fname_string = this->syncDir.string() + bf::path(file_name).filename().string();
     } else {
         fname_string = this->syncDir.string() + file_name;
@@ -96,15 +92,19 @@ std::vector<std::unique_ptr<bdu::packet_t>> FileHandler::read_file(char const* f
     myFile.open(fname_string, std::ios::binary | std::ios::in);
     this->log("Opened the file");
 
-    file_size_in_packets = static_cast<long int>(ceil(static_cast<float>(bf::file_size(fname_string)) / static_cast<float>(PACKETSIZE)));
-    std::vector<std::unique_ptr<bdu::packet_t>> data(file_size_in_packets);
+    auto file_size = bf::file_size(fname_string);
+    file_size_in_packets = static_cast<long int>(ceil(static_cast<float>(file_size) / static_cast<float>(PACKETSIZE)));
+    std::vector<std::unique_ptr<bdu::packet_t>> data;
 
-    auto packet = std::make_unique<bdu::packet_t>(i);
+    unsigned int i = 0;
+    auto packet = std::make_unique<bdu::packet_t>(i, (file_size > PACKETSIZE) ? PACKETSIZE : file_size);
 
     do {
         myFile.read(reinterpret_cast<char*>(packet->data), PACKETSIZE);
+        file_size -= PACKETSIZE;
         data.push_back(std::move(packet));
-        packet = std::make_unique<bdu::packet_t>(i);
+        i++;
+        packet = std::make_unique<bdu::packet_t>(i, (file_size > PACKETSIZE) ? PACKETSIZE : file_size);
     } while (myFile);
     this->log("Finished reading the file");
 
@@ -145,14 +145,26 @@ bool FileHandler::delete_file(char const* file_name) const
     return false;
 }
 
+bool FileHandler::copy_file_to_sync_dir(char const* file_name) const
+{
+    try {
+        bf::copy_file(std::string(file_name), this->syncDir.string() + bf::path(file_name).filename().string(), bf::copy_option::overwrite_if_exists);
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << '\n';
+        return false;
+    }
+
+    return true;
+}
+
 bool FileHandler::check_freshness(bdu::file_info const& file) const
 {
-    //FIXME: Handle conflicts? 
+    //FIXME: Handle conflicts?
 
     auto my_file = this->get_file_info(file.name);
 
     return file.modified_time > my_file.modified_time;
-} 
+}
 
 bdu::file_info FileHandler::get_file_info(char const* file_name) const
 {

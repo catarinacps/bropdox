@@ -75,11 +75,12 @@ struct syn_t {
 
 struct packet_t {
     unsigned int num;
+    unsigned int data_size;
     byte_t data[PACKETSIZE];
 
-    packet_t(unsigned int num_p)
+    packet_t(unsigned int num_p, unsigned int data_size_p)
         : num(num_p)
-        , data{ '\0' }
+        , data_size(data_size_p)
     {
     }
 

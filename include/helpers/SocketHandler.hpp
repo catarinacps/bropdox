@@ -33,9 +33,9 @@ public:
     template <typename T>
     std::unique_ptr<T> wait_packet()
     {
-        auto buffer = std::make_unique<byte_t[]>(sizeof(T));
+        auto packet = std::make_unique<T>();
 
-        int desc = recvfrom(this->sockfd, (void*)buffer.get(), sizeof(T), 0, (struct sockaddr*)&(this->peer_address), &(this->peer_len));
+        int desc = recvfrom(this->sockfd, (void*)packet.get(), sizeof(T), 0, (struct sockaddr*)&(this->peer_address), &(this->peer_len));
         if (desc < 0) {
             this->log("Error while receiving packet...");
             perror("wait_packet error");
@@ -44,7 +44,7 @@ public:
 
         //! Caller will now own the buffer
         this->log("Received a packet");
-        return bdu::convert_bytes<T>(buffer.get());
+        return packet;
     }
 
     /**
