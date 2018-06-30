@@ -79,9 +79,9 @@ bool Client::parse_input(std::vector<std::string> tokens)
                     if (!modified_files.empty()) {
                         std::cout << modified_files.front().file.name << std::endl;
 
-                        /* if (this->send_handshake(bdu::req::sync)) {
+                        if (this->send_handshake(bdu::req::sync)) {
                             this->sync_client(std::move(modified_files));
-                        } */
+                        } 
                     }
 
                     std::this_thread::sleep_for(std::chrono::seconds(DAEMON_SLEEP_SECONDS));
@@ -163,19 +163,37 @@ bool Client::sync_client(std::vector<bdu::file_event_t> events)
         default:
             this->log("Unexpected event");
         }
-
-        ack = this->sock_handler_req->wait_packet<bdu::ack_t>();
-        if (!ack->confirmation) {
-            this->log("Failed sending the event to the server");
-        } else {
-            this->log("Success sending the event to the server");
-        }
     }
 
     bdu::file_event_t empty_event;
     this->sock_handler_req->send_packet(&empty_event);
 
     this->log("Yay!");
+
+    bool get_out = true;
+    do{
+        auto finfo = this->sock_handler_req->wait_packet<bdu::file_data_t>();
+
+        if(finfo && finfo->num_packets != 0){
+            this->log(finfo->file.name);
+            bdu::ack_t ack(this->file_handler.check_freshness(finfo->file));
+            this->sock_handler_req->send_packet(&ack);
+            if (!ack.confirmation) {
+                this->log("I dont need old files lol");
+                continue;
+            }
+
+            this->get_file(finfo->file.name);          
+
+        }else{
+            get_out = false;
+        }
+
+    }while(get_out);
+
+    bdu::ack_t ack(true);
+    this->sock_handler_req->send_packet(&ack);
+    this->log("Finished syncing!");
 
     this->syncing = false;
 

@@ -113,17 +113,18 @@ std::vector<std::unique_ptr<bdu::packet_t>> FileHandler::read_file(char const* f
 
 std::vector<bdu::file_data_t> FileHandler::get_file_info_list() const
 {
-    char const* file_name;
+    //char const* file_name[MAXNAME * 2];
     struct stat attrib;
     bdu::file_data_t file_data;
     std::vector<bdu::file_data_t> file_info_vector;
 
     for (auto const& p : bf::recursive_directory_iterator(this->syncDir)) {
         auto accessed_file = p.path();
-        file_name = accessed_file.filename().c_str();
-        stat(file_name, &attrib);
+        auto file_name = accessed_file.filename();
+        stat(file_name.c_str(), &attrib);
 
-        strncpy(file_data.file.name, file_name, MAXNAME * 2);
+        //strncpy(file_data.file.name, file_name.c_str(), MAXNAME * 2);
+        snprintf(file_data.file.name, sizeof(file_name.c_str()), "%s", file_name.c_str());
         file_data.file.name[MAXNAME * 2 - 1] = '\0';
         file_data.file.size = attrib.st_size;
         strftime(file_data.file.last_modified, MAXNAME, "%T - %d/%m/%Y", gmtime(&(attrib.st_ctime)));

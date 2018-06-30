@@ -118,9 +118,6 @@ void RequestHandler::sync_server()
             default:
                 this->log("Unexpected event");
             }
-
-            auto ack = bdu::ack_t(true);
-            this->sock_handler.send_packet(&ack);
         }
 
         // If the received file_data isn't empty, this field will be 'true'
@@ -129,17 +126,32 @@ void RequestHandler::sync_server()
 
     this->log("Yay!");
 
-    /* // Send to the client all files new to him
-    for (auto& file_info : to_be_sent_files) {
+    auto all_files = this->file_handler.get_file_info_list();
+   
+    // Send to the client all files new to him
+    for (auto& file_info : all_files) {
+        this->log(file_info.file.name);
         this->sock_handler.send_packet(&file_info);
-
         auto ack = this->sock_handler.wait_packet<bdu::ack_t>();
-
-        if (ack->confirmation) {
-            this->send_file(file_info.file.name);
+        if (ack && !ack->confirmation) {
+            this->log("Client already has file");
+            continue;
         }
-    } */
+        this->send_file(file_info.file.name);
+        this->log("Sent file");
+    } 
 
+    bdu::file_data_t last_file;
+    this->sock_handler.send_packet(&last_file);
+    this->log("Sent last file");
+
+    auto ack = this->sock_handler.wait_packet<bdu::ack_t>();
+    if(!ack || !ack->confirmation ){
+        this->log("Syncing failure");
+        return;
+    }
+
+    this->log("Finished syncing");
     return;
 }
 
