@@ -25,7 +25,7 @@ namespace bdu {
 struct file_info {
     char name[MAXNAME * 2];
     char last_modified[MAXNAME];
-    int size;
+    uintmax_t size;
     time_t modified_time;
 
     file_info()
@@ -36,7 +36,7 @@ struct file_info {
     {
     }
 
-    file_info(std::string const& name_p, std::string const& sync_dir)
+    file_info(std::string const& name_p, std::string const& sync_dir = "")
         : file_info()
     {
         time_t last_time;
@@ -85,7 +85,7 @@ struct file_data_t {
 
     friend std::ostream& operator<<(std::ostream& os, file_data_t const& data)
     {
-        os << data.file.name << "\t\t" << "last modified: " << data.file.modified_time;
+        os << data.file.name << "\t\t\t" << "last modified: " << data.file.modified_time;
         
         return os;
     }

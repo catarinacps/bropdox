@@ -77,22 +77,22 @@ std::vector<std::unique_ptr<bdu::packet_t>> FileHandler::read_file(char const* f
     std::ifstream myFile;
     std::string fname_string;
 
-    if (std::string(file_name).find("/") == 0) {
-        fname_string = this->syncDir.string() + bf::path(file_name).filename().string();
-    } else {
-        fname_string = this->syncDir.string() + file_name;
+    std::string file_name_str(file_name);
+
+    if (file_name_str.find("/") != 0) {
+        file_name_str = this->syncDir.string() + file_name_str;
     }
 
-    if (!bf::exists(fname_string)) {
+    if (!bf::exists(file_name_str)) {
         this->log("File doesn't exist");
         file_size_in_packets = 0;
         throw bdu::file_does_not_exist();
     }
 
-    myFile.open(fname_string, std::ios::binary | std::ios::in);
+    myFile.open(file_name_str, std::ios::binary | std::ios::in);
     this->log("Opened the file");
 
-    auto file_size = bf::file_size(fname_string);
+    auto file_size = bf::file_size(file_name_str);
     file_size_in_packets = static_cast<long int>(ceil(static_cast<float>(file_size) / static_cast<float>(PACKETSIZE)));
     std::vector<std::unique_ptr<bdu::packet_t>> data;
 
@@ -113,22 +113,15 @@ std::vector<std::unique_ptr<bdu::packet_t>> FileHandler::read_file(char const* f
 
 std::vector<bdu::file_data_t> FileHandler::get_file_info_list() const
 {
-    //char const* file_name[MAXNAME * 2];
-    struct stat attrib;
-    bdu::file_data_t file_data;
     std::vector<bdu::file_data_t> file_info_vector;
 
     for (auto const& p : bf::recursive_directory_iterator(this->syncDir)) {
         auto accessed_file = p.path();
-        auto file_name = accessed_file.filename();
-        stat(file_name.c_str(), &attrib);
+        auto file_name = accessed_file.filename().string();
 
-        //strncpy(file_data.file.name, file_name.c_str(), MAXNAME * 2);
-        snprintf(file_data.file.name, sizeof(file_name.c_str()), "%s", file_name.c_str());
-        file_data.file.name[MAXNAME * 2 - 1] = '\0';
-        file_data.file.size = attrib.st_size;
-        strftime(file_data.file.last_modified, MAXNAME, "%T - %d/%m/%Y", gmtime(&(attrib.st_ctime)));
-        file_data.num_packets = static_cast<unsigned int>(ceil(static_cast<float>(attrib.st_size) / static_cast<float>(PACKETSIZE)));
+        bdu::file_info finfo(file_name, this->syncDir.string());
+        auto file_size = static_cast<unsigned int>(ceil(static_cast<float>(finfo.size) / static_cast<float>(PACKETSIZE)));
+        bdu::file_data_t file_data(finfo, file_size);
 
         file_info_vector.push_back(file_data);
     }

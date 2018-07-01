@@ -180,6 +180,10 @@ bool Client::sync_client(std::vector<bdu::file_event_t> events)
             this->sock_handler_req->send_packet(&ack);
             if (!ack.confirmation) {
                 this->log("I dont need old files lol");
+
+                bdu::ack_t ack_packt(false);
+                this->sock_handler_req->send_packet(&ack_packt);
+
                 continue;
             }
 
@@ -262,6 +266,11 @@ bool Client::get_file(char const* file)
 
     if (file_data->num_packets == 0) {
         this->log("Bad file info received");
+
+        if (!this->syncing) {
+            this->sock_handler_req.reset();
+        }
+
         return false;
     }
 

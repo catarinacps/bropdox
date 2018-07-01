@@ -96,11 +96,12 @@ void RequestHandler::sync_server()
 
                 if (!(file_data->num_packets > 0)) {
                     bdu::ack_t ack_packt(false);
-                    this->sock_handler.send_packet(&ack);
+                    this->sock_handler.send_packet(&ack_packt);
                     this->log("Bad number of packets, sending false ack back...");
                 } else {
                     bdu::ack_t ack_packt(true);
-                    this->sock_handler.send_packet(&ack);
+                    this->sock_handler.send_packet(&ack_packt);
+                    this->log(file_data->file.name);
                     this->receive_file(file_data->file.name, file_data->num_packets);
                 }
                 break;
@@ -132,11 +133,16 @@ void RequestHandler::sync_server()
     for (auto& file_info : all_files) {
         this->log(file_info.file.name);
         this->sock_handler.send_packet(&file_info);
+
         auto ack = this->sock_handler.wait_packet<bdu::ack_t>();
-        if (ack && !ack->confirmation) {
+        if (!ack) {
+            this->log("Timeouted ack");
+            continue;
+        } else if (!ack->confirmation) {
             this->log("Client already has file");
             continue;
         }
+
         this->send_file(file_info.file.name);
         this->log("Sent file");
     }
@@ -157,17 +163,18 @@ void RequestHandler::sync_server()
 
 void RequestHandler::send_file(char const* file)
 {
-    long int file_size_in_packets;
+    long int file_size_in_packets = 0;
     bdu::file_info finfo;
 
     std::vector<std::unique_ptr<bdu::packet_t>> packets;
 
     try {
+        this->log(file);
         packets = this->file_handler.read_file(file, file_size_in_packets);
     } catch (bdu::file_does_not_exist const& e) {
         std::cerr << e.what() << '\n';
 
-        bdu::file_data_t file_data(finfo, file_size_in_packets);
+        bdu::file_data_t file_data(bdu::file_info(), 0);
         this->sock_handler.send_packet(&file_data);
 
         this->log("Requested file doesn't exist");
@@ -175,7 +182,7 @@ void RequestHandler::send_file(char const* file)
     } catch (std::ios::failure const& e) {
         std::cerr << e.what() << '\n';
 
-        bdu::file_data_t file_data(finfo, file_size_in_packets);
+        bdu::file_data_t file_data(bdu::file_info(), 0);
         this->sock_handler.send_packet(&file_data);
 
         this->log("IOS failure");
