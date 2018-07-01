@@ -142,6 +142,8 @@ void RequestHandler::sync_server()
             this->log("Client already has file");
             continue;
         }
+        auto file_data = this->sock_handler.wait_packet<bdu::file_data_t>();
+        this->log("consistency check");
 
         this->send_file(file_info.file.name);
         this->log("Sent file");
@@ -152,9 +154,13 @@ void RequestHandler::sync_server()
     this->log("Sent last file");
 
     auto ack = this->sock_handler.wait_packet<bdu::ack_t>();
-    if (!ack || !ack->confirmation) {
-        this->log("Syncing failure");
-        return;
+    if (ack){
+        if(!ack->confirmation) {
+            this->log("Syncing failure");
+            return;
+        }
+    }else{
+        this->log("No ack recieved");
     }
 
     this->log("Finished syncing");

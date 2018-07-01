@@ -139,7 +139,7 @@ bool Client::connect_to_server(char const* host, int port)
 bool Client::sync_client(std::vector<bdu::file_event_t> events)
 {
     this->syncing = true;
-
+    
     for (auto const& event : events) {
         this->sock_handler_req->send_packet(&event);
 
@@ -181,15 +181,15 @@ bool Client::sync_client(std::vector<bdu::file_event_t> events)
             if (!ack.confirmation) {
                 this->log("I dont need old files lol");
 
-                bdu::ack_t ack_packt(false);
-                this->sock_handler_req->send_packet(&ack_packt);
+               // bdu::ack_t ack_packt(false);
+                //this->sock_handler_req->send_packet(&ack_packt);
 
                 continue;
             }
-
             this->get_file(finfo->file.name);
 
         } else {
+            this->log("getting out");
             get_out = false;
         }
 

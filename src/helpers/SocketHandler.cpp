@@ -12,10 +12,10 @@ SocketHandler::SocketHandler(port_t port, hostent* server)
 
     this->sockfd = SocketHandler::init_client_socket(this->peer_address, port, server);
 
-    if (setsockopt(this->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(struct timeval)) < 0) {
+    /* if (setsockopt(this->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(struct timeval)) < 0) {
         this->log("Error while setting the timeout, please try again...");
         throw bdu::socket_bad_opt();
-    }
+    } */
 }
 
 SocketHandler::SocketHandler(port_t port, sockaddr_in peer_address_p)
@@ -28,10 +28,10 @@ SocketHandler::SocketHandler(port_t port, sockaddr_in peer_address_p)
 
     this->sockfd = SocketHandler::init_server_socket(this->handler_address, port);
 
-    if (setsockopt(this->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(struct timeval)) < 0) {
+    /* if (setsockopt(this->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(struct timeval)) < 0) {
         this->log("Error while setting the timeout, please try again...");
         throw bdu::socket_bad_opt();
-    }
+    } */
 
     if (bind(this->sockfd, (struct sockaddr*)&(this->handler_address), sizeof(struct sockaddr)) < 0) {
         this->log("Error while binding the socket, please try again...");
