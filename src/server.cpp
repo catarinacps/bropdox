@@ -1,4 +1,4 @@
-#include "server/Server.hpp"
+#include "server/ReplicaManager.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -41,22 +41,66 @@ int main(int argc, char* argv[])
     // close(sockfd);
     // return 0;
 
-    if (argc != 2) {
+    switch (argc) {
+    case 1:
+    case 2: {
         printf("Incorrect parameter usage, please refer to the following model:\n");
-        printf("./mserver <port>\n\n");
+        printf("\t./server <port> <mode> [-v]\n");
+        printf("where mode is either '--primary' or '--backup'\n\n");
 
         return -1;
     }
+    case 3: {
+        std::string mode(argv[2]);
 
-    Server server((port_t)atoi(argv[1]));
-    printf("Server: Server is alive\n");
+        if (mode == "--primary") {
+            // auto replica = ReplicaManager::make_primary(atoi(argv[1]), false);
 
-    while (true) {
-        if (server.listen()) {
-            printf("Server: Treating a request in a new thread...\n");
+            // replica.run();
+        } else if (mode == "--backup") {
+            // auto replica = ReplicaManager::make_backup(atoi(argv[1]), false);
+
+            // replica.run();
         } else {
-            printf("Server: Failed handshake attempt received...\n");
+            printf("Incorrect parameter usage, please refer to the following model:\n");
+            printf("\t./server <port> <mode> [-v]\n");
+            printf("where mode is either '--primary' or '--backup'\n\n");
+
+            return -1;
         }
+    }
+    case 4: {
+        std::string mode(argv[2]);
+        std::string verb(argv[3]);
+        bool verbose = false;
+        
+        if (verb == "-v") {
+            verbose = true;
+        }
+
+        if (mode == "--primary") {
+            // auto replica = ReplicaManager::make_primary(atoi(argv[1]), verbose);
+
+            // replica.run();
+        } else if (mode == "--backup") {
+            // auto replica = ReplicaManager::make_backup(atoi(argv[1]), verbose);
+
+            // replica.run();
+        } else {
+            printf("Incorrect parameter usage, please refer to the following model:\n");
+            printf("\t./server <port> <mode> [-v]\n");
+            printf("where mode is either '--primary' or '--backup'\n\n");
+
+            return -1;
+        }
+    }
+    default: {
+        printf("Incorrect parameter usage, please refer to the following model:\n");
+        printf("\t./server <port> <mode> [-v]\n");
+        printf("where mode is either '--primary' or '--backup'\n\n");
+
+        return -1;
+    }
     }
 
     return 0;

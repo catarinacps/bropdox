@@ -18,13 +18,21 @@ class Server {
     LoginManager login_manager;
     PortManager port_manager;
 
+    bool listening = false;
+    bool verbose;
+
 public:
     /**
      * Sets the server to wait the next handshake package from a client.
-     * 
-     * @return success or failure on receiving said handshake
      */
-    bool listen();
+    void listen();
+
+    /**
+     * Stops listening for handshakes.
+     */
+    void stop();
+
+    //TODO: Add a "update" or "refresh" method to sync the changes with the primary server.
 
 private:
     /**
@@ -42,5 +50,5 @@ private:
     void log(char const* userid, char const* message) const noexcept;
 
 public:
-    Server(port_t port);
+    Server(port_t port, bool verbose);
 };

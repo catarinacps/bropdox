@@ -1,39 +1,46 @@
 #include "server/Server.hpp"
 
-Server::Server(port_t port_param)
+Server::Server(port_t port_param, bool verbose_param)
     : port(port_param)
     , sock_handler(port_param)
     , port_manager(port)
+    , verbose(verbose_param)
 {
 }
 
-bool Server::listen()
+void Server::listen()
 {
-    auto hand = this->sock_handler.wait_packet<bdu::handshake_t>();
-    if (!hand) {
-        return false;
+    this->listening = true;
+
+    this->log("-", "Server is alive!");
+
+    while (this->listening) {
+        auto hand = this->sock_handler.wait_packet<bdu::handshake_t>();
+        if (!hand) {
+            continue;
+        }
+
+        auto address = this->sock_handler.get_last_address();
+
+        this->log(hand->userid, "New handshake received, creating receiver thread...");
+        std::thread request_thread(&Server::treat_client_request, this, std::move(hand), address);
+
+        if (!request_thread.joinable()) {
+            this->log("-", "Failed to create new thread...");
+            continue;
+        }
+
+        request_thread.detach();
     }
+}
 
-    auto address = this->sock_handler.get_last_address();
-
-    this->log(hand->userid, "New handshake received, creating receiver thread...");
-    std::thread request_thread(&Server::treat_client_request, this, std::move(hand), address);
-
-    if (!request_thread.joinable()) {
-        this->log("-", "Failed to create new thread...");
-        return false;
-    }
-
-    request_thread.detach();
-
-    return true;
+void Server::stop()
+{
+    this->listening = false;
 }
 
 void Server::treat_client_request(std::unique_ptr<bdu::handshake_t> hand, sockaddr_in const client_addr)
 {
-    //TODO:
-    // - check package (checksum) (is it really necessary?)
-
     if (hand->device == 0) {
         if (hand->req_type == bdu::req::login) {
             auto const reserved_port = this->port_manager.reserve_port();
@@ -80,5 +87,7 @@ void Server::treat_client_request(std::unique_ptr<bdu::handshake_t> hand, sockad
 
 void Server::log(char const* userid, char const* message) const noexcept
 {
-    printf("Server [UID: %s]: %s\n", userid, message);
+    if (this->verbose) {
+        printf("Server [UID: %s]: %s\n", userid, message);
+    }
 }

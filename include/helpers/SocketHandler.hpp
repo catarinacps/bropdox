@@ -15,6 +15,7 @@
 #include <iostream>
 #include <memory>
 #include <queue>
+#include <map>
 
 #define TIMEOUT 500000
 
@@ -71,8 +72,7 @@ public:
     }
 
     /**
-     * Sends a data packet to the last known client (aka the last client that the socket
-     * heard from).
+     * Sends a data packet to the specified target address.
      * 
      * @param data a reference to the data pointer.
      * @param address the target address.
@@ -91,6 +91,29 @@ public:
 
         this->log("Sent a packet");
         return true;
+    }
+
+    /**
+     * Multicasts a data packet to all targets in the specified map parameter.
+     * 
+     * @param data A reference to the data pointer.
+     * @param targets A map containing all target sockaddr.
+     * 
+     * @return a boolean representing success if every packet was delivered successfully or 
+     * false if some packet failed to be delivered.
+     */
+    template <typename T>
+    bool multicast_packet(T const* data, std::map<id_t, sockaddr_in> const& targets) const
+    {
+        bool success = true;
+        
+        for (auto const& pair : targets) {
+            if (!this->send_packet(data, pair.second)) {
+                success = false;
+            }
+        }
+
+        return success;
     }
 
     /**
