@@ -72,7 +72,7 @@ private:
      * 
      * @param file O nome e extensao do arquivo.
      */
-    bool get_file(char const* file);
+    bool get_file(char const* file, std::string path = std::string());
 
     /**
      * Exclui um arquivo de "sync_dir_<nomeusuario>".

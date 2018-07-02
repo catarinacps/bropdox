@@ -49,14 +49,15 @@ bool Client::parse_input(std::vector<std::string> tokens)
 
         return this->send_file(file_path.c_str());
     } else if (command == "download") {
-        std::string file_path(tokens[1]);
-
+        std::string file_name(tokens[1]);
+        std::string file_path(tokens[2]);
         // We start by sending a handshake containing the request to the server
         if (!this->send_handshake(bdu::req::send)) {
             return false;
         }
 
-        return this->get_file(file_path.c_str());
+        return this->get_file(file_name.c_str(),file_path);
+
     } else if (command == "delete") {
         std::string file_path(tokens[1]);
         // We start by sending a handshake containing the request to the server
@@ -255,7 +256,7 @@ bool Client::send_file(char const* file)
     return true;
 }
 
-bool Client::get_file(char const* file)
+bool Client::get_file(char const* file, std::string path)
 {
     unsigned int received_packet_number = 0, packets_to_be_received;
 
@@ -299,8 +300,11 @@ bool Client::get_file(char const* file)
 
         bdu::ack_t ack(true);
         this->sock_handler_req->send_packet(&ack);
-
-        this->file_handler.write_file(file, std::move(recv_file));
+        if(!path.empty()){
+            this->file_handler.write_file(file, std::move(recv_file), path);
+        }else{
+            this->file_handler.write_file(file, std::move(recv_file));
+        }
     } else {
         this->log("Failure receiving the file");
 
@@ -325,8 +329,6 @@ bool Client::delete_file(char const* file)
             this->log("File does not exist");
             return false;
         }
-
-        this->sock_handler_req.reset();
     }
 
     auto ack = this->sock_handler_req->wait_packet<bdu::ack_t>();
@@ -337,6 +339,10 @@ bool Client::delete_file(char const* file)
     } else {
         this->log("Success deleting the file");
         return true;
+    }
+
+    if (!this->syncing) {
+        this->sock_handler_req.reset();
     }
 }
 

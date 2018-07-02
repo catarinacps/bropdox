@@ -235,8 +235,7 @@ void RequestHandler::receive_file(char const* file, unsigned int const packets_t
 
     // Packet receiving loop
     for (auto& packet : recv_file) {
-        auto received_packet = this->sock_handler.wait_packet<bdu::packet_t>();
-
+        auto received_packet = this->sock_handler.wait_packet<bdu::packet_t>();      
         // If the received packet is NULL, we do nothing
         if (received_packet) {
             // Can the packets arrive in another order?

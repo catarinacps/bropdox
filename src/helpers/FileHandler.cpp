@@ -40,13 +40,15 @@ FileHandler::FileHandler(std::string client_id_param, int flag)
 }
 
 //Function that receives an *databuffer and a filename and writes on disk
-bool FileHandler::write_file(char const* file_name, std::vector<std::unique_ptr<bdu::packet_t>> file_data) const
+bool FileHandler::write_file(char const* file_name, std::vector<std::unique_ptr<bdu::packet_t>> file_data, std::string path) const
 {
     std::ofstream myFile;
     std::string fname_string;
 
     if (std::string(file_name).find("/") == 0) {
         fname_string = this->syncDir.string() + bf::path(file_name).filename().string();
+    } else if(!path.empty()) {
+        fname_string = path + "/" +file_name;
     } else {
         fname_string = this->syncDir.string() + file_name;
     }
