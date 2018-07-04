@@ -12,6 +12,7 @@
 #include <cmath>
 #include <ctime>
 #include <vector>
+#include <map>
 
 class RequestHandler {
     SocketHandler sock_handler;

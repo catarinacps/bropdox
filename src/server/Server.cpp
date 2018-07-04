@@ -6,6 +6,7 @@ Server::Server(port_t port_param, bool verbose_param)
     , port_manager(port)
     , verbose(verbose_param)
 {
+    this->port_manager.reserve_port(); //Por causa do ReplicaManager
 }
 
 void Server::listen()

@@ -4,10 +4,13 @@
 #include "server/Server.hpp"
 
 #include "util/Definitions.hpp"
-
+#include "util/Messages.hpp"
 #include <map>
 #include <memory>
 #include <thread>
+#include <chrono>
+
+#define ALIVE_SLEEP_SECONDS 10
 
 class ReplicaManager {
     SocketHandler sock_handler;
@@ -15,9 +18,13 @@ class ReplicaManager {
 
     std::map<id_t, sockaddr_in> group;
 
-    id_t const id = 0;
+    id_t id = 0; 
 
     bool primary;
+    bool verbose;
+
+    sockaddr_in primary_address;
+
 
 private:
     /**
@@ -26,6 +33,14 @@ private:
      * @return true if the object is the new leader, false if someone answered
      */
     bool election();
+
+    ReplicaManager(port_t port, bool verbose);
+    ReplicaManager(char const* host, port_t port, bool verbose);
+    void log(char const* message);
+    
+    void sync();
+    void listen();
+    void check_if_alive();
 
 public:
     /**
@@ -40,12 +55,12 @@ public:
      * 
      * @return A primary ReplicaManager
      */
-    static ReplicaManager make_primary(port_t port, bool verbose);
+    static std::unique_ptr<ReplicaManager> make_primary(port_t port, bool verbose);
 
     /**
      * Factory style constructor of a ReplicaManager.
      * 
      * @return A backup ReplicaManager
      */
-    static ReplicaManager make_backup(port_t port, bool verbose);
+    static std::unique_ptr<ReplicaManager> make_backup(char const* host, port_t port, bool verbose);
 };

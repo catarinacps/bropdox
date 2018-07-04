@@ -1,9 +1,11 @@
 #pragma once
 
 #include "util/Definitions.hpp"
+#include "helpers/SocketHandler.hpp"
 
 #include <cstring>
 #include <string>
+#include <map>
 
 #ifndef MAXNAME
 #define MAXNAME 255
@@ -86,4 +88,32 @@ struct packet_t {
 
     packet_t() = default;
 };
+
+
+struct server_handshake_t{
+    id_t id;
+
+    server_handshake_t(id_t i)
+        : id(i)
+    {
+    }
+
+    server_handshake_t()
+        : id(-1)
+    {
+    }
+
+};
+
+struct alive_t{
+    bool alive;
+
+    alive_t(bool a)
+        : alive(a)
+    {
+    }
+
+    alive_t() = default;
+};
+
 }
