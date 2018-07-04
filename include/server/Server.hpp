@@ -18,6 +18,8 @@ class Server {
     LoginManager login_manager;
     PortManager port_manager;
 
+    sockaddr_in replica_address;
+
     bool listening = false;
     bool verbose;
 
@@ -31,6 +33,13 @@ public:
      * Stops listening for handshakes.
      */
     void stop();
+
+    /**
+     * Gets the server address.
+     * 
+     * @return the server address.
+     */
+    sockaddr_in get_own_address();
 
     //TODO: Add a "update" or "refresh" method to sync the changes with the primary server.
 
@@ -50,5 +59,5 @@ private:
     void log(char const* userid, char const* message) const noexcept;
 
 public:
-    Server(port_t port, bool verbose);
+    Server(port_t port, sockaddr_in replica_address, bool verbose);
 };

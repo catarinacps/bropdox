@@ -124,6 +124,13 @@ public:
     sockaddr_in get_last_address() const noexcept;
 
     /**
+     * Gets the own handler address.
+     * 
+     * @return the handler address
+     */
+    sockaddr_in get_own_address() const noexcept;
+
+    /**
      * Logs a message to stdout using the context of the object.
      */
     void log(char const* message) const;

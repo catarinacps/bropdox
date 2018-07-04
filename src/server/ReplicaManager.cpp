@@ -1,23 +1,22 @@
 #include "server/ReplicaManager.hpp"
 
 //Primary constructor
-ReplicaManager::ReplicaManager(port_t port, bool verbose)
+ReplicaManager::ReplicaManager(port_t port, bool verbose_p)
     : sock_handler(port + 1)
-    , server(port, verbose)
+    , server(port, this->sock_handler.get_own_address(), verbose_p)
     , file_handler(true)
-    , verbose(verbose)
     , primary(true)
+    , verbose(verbose_p)
 {
 }
 
 //Backup Constructor
-ReplicaManager::ReplicaManager(char const* host, port_t port, bool verbose)
+ReplicaManager::ReplicaManager(char const* host, port_t port, bool verbose_p)
     : sock_handler(port + 1, gethostbyname(host), true)
-    , server(port, verbose)
+    , server(port, this->sock_handler.get_own_address(), verbose_p)
     , file_handler(true)
-    , verbose(verbose)
     , primary(false)
-
+    , verbose(verbose_p)
 {
 }
 
@@ -54,28 +53,35 @@ bool ReplicaManager::run()
     //All threads listen to other RM
     //Backups send vivo?
     this->log("Creating server listening thread");
-    std::thread server_listen_thread(&ReplicaManager::listen, this);
+    std::thread rm_listen_thread(&ReplicaManager::listen, this);
 
-    if (!server_listen_thread.joinable()) {
+    if (!rm_listen_thread.joinable()) {
         this->log("Failed to create new server listen thread...");
+        return false;
+    }
+
+    this->log("Creating  client listening thread for primary server");
+    std::thread client_listen_thread(&Server::listen, &(this->server));
+
+    if (!client_listen_thread.joinable()) {
+        this->log("Failed to create new client listen thread...");
+        return false;
     }
 
     if (this->primary) {
-        this->log("Creating  client listening thread for primary server");
-        std::thread client_listen_thread(&Server::listen, &(this->server));
-
-        if (!client_listen_thread.joinable()) {
-            this->log("Failed to create new client listen thread...");
-        }
 
         this->log("Creating syncing thread for primary server");
-        std::thread syncing_thread(&ReplicaManager::sync, this);
+        std::thread syncing_thread([&]() {
+            this->sync();
+
+            std::this_thread::sleep_for(std::chrono::seconds(SYNC_SLEEP_SECONDS));
+        });
 
         if (!syncing_thread.joinable()) {
             this->log("Failed to create new syncing thread...");
+            return false;
         }
 
-        client_listen_thread.detach();
         syncing_thread.detach();
     } else {
         this->log("Creating check thread for backup server");
@@ -83,16 +89,23 @@ bool ReplicaManager::run()
 
         if (!alive_thread.joinable()) {
             this->log("Failed to create new check thread...");
+            return false;
         }
 
         alive_thread.detach();
     }
 
-    server_listen_thread.detach();
+    client_listen_thread.detach();
+    rm_listen_thread.detach();
+
+    return true;
 }
 
 void ReplicaManager::sync()
 {
+    bdu::rm_operation_t sync_op(bdu::serv_req::sync);
+    this->sock_handler.multicast_packet(&sync_op, this->group);
+
     for (auto const& entry : bf::directory_iterator(".")) {
         auto path = entry.path();
 
@@ -103,39 +116,25 @@ void ReplicaManager::sync()
             bdu::client_t client(client_name);
             this->sock_handler.multicast_packet(&client, this->group);
 
-            this->file_handler.set_sync_dir(path);
+            this->file_handler.set_sync_dir(path.string());
             auto all_files = this->file_handler.get_file_info_list();
 
             for (auto const& file_info : all_files) {
-                this->sock_handler.multicast_packet(file_info, this->group);
+                this->sock_handler.multicast_packet(&file_info, this->group);
 
                 this->send_file(file_info.file.name);
                 this->log("Sent file");
             }
 
             bdu::file_data_t empty;
-            this->sock_handler.multicast_packet(&empty);
+            this->sock_handler.multicast_packet(&empty, this->group);
         }
     }
 
-    // for(auto const& client : this->server.login_manager.users){
-    //     client_data_ingredients_t pack;
-    //     pack.address = client.second
-    // }
+    bdu::client_t client("");
+    this->sock_handler.multicast_packet(&client, this->group);
 
-    /* 
-    auto ack = this->sock_handler.wait_packet<bdu::ack_t>();
-    if (ack){
-        if(!ack->confirmation) {
-            this->log("Syncing failure");
-            return;
-        }
-    }else{
-        this->log("No ack recieved");
-    }
- */
-
-    this->log("Finished syncing");
+    this->log("Finished syncing files");
     return;
 }
 
@@ -168,9 +167,7 @@ void ReplicaManager::listen()
                 //TODO: PLEASE
                 //DOnt you FOrgEt AbouT mE
                 //logica de id!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                auto id = this->group.size() + 1;
-
-                bdu::rm_syn_t new_id(id);
+                bdu::rm_syn_t new_id(this->group.size() + 1);
                 this->sock_handler.send_packet(&new_id, address);
 
                 for (auto const& member : this->group) {
@@ -190,13 +187,51 @@ void ReplicaManager::listen()
                 bdu::rm_operation_t new_member_operation(bdu::serv_req::new_member);
                 this->sock_handler.multicast_packet(&new_member_operation, this->group);
 
+                usleep(10);
+
                 bdu::member_t new_member_address(id, address);
                 this->sock_handler.multicast_packet(&new_member_address, this->group);
             }
             break;
         }
         case bdu::serv_req::sync: {
-            //
+            if (!this->primary) {
+                auto client = this->sock_handler.wait_packet<bdu::client_t>();
+
+                while (client && (std::strlen(client->name) > 0)) {
+                    auto file_info = this->sock_handler.wait_packet<bdu::file_data_t>();
+                    do {
+                        this->receive_file(file_info->file.name, file_info->num_packets);
+
+                        file_info = this->sock_handler.wait_packet<bdu::file_data_t>();
+                    } while (file_info && (file_info->num_packets != 0));
+
+                    client = this->sock_handler.wait_packet<bdu::client_t>();
+                }
+            }
+            break;
+        }
+        case bdu::serv_req::client_login: {
+            auto hand = this->sock_handler.wait_packet<bdu::handshake_t>();
+            if (this->primary) {
+                bdu::rm_operation_t propagate_login(bdu::serv_req::propagate_login);
+                this->sock_handler.multicast_packet(&propagate_login, this->group);
+
+                usleep(10);
+
+                this->sock_handler.multicast_packet(hand.get(), this->group);
+            } else {
+                auto dummy_syn = this->sock_handler.wait_packet<bdu::syn_t>();
+            }
+            break;
+        }
+        case bdu::serv_req::propagate_login: {
+            if (!this->primary) {
+                auto hand = this->sock_handler.wait_packet<bdu::handshake_t>();
+
+                this->sock_handler.send_packet(hand.get(), this->server.get_own_address());
+            }
+            break;
         }
         }
     }
@@ -205,17 +240,49 @@ void ReplicaManager::listen()
 void ReplicaManager::check_if_alive()
 {
     while (true) {
-        bdu::alive_t are_u_alive;
+        /* bdu::alive_t are_u_alive;
         this->sock_handler.send_packet(&are_u_alive, this->primary_address);
 
         auto alive = this->sock_handler.wait_packet<bdu::alive_t>();
 
         if (!alive->alive) {
             //eleicao
-        }
+        } */
 
         std::this_thread::sleep_for(std::chrono::seconds(ALIVE_SLEEP_SECONDS));
     }
+}
+
+void ReplicaManager::receive_file(char const* file, unsigned int const packets_to_be_received)
+{
+    unsigned int received_packet_number = 0;
+
+    std::vector<std::unique_ptr<bdu::packet_t>> recv_file(packets_to_be_received);
+
+    // Packet receiving loop
+    for (auto& packet : recv_file) {
+        auto received_packet = this->sock_handler.wait_packet<bdu::packet_t>();
+        // If the received packet is NULL, we do nothing
+        if (received_packet) {
+            // Can the packets arrive in another order?
+            packet = std::move(received_packet);
+            received_packet_number++;
+        }
+    }
+
+    // After receiving all packets, we send an ack with true if we received all the packets or
+    // false if we didn't.
+    // If the number doesnt match the expected number, the client should do something about it.
+    // Also, we do nothing if the number doesnt match.
+    if (received_packet_number == packets_to_be_received) {
+        this->log("Success receiving the file");
+
+        this->file_handler.write_file(file, std::move(recv_file));
+    } else {
+        this->log("Failure receiving the file");
+    }
+
+    return;
 }
 
 void ReplicaManager::send_file(char const* file)
@@ -229,24 +296,24 @@ void ReplicaManager::send_file(char const* file)
     // If all goes well, the server sends the complete file_info to the client
     finfo = this->file_handler.get_file_info(file);
     bdu::file_data_t file_data(finfo, file_size_in_packets);
-    //this->sock_handler.send_packet(&file_data);
-    this->sock_handler.multicast_packet(&file_data, group);
+
+    this->sock_handler.multicast_packet(&file_data, this->group);
     this->log("Sent the requested file_info");
 
     // Packet sending loop
     for (auto const& packet : packets) {
-        this->sock_handler.multicast_packet(packet.get(), group);
+        this->sock_handler.multicast_packet(packet.get(), this->group);
         usleep(15);
     }
     this->log("Finished sending the packets");
 
-    unsigned int number_of_acks = 0;
-    while (number_of_acks < group.size()) {
+    /* unsigned int number_of_acks = 0;
+    while (number_of_acks < this->group.size()) {
         auto ack = this->sock_handler.wait_packet<bdu::ack_t>();
         if (ack->confirmation) {
             number_of_acks++;
         }
-    }
+    } */
 
     return;
 }

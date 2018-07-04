@@ -3,6 +3,8 @@
 #include "helpers/SocketHandler.hpp"
 #include "util/Definitions.hpp"
 
+#include <netinet/in.h>
+
 #include <cstring>
 #include <map>
 #include <string>
@@ -32,6 +34,8 @@ enum class req {
 enum class serv_req {
     sync,
     alive,
+    client_login,
+    propagate_login,
     election,
     new_member,
     request_entrance
@@ -104,6 +108,8 @@ struct rm_syn_t {
         : id(i)
     {
     }
+
+    rm_syn_t() = default;
 };
 
 struct rm_operation_t {
@@ -114,7 +120,7 @@ struct rm_operation_t {
     {
     }
 
-    rm_operation_t() = delete;
+    rm_operation_t() = default;
 };
 
 struct member_t {
@@ -126,15 +132,22 @@ struct member_t {
         , address(addr)
     {
     }
+
+    member_t() = default;
 };
 
 struct client_t {
     char name[MAXNAME];
 
     client_t(std::string name_p)
-        : name{ '\0' }
+        : client_t()
     {
         std::strcpy(name, name_p.c_str());
+    }
+
+    client_t()
+        : name{ '\0' }
+    {
     }
 };
 }

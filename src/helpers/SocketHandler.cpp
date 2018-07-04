@@ -84,6 +84,11 @@ sockaddr_in SocketHandler::get_last_address() const noexcept
     return this->peer_address;
 }
 
+sockaddr_in SocketHandler::get_own_address() const noexcept
+{
+    return this->handler_address;
+}
+
 void SocketHandler::log(char const* message) const
 {
     printf("SocketHandler [sockfd: %d]: %s\n", this->sockfd, message);

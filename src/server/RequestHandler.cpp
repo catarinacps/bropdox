@@ -224,7 +224,6 @@ void RequestHandler::send_file(char const* file)
     return;
 }
 
-//TODO: Check if packets can arrive in another order
 void RequestHandler::receive_file(char const* file, unsigned int const packets_to_be_received)
 {
     unsigned int received_packet_number = 0;

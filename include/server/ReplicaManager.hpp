@@ -15,6 +15,7 @@
 #include <thread>
 
 #define ALIVE_SLEEP_SECONDS 10
+#define SYNC_SLEEP_SECONDS 10
 
 namespace bf = boost::filesystem;
 
@@ -76,6 +77,7 @@ private:
 
     void log(char const* message);
     void send_file(char const* file);
+    void receive_file(char const* file, unsigned int packets_to_be_received);
 
     void sync();
     void listen();

@@ -1,9 +1,10 @@
 #include "server/Server.hpp"
 
-Server::Server(port_t port_param, bool verbose_param)
+Server::Server(port_t port_param, sockaddr_in replica_address_p, bool verbose_param)
     : port(port_param)
     , sock_handler(port_param)
     , port_manager(port)
+    , replica_address(replica_address_p)
     , verbose(verbose_param)
 {
     this->port_manager.reserve_port(); //Por causa do ReplicaManager
@@ -20,8 +21,14 @@ void Server::listen()
         if (!hand) {
             continue;
         }
-
         auto address = this->sock_handler.get_last_address();
+
+        // The following operations propagate the received handshake to the 
+        // ReplicaManager of this server.
+        bdu::rm_operation_t client_login(bdu::serv_req::client_login);
+        this->sock_handler.send_packet(&client_login, this->replica_address);
+        usleep(10);
+        this->sock_handler.send_packet(hand.get(), this->replica_address);
 
         this->log(hand->userid, "New handshake received, creating receiver thread...");
         std::thread request_thread(&Server::treat_client_request, this, std::move(hand), address);
@@ -84,6 +91,11 @@ void Server::treat_client_request(std::unique_ptr<bdu::handshake_t> hand, sockad
     }
 
     return;
+}
+
+sockaddr_in Server::get_own_address()
+{
+    return this->sock_handler.get_own_address();
 }
 
 void Server::log(char const* userid, char const* message) const noexcept
