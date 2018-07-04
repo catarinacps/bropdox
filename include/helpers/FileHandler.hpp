@@ -43,5 +43,7 @@ public:
 
     FileHandler() {}
 
+    FileHandler(bool flag);
+
     // TODO: some function that gets all modified files
 };

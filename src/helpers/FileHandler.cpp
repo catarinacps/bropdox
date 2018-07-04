@@ -39,6 +39,12 @@ FileHandler::FileHandler(std::string client_id_param, int flag)
     }
 }
 
+FileHandler::FileHandler(bool flag)
+    : syncDir("./")
+{
+    this->client_id = "Replica Manager";
+}
+
 //Function that receives an *databuffer and a filename and writes on disk
 bool FileHandler::write_file(char const* file_name, std::vector<std::unique_ptr<bdu::packet_t>> file_data, std::string path) const
 {

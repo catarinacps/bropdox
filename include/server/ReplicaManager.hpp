@@ -15,6 +15,7 @@
 class ReplicaManager {
     SocketHandler sock_handler;
     Server server;
+    FileHandler file_handler;
 
     std::map<id_t, sockaddr_in> group;
 
@@ -37,6 +38,7 @@ private:
     ReplicaManager(port_t port, bool verbose);
     ReplicaManager(char const* host, port_t port, bool verbose);
     void log(char const* message);
+    void send_file(char const* file);
     
     void sync();
     void listen();

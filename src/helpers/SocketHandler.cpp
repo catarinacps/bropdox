@@ -60,6 +60,21 @@ SocketHandler::SocketHandler(SocketHandler&& move)
     move.sockfd = -1;
 }
 
+SocketHandler::SocketHandler(port_t port, hostent* server, bool flag)
+    :SocketHandler(port, server)
+{
+    
+    this->handler_address.sin_family = AF_INET;
+    this->handler_address.sin_port = htons(port);
+    this->handler_address.sin_addr.s_addr = INADDR_ANY;
+    std::memset(&(this->handler_address.sin_zero), '\0', sizeof(this->handler_address.sin_zero));
+    
+    if (bind(sockfd, (struct sockaddr*)&(this->handler_address), sizeof(struct sockaddr)) < 0) {
+        this->log("Error while binding the socket, please try again...");
+        throw bdu::socket_bad_bind();
+    }
+}
+
 /******************************************************************************
  * Member Functions
  */
