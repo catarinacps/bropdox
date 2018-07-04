@@ -118,6 +118,11 @@ void ReplicaManager::sync()
         }
     }
 
+    // for(auto const& client : this->server.login_manager.users){
+    //     client_data_ingredients_t pack;
+    //     pack.address = client.second
+    // }
+
     /* 
     auto ack = this->sock_handler.wait_packet<bdu::ack_t>();
     if (ack){

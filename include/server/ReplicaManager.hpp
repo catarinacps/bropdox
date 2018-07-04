@@ -18,6 +18,15 @@
 
 namespace bf = boost::filesystem;
 
+struct client_data_ingredients_t{
+    sockaddr_in address;
+    port_t port;
+    // bool initialized;
+    device_t device;
+    char client_id[MAXNAME];
+    
+};
+
 class ReplicaManager {
     SocketHandler sock_handler;
     Server server;
