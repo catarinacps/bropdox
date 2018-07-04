@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     case 2: {
         printf("Incorrect parameter usage, please refer to the following model:\n");
         printf("\t./server <port> <mode> [-v]\n");
-        printf("where mode is either '--primary' or '--backup'\n\n");
+        printf("where mode is either '--primary' or '--backup <host>'\n\n");
 
         return -1;
     }
@@ -54,50 +54,58 @@ int main(int argc, char* argv[])
         std::string mode(argv[2]);
 
         if (mode == "--primary") {
-            // auto replica = ReplicaManager::make_primary(atoi(argv[1]), false);
+            auto replica = ReplicaManager::make_primary(atoi(argv[1]), false);
 
-            // replica.run();
-        } else if (mode == "--backup") {
-            // auto replica = ReplicaManager::make_backup(atoi(argv[1]), false);
-
-            // replica.run();
+            replica->run();
         } else {
             printf("Incorrect parameter usage, please refer to the following model:\n");
             printf("\t./server <port> <mode> [-v]\n");
-            printf("where mode is either '--primary' or '--backup'\n\n");
+            printf("where mode is either '--primary' or '--backup <host>'\n\n");
 
             return -1;
         }
     }
     case 4: {
         std::string mode(argv[2]);
-        std::string verb(argv[3]);
+        std::string third(argv[3]);
         bool verbose = false;
-        
-        if (verb == "-v") {
+
+        if (third == "-v" && mode == "--primary") {
             verbose = true;
-        }
 
-        if (mode == "--primary") {
-            // auto replica = ReplicaManager::make_primary(atoi(argv[1]), verbose);
+            auto replica = ReplicaManager::make_primary(atoi(argv[1]), verbose);
 
-            // replica.run();
+            replica->run();
         } else if (mode == "--backup") {
-            // auto replica = ReplicaManager::make_backup(atoi(argv[1]), verbose);
+            auto replica = ReplicaManager::make_backup(third.c_str(), atoi(argv[1]), verbose);
 
-            // replica.run();
+            replica->run();
         } else {
             printf("Incorrect parameter usage, please refer to the following model:\n");
             printf("\t./server <port> <mode> [-v]\n");
-            printf("where mode is either '--primary' or '--backup'\n\n");
+            printf("where mode is either '--primary' or '--backup <host>'\n\n");
 
             return -1;
         }
     }
+    case 5: {
+        std::string mode(argv[2]);
+        std::string host(argv[3]);
+        std::string verb(argv[3]);
+        bool verbose = false;
+
+        if (verb == "-v") {
+            verbose = true;
+        }
+
+        auto replica = ReplicaManager::make_backup(host.c_str(), atoi(argv[1]), verbose);
+
+        replica->run();
+    }
     default: {
         printf("Incorrect parameter usage, please refer to the following model:\n");
         printf("\t./server <port> <mode> [-v]\n");
-        printf("where mode is either '--primary' or '--backup'\n\n");
+        printf("where mode is either '--primary' or '--backup <host>'\n\n");
 
         return -1;
     }

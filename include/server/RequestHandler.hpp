@@ -3,16 +3,16 @@
 #include "helpers/FileHandler.hpp"
 #include "helpers/SocketHandler.hpp"
 
+#include "util/Convert.hpp"
 #include "util/Definitions.hpp"
 #include "util/FileData.hpp"
-#include "util/Convert.hpp"
 
-#include <memory>
 #include <algorithm>
 #include <cmath>
 #include <ctime>
-#include <vector>
 #include <map>
+#include <memory>
+#include <vector>
 
 class RequestHandler {
     SocketHandler sock_handler;

@@ -56,7 +56,7 @@ bool Client::parse_input(std::vector<std::string> tokens)
             return false;
         }
 
-        return this->get_file(file_name.c_str(),file_path);
+        return this->get_file(file_name.c_str(), file_path);
 
     } else if (command == "delete") {
         std::string file_path(tokens[1]);
@@ -140,7 +140,7 @@ bool Client::connect_to_server(char const* host, int port)
 bool Client::sync_client(std::vector<bdu::file_event_t> events)
 {
     this->syncing = true;
-    
+
     for (auto const& event : events) {
         this->sock_handler_req->send_packet(&event);
 
@@ -182,7 +182,7 @@ bool Client::sync_client(std::vector<bdu::file_event_t> events)
             if (!ack.confirmation) {
                 this->log("I dont need old files lol");
 
-               // bdu::ack_t ack_packt(false);
+                // bdu::ack_t ack_packt(false);
                 //this->sock_handler_req->send_packet(&ack_packt);
 
                 continue;
@@ -300,9 +300,9 @@ bool Client::get_file(char const* file, std::string path)
 
         bdu::ack_t ack(true);
         this->sock_handler_req->send_packet(&ack);
-        if(!path.empty()){
+        if (!path.empty()) {
             this->file_handler.write_file(file, std::move(recv_file), path);
-        }else{
+        } else {
             this->file_handler.write_file(file, std::move(recv_file));
         }
     } else {

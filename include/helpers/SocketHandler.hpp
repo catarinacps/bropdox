@@ -154,7 +154,7 @@ public:
     SocketHandler(SocketHandler const& copy) = delete;
 
     SocketHandler(SocketHandler&& move);
-    SocketHandler(port_t port, hostent* server, bool flag)
+    SocketHandler(port_t port, hostent* server, bool flag);
 
     ~SocketHandler();
 

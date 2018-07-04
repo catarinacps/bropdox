@@ -1,9 +1,9 @@
 #pragma once
 
 #include "util/Definitions.hpp"
-#include "util/Messages.hpp"
-#include "util/FileData.hpp"
 #include "util/Exception.hpp"
+#include "util/FileData.hpp"
+#include "util/Messages.hpp"
 
 #include <cmath>
 #include <fstream>
@@ -17,7 +17,7 @@ class FileHandler {
 
 public:
     //eu não sei se é public ou private alguém bota no lugar certo depois
-    bool write_file(char const* file_name, std::vector<std::unique_ptr<bdu::packet_t>> file_data, std::string path = std::string() ) const;
+    bool write_file(char const* file_name, std::vector<std::unique_ptr<bdu::packet_t>> file_data, std::string path = std::string()) const;
 
     std::vector<std::unique_ptr<bdu::packet_t>> read_file(char const* file_name, long int& file_size);
 

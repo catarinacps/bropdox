@@ -5,10 +5,10 @@
 
 #include "util/Definitions.hpp"
 #include "util/Messages.hpp"
+#include <chrono>
 #include <map>
 #include <memory>
 #include <thread>
-#include <chrono>
 
 #define ALIVE_SLEEP_SECONDS 10
 
@@ -19,30 +19,12 @@ class ReplicaManager {
 
     std::map<id_t, sockaddr_in> group;
 
-    id_t id = 0; 
+    id_t id = 0;
 
     bool primary;
     bool verbose;
 
     sockaddr_in primary_address;
-
-
-private:
-    /**
-     * Initiates a election following the Bully's Algorithm.
-     * 
-     * @return true if the object is the new leader, false if someone answered
-     */
-    bool election();
-
-    ReplicaManager(port_t port, bool verbose);
-    ReplicaManager(char const* host, port_t port, bool verbose);
-    void log(char const* message);
-    void send_file(char const* file);
-    
-    void sync();
-    void listen();
-    void check_if_alive();
 
 public:
     /**
@@ -65,4 +47,22 @@ public:
      * @return A backup ReplicaManager
      */
     static std::unique_ptr<ReplicaManager> make_backup(char const* host, port_t port, bool verbose);
+
+    ReplicaManager(char const* host, port_t port, bool verbose);
+    ReplicaManager(port_t port, bool verbose);
+
+private:
+    /**
+     * Initiates a election following the Bully's Algorithm.
+     * 
+     * @return true if the object is the new leader, false if someone answered
+     */
+    bool election();
+
+    void log(char const* message);
+    void send_file(char const* file);
+
+    void sync();
+    void listen();
+    void check_if_alive();
 };
