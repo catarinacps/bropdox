@@ -29,6 +29,14 @@ enum class req {
     close
 };
 
+enum class serv_req{
+    sync,
+    alive,
+    election,
+    new_member,
+    request_entrance
+};
+
 struct handshake_t {
     req req_type;
     char userid[MAXNAME];
@@ -89,28 +97,38 @@ struct packet_t {
     packet_t() = default;
 };
 
-struct server_handshake_t {
+struct rm_syn_t {
     id_t id;
 
-    server_handshake_t(id_t i)
+    rm_syn_t(id_t i)
         : id(i)
     {
     }
-
-    server_handshake_t()
-        : id(-1)
-    {
-    }
 };
 
-struct alive_t {
-    bool alive;
+struct rm_operation_t {
 
-    alive_t(bool a)
-        : alive(a)
+    serv_req req;
+    
+    rm_operation_t(serv_req req_p)
+        :req(req_p)
     {
     }
 
-    alive_t() = default;
+    rm_operation_t() = delete; 
+     
 };
+
+struct new_member_t{
+    id_t id;
+    sockaddr_in address;
+
+    new_member_t(id_t id_p, sockaddr_in addr)
+        : id(id_p)
+        , address(addr)
+    {
+    }
+
+};
+
 }

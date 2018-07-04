@@ -25,10 +25,10 @@ std::unique_ptr<ReplicaManager> ReplicaManager::make_backup(char const* host, po
 {
     auto rm = std::make_unique<ReplicaManager>(host, port, verbose);
 
-    bdu::server_handshake_t hs;
-    rm->sock_handler.send_packet(&hs);
+    bdu::rm_operation_t request(bdu::serv_req::request_entrance);
+    rm->sock_handler.send_packet(&request);
 
-    auto pack = rm->sock_handler.wait_packet<bdu::server_handshake_t>();
+    auto pack = rm->sock_handler.wait_packet<bdu::rm_syn_t>();
 
     if (pack) {
         rm->id = pack->id;
@@ -132,6 +132,47 @@ void ReplicaManager::listen()
 {
     while (true) {
         //should we use a RequestHandler type thing or define funcs here?
+        auto request = this->sock_handler.wait_packet<bdu::rm_operation_t>();
+
+        switch(request->req){
+            case bdu::serv_req::alive: {
+                if(this->primary){
+                    bdu::serv_req::alive ok;
+                    this->sock_handler.send_packet(&ok);
+                }
+                break;
+            }
+
+            case bdu::serv_req::new_member: {
+                auto member = this->sock_handler.wait_packet<new_member_t>();
+                this->group[member->id] = member->address;
+                break;
+            }
+
+            case bdu::serv_req::election: {
+                //TODO
+                break;
+            }
+
+            case bdu::serv_req::request_entrance:{
+                if(this->primary){
+                    //TODO PLEASE
+                    //DOnt you FOrgEt AbouT mE
+                    //logica de id!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    
+                    bdu::rm_syn_t new_member(this->group.size()+1);
+                    this->sock_handler.send_packet(&new_member);
+
+                    bdu::rm_operation_t nm()
+                }
+                break;
+            }
+            case bdu::serv_req::sync:{
+
+            }
+        }
+
+        
     }
 }
 
@@ -173,10 +214,6 @@ void ReplicaManager::send_file(char const* file)
     }
     this->log("Finished sending the packets");
 
-    // The RequestHandler then procedes to wait for the Client's ack, which will contain the
-    // number of packets that the client received.
-    // This number of receveid packets will indicate a possible missing packet in the transmission,
-    // calling for a repeat of the send_file() operation.
     unsigned int number_of_acks = 0;
     while (number_of_acks < group.size()) {
         auto ack = this->sock_handler.wait_packet<bdu::ack_t>();
