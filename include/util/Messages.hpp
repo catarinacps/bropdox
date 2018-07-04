@@ -150,4 +150,15 @@ struct client_t {
     {
     }
 };
+
+struct fe_change_primary_t{
+    sockaddr_in address;
+
+    fe_change_primary_t( sockaddr_in addr)
+        : address(addr)
+    {
+    }
+
+    fe_change_primary_t() = default;
+};
 }
