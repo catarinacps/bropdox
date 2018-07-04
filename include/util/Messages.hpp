@@ -29,7 +29,7 @@ enum class req {
     close
 };
 
-enum class serv_req{
+enum class serv_req {
     sync,
     alive,
     election,
@@ -107,28 +107,34 @@ struct rm_syn_t {
 };
 
 struct rm_operation_t {
-
     serv_req req;
-    
+
     rm_operation_t(serv_req req_p)
-        :req(req_p)
+        : req(req_p)
     {
     }
 
-    rm_operation_t() = delete; 
-     
+    rm_operation_t() = delete;
 };
 
-struct new_member_t{
+struct member_t {
     id_t id;
     sockaddr_in address;
 
-    new_member_t(id_t id_p, sockaddr_in addr)
+    member_t(id_t id_p, sockaddr_in addr)
         : id(id_p)
         , address(addr)
     {
     }
-
 };
 
+struct client_t {
+    char name[MAXNAME];
+
+    client_t(std::string name_p)
+        : name{ '\0' }
+    {
+        std::strcpy(name, name_p.c_str());
+    }
+};
 }

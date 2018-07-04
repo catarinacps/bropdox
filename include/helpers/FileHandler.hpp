@@ -31,6 +31,8 @@ public:
 
     bdu::file_info get_file_info(char const* file_name) const;
 
+    void set_sync_dir(std::string path);
+
     bf::path get_path() const;
 
 private:

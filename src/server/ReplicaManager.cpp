@@ -93,24 +93,30 @@ bool ReplicaManager::run()
 
 void ReplicaManager::sync()
 {
+    for (auto const& entry : bf::directory_iterator(".")) {
+        auto path = entry.path();
 
-    // auto all_files = this->server.request_handler.file_handler.get_file_info_list();  //wHY
-    //FileHandler
+        if (bf::is_directory(path)) {
+            auto directory_name = path.filename().string();
+            auto client_name = directory_name.substr(directory_name.find_last_of('_'), directory_name.size());
 
-    //send somethind to say files are coming
+            bdu::client_t client(client_name);
+            this->sock_handler.multicast_packet(&client, this->group);
 
-    /* for (auto& file_info : all_files) {
-        this->log(file_info.file.name);
+            this->file_handler.set_sync_dir(path);
+            auto all_files = this->file_handler.get_file_info_list();
 
-        //oh no
-        // auto file_data = this->sock_handler.wait_packet<bdu::file_data_t>();
-        // this->log("consistency check");
+            for (auto const& file_info : all_files) {
+                this->sock_handler.multicast_packet(file_info, this->group);
 
-        //if(this->sock_handler.multicast_packet()){}
+                this->send_file(file_info.file.name);
+                this->log("Sent file");
+            }
 
-        // this->send_file(file_info.file.name); FUCK
-        this->log("Sent file");
-    } */
+            bdu::file_data_t empty;
+            this->sock_handler.multicast_packet(&empty);
+        }
+    }
 
     /* 
     auto ack = this->sock_handler.wait_packet<bdu::ack_t>();
@@ -133,46 +139,61 @@ void ReplicaManager::listen()
     while (true) {
         //should we use a RequestHandler type thing or define funcs here?
         auto request = this->sock_handler.wait_packet<bdu::rm_operation_t>();
+        auto address = this->sock_handler.get_last_address();
 
-        switch(request->req){
-            case bdu::serv_req::alive: {
-                if(this->primary){
-                    bdu::serv_req::alive ok;
-                    this->sock_handler.send_packet(&ok);
-                }
-                break;
+        switch (request->req) {
+        case bdu::serv_req::alive: {
+            if (this->primary) {
+                bdu::rm_operation_t ok(bdu::serv_req::alive);
+                this->sock_handler.send_packet(&ok, address);
             }
-
-            case bdu::serv_req::new_member: {
-                auto member = this->sock_handler.wait_packet<new_member_t>();
-                this->group[member->id] = member->address;
-                break;
-            }
-
-            case bdu::serv_req::election: {
-                //TODO
-                break;
-            }
-
-            case bdu::serv_req::request_entrance:{
-                if(this->primary){
-                    //TODO PLEASE
-                    //DOnt you FOrgEt AbouT mE
-                    //logica de id!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    
-                    bdu::rm_syn_t new_member(this->group.size()+1);
-                    this->sock_handler.send_packet(&new_member);
-
-                    bdu::rm_operation_t nm()
-                }
-                break;
-            }
-            case bdu::serv_req::sync:{
-
-            }
+            break;
         }
+        case bdu::serv_req::new_member: {
+            auto member = this->sock_handler.wait_packet<bdu::member_t>();
+            this->group[member->id] = member->address;
+            break;
+        }
+        case bdu::serv_req::election: {
+            //TODO: this
+            break;
+        }
+        case bdu::serv_req::request_entrance: {
+            if (this->primary) {
+                //TODO: PLEASE
+                //DOnt you FOrgEt AbouT mE
+                //logica de id!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                auto id = this->group.size() + 1;
 
-        
+                bdu::rm_syn_t new_id(id);
+                this->sock_handler.send_packet(&new_id, address);
+
+                for (auto const& member : this->group) {
+                    bdu::member_t existing_member(member.first, member.second);
+                    this->sock_handler.send_packet(&existing_member, address);
+                }
+
+                bdu::member_t empty(0, sockaddr_in());
+                this->sock_handler.send_packet(&empty, address);
+
+                auto new_member_ack = this->sock_handler.wait_packet<bdu::ack_t>();
+                if (!new_member_ack) {
+                    this->log("Aborting new member addition...");
+                    return;
+                }
+
+                bdu::rm_operation_t new_member_operation(bdu::serv_req::new_member);
+                this->sock_handler.multicast_packet(&new_member_operation, this->group);
+
+                bdu::member_t new_member_address(id, address);
+                this->sock_handler.multicast_packet(&new_member_address, this->group);
+            }
+            break;
+        }
+        case bdu::serv_req::sync: {
+            //
+        }
+        }
     }
 }
 

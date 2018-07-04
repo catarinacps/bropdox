@@ -29,9 +29,13 @@ struct client_data_t {
 
     client_data_t& operator=(client_data_t&& move)
     {
-        this->handler = std::move(move.handler);
-        this->port = std::move(move.port);
-        this->initialized = std::move(move.initialized);
+        if (this != &move) {
+            this->handler = std::move(move.handler);
+            this->port = move.port;
+            this->initialized = move.initialized;
+            move.port = 0;
+            move.initialized = false;
+        }
 
         return *this;
     }

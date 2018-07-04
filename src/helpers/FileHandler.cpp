@@ -176,6 +176,11 @@ bdu::file_info FileHandler::get_file_info(char const* file_name) const
     return bdu::file_info(file_name, this->syncDir.string());
 }
 
+void FileHandler::set_sync_dir(std::string path)
+{
+    this->syncDir = path;
+}
+
 bf::path FileHandler::get_path() const
 {
     return this->syncDir;

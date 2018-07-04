@@ -1,16 +1,22 @@
 #pragma once
 
 #include "helpers/SocketHandler.hpp"
+#include "helpers/FileHandler.hpp"
 #include "server/Server.hpp"
 
 #include "util/Definitions.hpp"
 #include "util/Messages.hpp"
+
+#include <boost/filesystem.hpp>
+
 #include <chrono>
 #include <map>
 #include <memory>
 #include <thread>
 
 #define ALIVE_SLEEP_SECONDS 10
+
+namespace bf = boost::filesystem;
 
 class ReplicaManager {
     SocketHandler sock_handler;
