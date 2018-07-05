@@ -37,12 +37,25 @@ std::unique_ptr<ReplicaManager> ReplicaManager::make_backup(char const* host, po
         return nullptr;
     }
 
+    rm->receive_members();
+
     return rm;
 }
 
 std::unique_ptr<ReplicaManager> ReplicaManager::make_primary(port_t port, bool verbose)
 {
     return std::make_unique<ReplicaManager>(port, verbose);
+}
+
+void ReplicaManager::receive_members()
+{
+    auto member = this->sock_handler.wait_packet<bdu::member_t>();
+
+    while (member && (member->id != 0)) {
+        this->group[member->id] = member->address;
+
+        member = this->sock_handler.wait_packet<bdu::member_t>();
+    }
 }
 
 bool ReplicaManager::run()

@@ -78,11 +78,13 @@ private:
      */
     bool election();
 
-    void log(char const* message);
     void send_file(char const* file);
     void receive_file(char const* file, unsigned int packets_to_be_received);
 
     void sync();
     void listen();
     void check_if_alive();
+    void receive_members();
+
+    void log(char const* message);
 };
