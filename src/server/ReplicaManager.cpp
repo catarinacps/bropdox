@@ -202,6 +202,8 @@ void ReplicaManager::listen()
 
                 bdu::member_t new_member_address(id, address);
                 this->sock_handler.multicast_packet(&new_member_address, this->group);
+
+                this->group[new_id.id] = address;
             }
             break;
         }
