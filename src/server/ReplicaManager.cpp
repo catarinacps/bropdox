@@ -60,21 +60,15 @@ bool ReplicaManager::run()
         return false;
     }
 
-    this->log("Creating  client listening thread for primary server");
-    std::thread client_listen_thread(&Server::listen, &(this->server));
-
-    if (!client_listen_thread.joinable()) {
-        this->log("Failed to create new client listen thread...");
-        return false;
-    }
-
     if (this->primary) {
 
         this->log("Creating syncing thread for primary server");
         std::thread syncing_thread([&]() {
-            this->sync();
+            while (true) {
+                this->sync();
 
-            std::this_thread::sleep_for(std::chrono::seconds(SYNC_SLEEP_SECONDS));
+                std::this_thread::sleep_for(std::chrono::seconds(SYNC_SLEEP_SECONDS));
+            }
         });
 
         if (!syncing_thread.joinable()) {
@@ -95,8 +89,9 @@ bool ReplicaManager::run()
         alive_thread.detach();
     }
 
-    client_listen_thread.detach();
     rm_listen_thread.detach();
+
+    this->server.listen();
 
     return true;
 }
@@ -342,5 +337,7 @@ void ReplicaManager::send_file(char const* file)
 
 void ReplicaManager::log(char const* message)
 {
-    printf("ReplicaManager [UID: %d]: %s\n", this->id, message);
+    if (this->verbose) {
+        printf("ReplicaManager [UID: %d]: %s\n", this->id, message);
+    }
 }

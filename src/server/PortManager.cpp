@@ -20,6 +20,7 @@ port_t PortManager::reserve_port()
         if (!occupied) {
             occupied = true;
 
+            this->m_port.unlock();
             return this->server_port + i;
         }
         i++;

@@ -88,7 +88,7 @@ std::vector<std::unique_ptr<bdu::packet_t>> FileHandler::read_file(char const* f
     std::string file_name_str(file_name);
 
     if (file_name_str.find("/") != 0) {
-        file_name_str = this->syncDir.string() + file_name_str;
+        file_name_str = this->syncDir.string() + "/" + file_name_str;
     }
 
     if (!bf::exists(file_name_str)) {

@@ -334,6 +334,11 @@ bool Client::delete_file(char const* file)
     }
 
     auto ack = this->sock_handler_req->wait_packet<bdu::ack_t>();
+
+    if (!this->syncing) {
+        this->sock_handler_req.reset();
+    }
+
     // If it's 'false' we try again
     if (!ack->confirmation) {
         this->log("Failed deleting the file");
@@ -341,10 +346,6 @@ bool Client::delete_file(char const* file)
     } else {
         this->log("Success deleting the file");
         return true;
-    }
-
-    if (!this->syncing) {
-        this->sock_handler_req.reset();
     }
 }
 

@@ -64,6 +64,7 @@ int main(int argc, char* argv[])
 
             return -1;
         }
+        break;
     }
     case 4: {
         std::string mode(argv[2]);
@@ -87,6 +88,7 @@ int main(int argc, char* argv[])
 
             return -1;
         }
+        break;
     }
     case 5: {
         std::string mode(argv[2]);
@@ -101,6 +103,7 @@ int main(int argc, char* argv[])
         auto replica = ReplicaManager::make_backup(host.c_str(), atoi(argv[1]), verbose);
 
         replica->run();
+        break;
     }
     default: {
         printf("Incorrect parameter usage, please refer to the following model:\n");
