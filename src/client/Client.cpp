@@ -31,7 +31,7 @@ bool Client::parse_input(std::vector<std::string> tokens)
 {
     std::string command(tokens[0]);
 
-    //TODO: list_server and list_client
+    //TODO: list_client
 
     if (command == "connect") {
         std::string address(tokens[1]);
@@ -122,7 +122,7 @@ bool Client::connect_to_server(char const* host, int port)
     }
 
     try {
-        this->sock_handler_server = std::move(SocketHandler(port, this->server));
+        this->front_end_server = std::make_unique<FrontEnd>(port, this->server);
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
         this->log("Failed to connect with the server");
@@ -130,6 +130,8 @@ bool Client::connect_to_server(char const* host, int port)
     }
 
     this->log("Connected to server");
+
+    this->front_end_server->run();
 
     //TODO: Sync the client with all the server's files
     //TODO: Start sync daemon
@@ -348,6 +350,7 @@ bool Client::delete_file(char const* file)
 
 bool Client::close_session()
 {
+    // this->front_end_server.reset();
     return false;
 }
 
@@ -355,11 +358,11 @@ bool Client::send_handshake(bdu::req request)
 {
     // Sends a handshake to the server containing the request type
     bdu::handshake_t hand(request, this->userid.c_str(), this->device);
-    this->sock_handler_server.send_packet(&hand);
+    this->front_end_server->send_packet(&hand);
     this->log("Sent handshake to server");
 
     // Waits the SYN data containing the port
-    auto syn = this->sock_handler_server.wait_packet<bdu::syn_t>();
+    auto syn = this->front_end_server->wait_packet<bdu::syn_t>();
     this->device = syn->device;
 
     // If the SYN is bad, we abort the process

@@ -28,7 +28,8 @@ enum class req {
     del,
     login,
     list,
-    close
+    close,
+    fe
 };
 
 enum class serv_req {
@@ -38,13 +39,15 @@ enum class serv_req {
     propagate_login,
     election,
     new_member,
-    request_entrance
+    request_entrance,
+    new_front_end
 };
 
 struct handshake_t {
     req req_type;
     char userid[MAXNAME];
     device_t device;
+    sockaddr_in fe_address;
 
     handshake_t(req request, char const* id, device_t dev = 0)
         : req_type(request)
@@ -56,6 +59,12 @@ struct handshake_t {
         // Trivial
         // Proof is left as an exercise to the reader
         std::strcpy(userid, aux.substr(0, aux.find_first_of('\0')).c_str());
+    }
+
+    handshake_t(sockaddr_in address)
+        : req_type(req::fe)
+        , fe_address(address)
+    {
     }
 
     handshake_t() = default;
@@ -151,14 +160,14 @@ struct client_t {
     }
 };
 
-struct fe_change_primary_t{
+struct address_t {
     sockaddr_in address;
 
-    fe_change_primary_t( sockaddr_in addr)
+    address_t(sockaddr_in addr)
         : address(addr)
     {
     }
 
-    fe_change_primary_t() = default;
+    address_t() = default;
 };
 }

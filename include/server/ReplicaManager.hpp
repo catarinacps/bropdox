@@ -2,6 +2,7 @@
 
 #include "helpers/SocketHandler.hpp"
 #include "helpers/FileHandler.hpp"
+
 #include "server/Server.hpp"
 
 #include "util/Definitions.hpp"
@@ -11,6 +12,7 @@
 
 #include <chrono>
 #include <map>
+#include <vector>
 #include <memory>
 #include <thread>
 
@@ -34,6 +36,7 @@ class ReplicaManager {
     FileHandler file_handler;
 
     std::map<id_t, sockaddr_in> group;
+    std::vector<sockaddr_in> front_ends;
 
     id_t id = 0;
 

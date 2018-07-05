@@ -1,6 +1,7 @@
 #pragma once
 
 #include "client/Watcher.hpp"
+#include "client/FrontEnd.hpp"
 
 #include "helpers/FileHandler.hpp"
 #include "helpers/SocketHandler.hpp"
@@ -25,9 +26,9 @@ private:
     std::string userid;
     hostent* server;
 
-    SocketHandler sock_handler_server;
+    std::unique_ptr<FrontEnd> front_end_server;
     std::unique_ptr<SocketHandler> sock_handler_req;
-    // SocketHandler sock_handler_req;
+
     FileHandler file_handler;
 
     Watcher watcher;

@@ -8,7 +8,7 @@ SocketHandler::SocketHandler(port_t port, hostent* server)
     : sockfd(-1)
     , peer_len(sizeof(struct sockaddr_in))
 {
-    struct timeval timeout = { 0, TIMEOUT };
+    // struct timeval timeout = { 0, TIMEOUT };
 
     this->sockfd = SocketHandler::init_client_socket(this->peer_address, port, server);
 
@@ -22,7 +22,7 @@ SocketHandler::SocketHandler(port_t port, sockaddr_in peer_address_p)
     : sockfd(-1)
     , peer_len(sizeof(struct sockaddr_in))
 {
-    struct timeval timeout = { 0, TIMEOUT };
+    // struct timeval timeout = { 0, TIMEOUT };
 
     this->peer_address = peer_address_p;
 

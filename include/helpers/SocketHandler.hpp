@@ -117,6 +117,29 @@ public:
     }
 
     /**
+     * Multicasts a data packet to all targets in the specified vector parameter.
+     * 
+     * @param data A reference to the data pointer.
+     * @param targets A vector containing all target sockaddr.
+     * 
+     * @return a boolean representing success if every packet was delivered successfully or 
+     * false if some packet failed to be delivered.
+     */
+    template <typename T>
+    bool multicast_packet(T const* data, std::vector<sockaddr_in> const& targets) const
+    {
+        bool success = true;
+        
+        for (auto const& address : targets) {
+            if (!this->send_packet(data, address)) {
+                success = false;
+            }
+        }
+
+        return success;
+    }
+
+    /**
      * Gets the last address in the peer address buffer.
      * 
      * @return the peer address
@@ -161,6 +184,7 @@ public:
     SocketHandler(SocketHandler const& copy) = delete;
 
     SocketHandler(SocketHandler&& move);
+    
     SocketHandler(port_t port, hostent* server, bool flag);
 
     ~SocketHandler();

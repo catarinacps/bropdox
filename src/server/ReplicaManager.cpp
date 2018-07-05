@@ -214,12 +214,26 @@ void ReplicaManager::listen()
         case bdu::serv_req::client_login: {
             auto hand = this->sock_handler.wait_packet<bdu::handshake_t>();
             if (this->primary) {
-                bdu::rm_operation_t propagate_login(bdu::serv_req::propagate_login);
-                this->sock_handler.multicast_packet(&propagate_login, this->group);
+                if (hand->req_type == bdu::req::fe) {
+                    this->front_ends.push_back(hand->fe_address);
 
-                usleep(10);
+                    bdu::address_t my_address(this->sock_handler.get_own_address());
+                    this->sock_handler.send_packet(&my_address, hand->fe_address);
 
-                this->sock_handler.multicast_packet(hand.get(), this->group);
+                    bdu::rm_operation_t propagate_fe(bdu::serv_req::new_front_end);
+                    this->sock_handler.multicast_packet(&propagate_fe, this->group);
+
+                    usleep(10);
+
+                    this->sock_handler.multicast_packet(hand.get(), this->group);
+                } else if (hand->req_type == bdu::req::login) {
+                    bdu::rm_operation_t propagate_login(bdu::serv_req::propagate_login);
+                    this->sock_handler.multicast_packet(&propagate_login, this->group);
+
+                    usleep(10);
+
+                    this->sock_handler.multicast_packet(hand.get(), this->group);
+                }
             } else {
                 auto dummy_syn = this->sock_handler.wait_packet<bdu::syn_t>();
             }
@@ -230,6 +244,14 @@ void ReplicaManager::listen()
                 auto hand = this->sock_handler.wait_packet<bdu::handshake_t>();
 
                 this->sock_handler.send_packet(hand.get(), this->server.get_own_address());
+            }
+            break;
+        }
+        case bdu::serv_req::new_front_end: {
+            if (!this->primary) {
+                auto hand = this->sock_handler.wait_packet<bdu::handshake_t>();
+
+                this->front_ends.push_back(hand->fe_address);
             }
             break;
         }
