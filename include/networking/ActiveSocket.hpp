@@ -130,7 +130,7 @@ public:
     ActiveSocket() = delete;
 
     /**
-     * Closes the socket if the socket file descriptor is valid/
+     * Closes the socket if the socket file descriptor is valid.
      */
     ~ActiveSocket();
 };
