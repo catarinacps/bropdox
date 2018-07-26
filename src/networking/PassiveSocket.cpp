@@ -11,9 +11,9 @@ PassiveSocket::PassiveSocket(port_t peer_port)
         throw bdu::socket_bad_create();
     }
 
-    init_own_addr(this->own_address, peer_port);
+    this->own_address = this->init_own_addr(peer_port);
 
-    if (!bind_to(this->own_address)) {
+    if (!this->bind_to(this->own_address)) {
         //TODO: log
         // error on bind_to
         throw bdu::socket_bad_create();
@@ -39,6 +39,7 @@ sockaddr_in PassiveSocket::init_own_addr(port_t port)
 {
     sockaddr_in my_address{};
 
+    // memset(&my_address, 0, sizeof(sockaddr_in));
     my_address.sin_family = AF_INET;
     my_address.sin_addr.s_addr = INADDR_ANY;
     my_address.sin_port = htons(port);

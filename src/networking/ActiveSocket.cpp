@@ -163,8 +163,9 @@ bool ActiveSocket::change_peer(const sockaddr_in& new_peer) noexcept
 {
     auto success = connect_to(new_peer);
 
-    if (success)
+    if (success) {
         this->peer_address = new_peer;
+    }
 
     return success;
 }

@@ -6,7 +6,6 @@
 #include <string>
 #include <optional>
 
-#include <arpa/inet.h>
 #include <string.h>
 #include <sys/sendfile.h>
 
@@ -99,7 +98,9 @@ public:
     ssize_t recv_file(int file_desc) const;
 
     /**
+     * Changes the connected address of the socket.
      * 
+     * @param the new peer address.
      */
     bool change_peer(const sockaddr_in& new_peer) noexcept;
 

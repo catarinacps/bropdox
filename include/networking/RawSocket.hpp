@@ -3,16 +3,9 @@
 #include "networking/Socket.hpp"
 #include "util/Definitions.hpp"
 
-#include <utility>
-#include <optional>
-
-#include <string.h>
-
 namespace networking {
 
-class PassiveSocket : public Socket {
-    static sockaddr_in init_own_addr(port_t port);
-
+class RawSocket : public Socket {
 public:
     /**
      * Tries to read the socket for a sizeof(T) bytes datagram.
@@ -63,7 +56,7 @@ public:
             perror("sendto");
             return false;
         } else if (sent_bytes < sizeof(T)) {
-            //TODO: log 
+            //TODO: log
             // less bytes sent than expected
             return false;
         }
@@ -73,31 +66,24 @@ public:
 
     /**
      * Creates an active internet datagram socket.
-     * 
-     * @param peer_port the port you want to bind to.
      */
-    PassiveSocket(port_t peer_port);
+    RawSocket();
 
     /**
      * Moves (and creates) an active internet datagram socket.
      * 
-     * @param the expiring PassiveSocket.
+     * @param the expiring RawSocket.
      */
-    PassiveSocket(PassiveSocket&&);
+    RawSocket(RawSocket&&);
 
     /**
      * No two exactly equal sockets can exist at a given instant.
      */
-    PassiveSocket(const PassiveSocket&) = delete;
-
-    /**
-     * No uninitialized socket can exist at a given time.
-     */
-    PassiveSocket() = delete;
+    RawSocket(const RawSocket&) = delete;
 
     /**
      * Closes the socket if the socket file descriptor is valid.
      */
-    ~PassiveSocket();
+    ~RawSocket();
 };
 }

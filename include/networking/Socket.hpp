@@ -3,9 +3,10 @@
 #include "util/Exception.hpp"
 
 #include <memory>
-#include <utility>
 #include <optional>
+#include <utility>
 
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -20,7 +21,7 @@ public:
     std::pair<std::unique_ptr<T>, sockaddr_in> recv_data() const;
 
     template <typename T>
-    bool send_data(const T* data) const;
+    bool send_data(const T* data, const sockaddr_in& address) const;
 
 protected:
     int sock_fd;
