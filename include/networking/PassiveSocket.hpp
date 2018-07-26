@@ -4,6 +4,7 @@
 #include "util/Definitions.hpp"
 
 #include <utility>
+#include <optional>
 
 #include <arpa/inet.h>
 #include <string.h>
@@ -11,8 +12,7 @@
 namespace networking {
 
 class PassiveSocket : public Socket {
-
-    static void init_own_addr(sockaddr_in& own_addr, port_t port);
+    static sockaddr_in init_own_addr(port_t port);
 
 public:
     /**
@@ -29,7 +29,7 @@ public:
     std::pair<std::unique_ptr<T>, sockaddr_in> recv_data() const
     {
         auto datagram = std::make_unique<T>();
-        sockaddr_in author;
+        sockaddr_in author{};
 
         auto read_bytes = recvfrom(this->sock_fd, datagram.get(), sizeof(T), 0, (sockaddr*)&author, sizeof(sockaddr_in));
 

@@ -4,6 +4,7 @@
 #include "util/Definitions.hpp"
 
 #include <string>
+#include <optional>
 
 #include <arpa/inet.h>
 #include <string.h>
@@ -18,7 +19,7 @@ namespace networking {
 class ActiveSocket : public Socket {
     sockaddr_in peer_address;
 
-    static bool init_peer_addr(sockaddr_in& peer, port_t port, const char* addr);
+    static std::optional<sockaddr_in> init_peer_addr(port_t port, const char* addr);
 
 public:
     /**
@@ -83,7 +84,7 @@ public:
      * 
      * @return the number of bytes written to the socket or -1 in case of failure.
      */
-    ssize_t send_file(int file_desc);
+    ssize_t send_file(int file_desc) const;
 
     /**
      * Receives 'n' bytes and writes them to a open file descriptor. This method
@@ -95,7 +96,12 @@ public:
      * 
      * @return the number of bytes written to the file or -1 in case of failure.
      */
-    ssize_t recv_file(int file_desc);
+    ssize_t recv_file(int file_desc) const;
+
+    /**
+     * 
+     */
+    bool change_peer(const sockaddr_in& new_peer) noexcept;
 
     /**
      * Creates an active internet datagram socket.

@@ -36,4 +36,22 @@ bool Socket::set_timeout(uint16_t sec, uint16_t microsec) const noexcept
 
     return true;
 }
+
+std::optional<sockaddr_in> Socket::get_own_address() const noexcept
+{
+    sockaddr_in address{};
+    socklen_t length = sizeof(sockaddr_in);
+
+    auto ret = getsockname(this->sock_fd, (sockaddr*)&address, &length);
+    if (ret == -1) {
+        perror("getsockname");
+        return {};
+    } else if (length < sizeof(sockaddr_in)) {
+        //TODO: log
+        // less bytes written on own_address than expected
+        return {};
+    }
+
+    return address;
+}
 }

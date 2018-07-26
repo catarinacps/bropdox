@@ -11,11 +11,14 @@ ActiveSocket::ActiveSocket(port_t peer_port, const std::string& peer_addr)
         throw bdu::socket_bad_create();
     }
 
-    if (!init_peer_addr(this->peer_address, peer_port, peer_addr.c_str())) {
+    auto opt = this->init_peer_addr(peer_port, peer_addr.c_str());
+    if (!opt) {
         //TODO: log
         // error on addr init
         throw bdu::socket_bad_create();
     }
+
+    this->peer_address = opt.value();
 
     if (!this->connect_to(this->peer_address)) {
         //TODO: log
@@ -28,6 +31,13 @@ ActiveSocket::ActiveSocket(port_t peer_port, const std::string& peer_addr)
         // error on setsockopt
         throw bdu::socket_bad_create();
     }
+
+    auto address = this->get_own_address();
+    if (!address) {
+        throw bdu::socket_bad_create();
+    }
+
+    this->own_address = address.value();
 }
 
 ActiveSocket::ActiveSocket(const sockaddr_in& peer)
@@ -52,6 +62,13 @@ ActiveSocket::ActiveSocket(const sockaddr_in& peer)
         // error on setsockopt
         throw bdu::socket_bad_create();
     }
+
+    auto address = this->get_own_address();
+    if (!address) {
+        throw bdu::socket_bad_create();
+    }
+
+    this->own_address = address.value();
 }
 
 ActiveSocket::ActiveSocket(ActiveSocket&& move)
@@ -70,32 +87,34 @@ ActiveSocket::~ActiveSocket()
     }
 }
 
-bool ActiveSocket::init_peer_addr(sockaddr_in& peer, port_t port, const char* addr)
+std::optional<sockaddr_in> ActiveSocket::init_peer_addr(port_t port, const char* addr)
 {
-    memset(&peer, 0, sizeof(sockaddr_in));
-    peer.sin_family = AF_INET;
-    peer.sin_port = htons(port);
-    auto ret = inet_pton(AF_INET, addr, &peer.sin_addr);
+    sockaddr_in peer_addr{};
+
+    // memset(&peer_addr, 0, sizeof(sockaddr_in));
+    peer_addr.sin_family = AF_INET;
+    peer_addr.sin_port = htons(port);
+    auto ret = inet_pton(AF_INET, addr, &peer_addr.sin_addr);
 
     if (ret == 0) {
         //TODO: log
         // invalid character in address
-        return false;
+        return {};
     } else if (ret == -1) {
         //TODO: log
         // invalid address family (??)
         perror("inet_pton");
-        return false;
+        return {};
     }
 
-    return true;
+    return peer_addr;
 }
 
-ssize_t ActiveSocket::send_file(int file_desc)
+ssize_t ActiveSocket::send_file(int file_desc) const
 {
     ssize_t written_bytes = 0, bytes_sum = 0;
 
-    auto current_offset = lseek(file_desc, 0, SEEK_CUR);
+    auto initial_offset = lseek(file_desc, 0, SEEK_CUR);
 
     while ((written_bytes = sendfile(this->sock_fd, file_desc, NULL, BUFFER_SIZE)) > 0) {
         bytes_sum += written_bytes;
@@ -103,15 +122,15 @@ ssize_t ActiveSocket::send_file(int file_desc)
 
     if (written_bytes == -1) {
         perror("sendfile");
-        lseek(file_desc, current_offset, SEEK_SET);
+        lseek(file_desc, initial_offset, SEEK_SET);
         return -1;
     }
 
-    lseek(file_desc, current_offset, SEEK_SET);
+    lseek(file_desc, initial_offset, SEEK_SET);
     return bytes_sum;
 }
 
-ssize_t ActiveSocket::recv_file(int file_desc)
+ssize_t ActiveSocket::recv_file(int file_desc) const
 {
     byte_t buffer[BUFFER_SIZE];
 
@@ -138,5 +157,15 @@ ssize_t ActiveSocket::recv_file(int file_desc)
     }
 
     return bytes_sum;
+}
+
+bool ActiveSocket::change_peer(const sockaddr_in& new_peer) noexcept
+{
+    auto success = connect_to(new_peer);
+
+    if (success)
+        this->peer_address = new_peer;
+
+    return success;
 }
 }

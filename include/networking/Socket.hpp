@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <utility>
+#include <optional>
 
 #include <netdb.h>
 #include <netinet/in.h>
@@ -33,11 +34,16 @@ protected:
     /**
      * 
      */
+    bool set_timeout(uint16_t sec, uint16_t microsec) const noexcept;
+
+    /**
+     * 
+     */
     bool connect_to(const sockaddr_in& address) const noexcept;
 
     /**
      * 
      */
-    bool set_timeout(uint16_t sec, uint16_t microsec) const noexcept;
+    std::optional<sockaddr_in> get_own_address() const noexcept;
 };
 }
