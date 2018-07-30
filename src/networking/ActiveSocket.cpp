@@ -3,6 +3,7 @@
 namespace networking {
 
 ActiveSocket::ActiveSocket(port_t peer_port, const std::string& peer_addr)
+    : is_corked(false)
 {
     this->sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
 
@@ -41,6 +42,7 @@ ActiveSocket::ActiveSocket(port_t peer_port, const std::string& peer_addr)
 }
 
 ActiveSocket::ActiveSocket(const sockaddr_in& peer)
+    : is_corked(false)
 {
     this->sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
 
@@ -72,11 +74,11 @@ ActiveSocket::ActiveSocket(const sockaddr_in& peer)
 }
 
 ActiveSocket::ActiveSocket(ActiveSocket&& move)
+    : sock_fd(move.sock_fd)
+    , is_corked(move.is_corked)
+    , own_address(move.own_address)
+    , peer_address(move.peer_address)
 {
-    this->sock_fd = move.sock_fd;
-    this->own_address = move.own_address;
-    this->peer_address = move.peer_address;
-
     move.sock_fd = -1;
 }
 
@@ -110,58 +112,46 @@ std::optional<sockaddr_in> ActiveSocket::init_peer_addr(port_t port, const char*
     return peer_addr;
 }
 
-ssize_t ActiveSocket::send_file(int file_desc) const
+ssize_t ActiveSocket::send_file_block(int file_desc) const
 {
-    ssize_t written_bytes = 0, bytes_sum = 0;
-
-    auto initial_offset = lseek(file_desc, 0, SEEK_CUR);
-
-    while ((written_bytes = sendfile(this->sock_fd, file_desc, NULL, BUFFER_SIZE)) > 0) {
-        bytes_sum += written_bytes;
-    }
+    auto written_bytes = sendfile(this->sock_fd, file_desc, NULL, BUFFER_SIZE);
 
     if (written_bytes == -1) {
         perror("sendfile");
-        lseek(file_desc, initial_offset, SEEK_SET);
         return -1;
     }
 
-    lseek(file_desc, initial_offset, SEEK_SET);
-    return bytes_sum;
+    return written_bytes;
 }
 
-ssize_t ActiveSocket::recv_file(int file_desc) const
+ssize_t ActiveSocket::recv_file_block(int file_desc) const
 {
     byte_t buffer[BUFFER_SIZE];
 
-    ssize_t read_bytes = 0, bytes_sum = 0;
-
-    while ((read_bytes = read(this->sock_fd, buffer, BUFFER_SIZE)) > 0) {
-        auto written_bytes = write(file_desc, buffer, read_bytes);
-
-        if (written_bytes == -1) {
-            perror("write");
-            return -1;
-        } else if (written_bytes < read_bytes) {
-            //TODO: log
-            // unexpected short write
-            return -1;
-        }
-
-        bytes_sum += written_bytes;
-    }
+    auto read_bytes = read(this->sock_fd, buffer, BUFFER_SIZE);
 
     if (read_bytes == -1) {
         perror("read");
         return -1;
     }
 
-    return bytes_sum;
+    auto written_bytes = write(file_desc, buffer, read_bytes);
+
+    if (written_bytes == -1) {
+        perror("write");
+        return -1;
+    } else if (written_bytes < read_bytes) {
+        //TODO: log
+        // unexpected short write
+        return -1;
+    }
+
+    return written_bytes;
 }
 
 bool ActiveSocket::change_peer(const sockaddr_in& new_peer) noexcept
 {
-    auto success = connect_to(new_peer);
+    auto success = this->connect_to(new_peer);
 
     if (success) {
         this->peer_address = new_peer;

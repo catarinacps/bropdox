@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <netinet/udp.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -18,13 +19,24 @@ namespace networking {
 class Socket {
 public:
     template <typename T>
-    std::pair<std::unique_ptr<T>, sockaddr_in> recv_data() const;
+    std::pair<std::unique_ptr<T>, sockaddr_in> recv_data() const = delete;
 
     template <typename T>
-    bool send_data(const T* data, const sockaddr_in& address) const;
+    bool send_data(const T* data, const sockaddr_in& address) const = delete;
+
+    /**
+     * 
+     */
+    bool cork() noexcept;
+
+    /**
+     * 
+     */
+    bool uncork() noexcept;
 
 protected:
     int sock_fd;
+    bool is_corked;
     sockaddr_in own_address;
 
     /**

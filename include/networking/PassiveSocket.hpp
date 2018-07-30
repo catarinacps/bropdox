@@ -11,6 +11,9 @@
 namespace networking {
 
 class PassiveSocket : public Socket {
+    /**
+     * 
+     */
     static sockaddr_in init_own_addr(port_t port);
 
 public:

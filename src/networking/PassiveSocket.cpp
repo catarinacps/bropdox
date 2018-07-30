@@ -3,6 +3,7 @@
 namespace networking {
 
 PassiveSocket::PassiveSocket(port_t peer_port)
+    : is_corked(false)
 {
     this->sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
 
@@ -21,10 +22,10 @@ PassiveSocket::PassiveSocket(port_t peer_port)
 }
 
 PassiveSocket::PassiveSocket(PassiveSocket&& move)
+    : sock_fd(move.sock_fd)
+    , is_corked(move.is_corked)
+    , own_address(move.own_address)
 {
-    this->sock_fd = move.sock_fd;
-    this->own_address = move.own_address;
-
     move.sock_fd = -1;
 }
 

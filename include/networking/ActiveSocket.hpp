@@ -3,11 +3,12 @@
 #include "networking/Socket.hpp"
 #include "util/Definitions.hpp"
 
-#include <string>
 #include <optional>
+#include <string>
 
 #include <string.h>
 #include <sys/sendfile.h>
+#include <sys/uio.h>
 
 #define TIMEOUT_SEC 0
 #define TIMEOUT_USEC 200000
@@ -18,6 +19,9 @@ namespace networking {
 class ActiveSocket : public Socket {
     sockaddr_in peer_address;
 
+    /**
+     * 
+     */
     static std::optional<sockaddr_in> init_peer_addr(port_t port, const char* addr);
 
 public:
@@ -77,16 +81,60 @@ public:
     }
 
     /**
-     * Sends 'n' bytes from an open file descriptor.
+     * 
+     */
+    template <typename T1, typename T2>
+    bool pair_send(const T1* first, const T2* second) const
+    {
+        iovec iov[2] = { { first, sizeof(T1) }, { second, sizeof(T2) } };
+
+        auto written_bytes = writev(this->sock_fd, iov, 2);
+
+        if (written_bytes == -1) {
+            perror("writev");
+            return false;
+        } else if (written_bytes < sizeof(T1) + sizeof(T2)) {
+            //TODO: log
+            // unexpected short write
+            return false;
+        }
+
+        return true;
+    }
+
+    template <typename T1, typename T2>
+    std::pair<std::unique_ptr<T1>, std::unique_ptr<T2>> pair_recv() const
+    {
+        auto first = std::make_unique<T1>();
+        auto second = std::make_unique<T2>();
+
+        iovec iov[2] = { { first.get(), sizeof(T1) }, { second.get(), sizeof(T2) } };
+
+        auto bytes_read = readv(this->sock_fd, iov, 2);
+
+        if (bytes_read == -1) {
+            perror("readv");
+            return std::make_pair(nullptr, nullptr);
+        } else if (bytes_read < sizeof(T1) + sizeof(T2)) {
+            //TODO: log
+            // unexpected short write
+            return std::make_pair(nullptr, nullptr);
+        }
+
+        return std::make_pair(std::move(first), std::move(second));
+    }
+
+    /**
+     * Sends BUFFER_SIZE bytes from an open file descriptor to the socket.
      * 
      * @param file_desc the file descriptor.
      * 
      * @return the number of bytes written to the socket or -1 in case of failure.
      */
-    ssize_t send_file(int file_desc) const;
+    ssize_t send_file_block(int file_desc) const;
 
     /**
-     * Receives 'n' bytes and writes them to a open file descriptor. This method
+     * Receives BUFFER_SIZE bytes and writes them to a open file descriptor. This method
      * is designed to work as a pair of 'send_file', though you could use it to 
      * write character data received as a packet directly to a file.
      * 
@@ -95,7 +143,7 @@ public:
      * 
      * @return the number of bytes written to the file or -1 in case of failure.
      */
-    ssize_t recv_file(int file_desc) const;
+    ssize_t recv_file_block(int file_desc) const;
 
     /**
      * Changes the connected address of the socket.

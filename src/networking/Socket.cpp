@@ -30,7 +30,7 @@ bool Socket::set_timeout(uint16_t sec, uint16_t microsec) const noexcept
 
     auto ret = setsockopt(this->sock_fd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeval));
     if (ret == -1) {
-        perror("timeout");
+        perror("setsockopt (timeout)");
         return false;
     }
 
@@ -53,5 +53,33 @@ std::optional<sockaddr_in> Socket::get_own_address() const noexcept
     }
 
     return address;
+}
+
+bool Socket::cork() noexcept
+{
+    int one = 1;
+
+    auto ret = setsockopt(this->sock_fd, IPPROTO_UDP, UDP_CORK, &one, sizeof(one));
+    if (ret == -1) {
+        perror("setsockopt (cork)");
+        return false;
+    }
+
+    this->is_corked = true;
+    return true;
+}
+
+bool Socket::uncork() noexcept
+{
+    int zero = 0;
+
+    auto ret = setsockopt(this->sock_fd, IPPROTO_UDP, UDP_CORK, &zero, sizeof(zero));
+    if (ret == -1) {
+        perror("setsockopt (uncork)");
+        return false;
+    }
+
+    this->is_corked = false;
+    return true;
 }
 }
