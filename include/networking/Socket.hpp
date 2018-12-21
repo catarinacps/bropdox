@@ -34,6 +34,14 @@ public:
      */
     bool uncork() noexcept;
 
+    /**
+     * 
+     */
+    explicit operator bool() const
+    {
+        return (this->sock_fd > 0);
+    }
+
 protected:
     int sock_fd;
     bool is_corked;
