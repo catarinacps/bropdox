@@ -39,6 +39,9 @@ std::unique_ptr<ReplicaManager> ReplicaManager::make_backup(char const* host, po
 
     rm->receive_members();
 
+    bdu::ack_t ack(true);
+    rm->sock_handler.send_packet(&ack);
+
     return rm;
 }
 
@@ -199,6 +202,8 @@ void ReplicaManager::listen()
 
                 bdu::member_t new_member_address(id, address);
                 this->sock_handler.multicast_packet(&new_member_address, this->group);
+
+                this->group[new_id.id] = address;
             }
             break;
         }
@@ -207,6 +212,13 @@ void ReplicaManager::listen()
                 auto client = this->sock_handler.wait_packet<bdu::client_t>();
 
                 while (client && (std::strlen(client->name) > 0)) {
+                    auto sync_dir = std::string("sync_dir") + client->name + "/";
+                    if (!bf::exists(sync_dir)) {
+                        bf::create_directory(sync_dir);
+                    }
+
+                    this->file_handler.set_sync_dir(sync_dir);
+
                     auto file_info = this->sock_handler.wait_packet<bdu::file_data_t>();
                     do {
                         this->receive_file(file_info->file.name, file_info->num_packets);
@@ -216,6 +228,8 @@ void ReplicaManager::listen()
 
                     client = this->sock_handler.wait_packet<bdu::client_t>();
                 }
+
+                this->file_handler.set_sync_dir("./");
             }
             break;
         }
