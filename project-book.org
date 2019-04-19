@@ -1,0 +1,36 @@
+* Project Description
+
+  Basically, this project needs a TCP socket interface (as part of the
+  requirements) using only UDP sockets. My idea when I last developed
+  this project was to create a baseline to then develop the intended
+  application. I was going to achieve this through the creation of
+  a abstration of the connection concept, posessing all features I
+  then needed. Turns out this is hard work. Besides having to rewrite
+  the whole application, I'd have to create the said abstraction of
+  the connection concept. I did came close to finishing this last part,
+  though.
+
+  The said connection abstraction is inside the "networking" module.
+  After finishing up the Socket wrapper, I have to start to think about
+  the Connection class, what it would do and what it wouldn't do. I'll
+  reserve the next subchapter so I can write down my ideas.
+
+** Connection abstraction
+
+   When I get here I'll start fillling this place up.
+
+* To-Do's [0/1]
+
+  - [ ] figure out the last thing i did
+  - [ ] create a default socket constructor
+
+* Diary
+
+  Here I'll write up everything I did everytime I commit. That way
+  I won't end up as I am at the moment, having no idea what I did last.
+
+** 2019-04-19
+
+   I updated the project makefile and also added the ~.clang-format~ file
+   to the project root. I really should do a c++ project framework repository
+   and add it to my github page. Future me would be very grateful.
