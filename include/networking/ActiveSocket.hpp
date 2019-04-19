@@ -2,7 +2,6 @@
 
 #include "networking/Socket.hpp"
 #include "util/Definitions.hpp"
-
 #include <optional>
 #include <string>
 

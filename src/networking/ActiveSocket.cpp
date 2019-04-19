@@ -91,7 +91,7 @@ ActiveSocket::~ActiveSocket()
 
 std::optional<sockaddr_in> ActiveSocket::init_peer_addr(port_t port, const char* addr)
 {
-    sockaddr_in peer_addr{};
+    sockaddr_in peer_addr {};
 
     // memset(&peer_addr, 0, sizeof(sockaddr_in));
     peer_addr.sin_family = AF_INET;
