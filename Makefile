@@ -3,52 +3,51 @@
 #	Makefile do projeto bropdox.
 #
 #	Exemplo de utilização:
-#		make <target> [DFLAG=true]
+#		make [<target>] [DFLAG=true]
 #
 #	@param target
 #		Pode ser as seguintes opções:
 #		all - compila.
 #		clean - limpa os binários gerados na compilação.
 #		redo - limpa binários e então compila.
-#		test - compila e realiza testes.
 #		print-<var> - imprime o conteúdo da variável do makefile (exemplo de uso: make print-OBJ).
 #
 #	@param "DFLAG=true"
 #		Quando presente, o programa será compilado em modo debug.
 #
-#	Se make não recebe parâmetros, a ação default é all
+#	Se make não recebe parâmetros de target, a ação default é all
 
 
 ####################################################################################################
 #	Definições:
 
 #	-- Diretorios do projeto
-INC_DIR = include
-OBJ_DIR = bin
-OUT_DIR = build
-SRC_DIR = src
-LIB_DIR = lib
+INC_DIR := include
+OBJ_DIR := bin
+OUT_DIR := build
+SRC_DIR := src
+LIB_DIR := lib
 
-DFLAG = 
+DFLAG :=
 
 #	-- Flags de compilação
 #	Compilador e versão da linguagem
-CC = g++ -std=c++17
+CC := g++ -std=c++17
 #	Caso DFLAG esteja definida, ativa compilação debug e coloca o address sanitizer junto ao executável
-DEBUG = $(if $(DFLAG),-g -fsanitize=address)
-CFLAGS =\
+DEBUG := $(if $(DFLAG),-g -fsanitize=address)
+CFLAGS :=\
 	-Wall \
 	-Wextra \
 	-Wpedantic\
 	-Wshadow \
 	-Wunreachable-code
-OPT = $(if $(DFLAG),-O0,-O3)
-LIB = -L$(LIB_DIR)\
+OPT := $(if $(DFLAG),-O0,-O3)
+LIB := -L$(LIB_DIR)\
 	-linotify-cpp \
 	-lboost_system \
 	-lboost_filesystem \
 	-lpthread
-INC = -I$(INC_DIR)
+INC := -I$(INC_DIR)
 
 ####################################################################################################
 #	Arquivos:

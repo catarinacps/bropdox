@@ -12,20 +12,21 @@ namespace networking {
 
 class PassiveSocket : public Socket {
     /**
-     * 
+     *
      */
     static sockaddr_in init_own_addr(port_t port);
 
 public:
     /**
-     * Tries to read the socket for a sizeof(T) bytes datagram.
-     * This method is a blocking call if there's no data in the socket. If theres more bytes in the 
-     * actual datagram than the size of T, the remaining bytes will get truncated. If the datagram 
-     * is smaller than T, all read data gets dropped.
-     * As a warning, theres maybe a chance that the whole package didn't got read. In this case, all
-     * unread bytes will get silently discarted.
-     * 
-     * @return a pair containing a unique_ptr<T> and the address of the author of the message.
+     * Tries to read the socket for a sizeof(T) bytes datagram.  This method is
+     * a blocking call if there's no data in the socket. If theres more bytes in
+     * the actual datagram than the size of T, the remaining bytes will get
+     * truncated. If the datagram is smaller than T, all read data gets dropped.
+     * As a warning, theres maybe a chance that the whole package didn't got
+     * read. In this case, all unread bytes will get silently discarted.
+     *
+     * @return a pair containing a unique_ptr<T> and the address of the author
+     * of the message.
      */
     template <typename T>
     std::pair<std::unique_ptr<T>, sockaddr_in> recv_data() const
@@ -51,10 +52,10 @@ public:
      * Tries to send the pointed data as a T-sized datagram to the socket.
      * This method will block if the socket's buffer has overflown, otherwise it is a non-blocking
      * call.
-     * 
+     *
      * @param data a const pointer of type T to the data.
      * @param address the recipient's address
-     * 
+     *
      * @return a boolean representing success or failure.
      */
     template <typename T>
@@ -66,7 +67,7 @@ public:
             perror("sendto");
             return false;
         } else if (sent_bytes < sizeof(T)) {
-            //TODO: log 
+            //TODO: log
             // less bytes sent than expected
             return false;
         }
@@ -76,14 +77,14 @@ public:
 
     /**
      * Creates an active internet datagram socket.
-     * 
+     *
      * @param peer_port the port you want to bind to.
      */
     PassiveSocket(port_t peer_port);
 
     /**
      * Moves (and creates) an active internet datagram socket.
-     * 
+     *
      * @param the expiring PassiveSocket.
      */
     PassiveSocket(PassiveSocket&&);
